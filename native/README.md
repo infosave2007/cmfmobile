@@ -1,58 +1,69 @@
-# Native cortiq runtime for CMF Mobile
+# Native cortiq runtime
 
-CMF Mobile talks to the cortiq inference runtime (the Rust workspace in
-[cmfpublic](https://github.com/infosave2007/cmf)) through the C ABI declared
-in [`cortiq_ffi.h`](cortiq_ffi.h). When the library is not bundled, the app
-falls back to a clearly-labeled **demo engine** so the full UX still works.
+CMF Mobile binds the cortiq inference engine through the C ABI of the
+[`cortiq-ffi`](https://github.com/infosave2007/cmf/tree/master/crates/cortiq-ffi)
+crate (header mirrored here as [`cortiq_ffi.h`](cortiq_ffi.h)):
 
-## 1. Create the FFI crate (once, in the cmfpublic workspace)
-
-```toml
-# crates/cortiq-ffi/Cargo.toml
-[package]
-name = "cortiq-ffi"
-version = "0.1.0"
-edition = "2021"
-
-[lib]
-name = "cortiq_ffi"
-crate-type = ["cdylib", "staticlib"]
-
-[dependencies]
-cortiq-engine = { path = "../cortiq-engine" }
-serde_json = "1"
+```
+cortiq_version / cortiq_last_error
+cortiq_load(path) -> handle          # mmap, NULL on error
+cortiq_free(handle)
+cortiq_chat(handle, prompt, max_tokens, cb, user)      # file's chat template
+cortiq_complete(handle, prompt, max_tokens, cb, user)  # raw prompt
 ```
 
-Implement the five functions from `cortiq_ffi.h` on top of
-`CortiqRuntime` (load → mmap; generate → pipeline with a per-token
-callback; cancel → cooperative flag).
+The token callback fires synchronously on the calling thread, so the Dart
+side (`lib/data/services/inference/native_engine.dart`) runs the blocking
+call in a worker isolate and cancels by returning `false` from the
+callback via a shared native flag.
 
-## 2. Android
+When the library is missing the app falls back to a clearly-labeled
+**demo engine**.
+
+## Android
+
+`android/app/src/main/jniLibs/arm64-v8a/libcortiq_ffi.so` is checked in,
+taken from the cmf release
+[v0.3.9](https://github.com/infosave2007/cmf/releases/tag/v0.3.9)
+(`libcortiq-ffi-aarch64-linux-android.tar.gz`). To update:
 
 ```bash
-cargo install cargo-ndk
-cd cmfpublic
-cargo ndk -t arm64-v8a -t armeabi-v7a -o /path/to/cmfmobile/android/app/src/main/jniLibs \
-  build --release -p cortiq-ffi
+curl -L -o /tmp/ffi.tar.gz \
+  https://github.com/infosave2007/cmf/releases/download/v<VER>/libcortiq-ffi-aarch64-linux-android.tar.gz
+tar -xzf /tmp/ffi.tar.gz -C android/app/src/main/jniLibs/arm64-v8a/
 ```
 
-The app loads `libcortiq_ffi.so` automatically at startup.
+Or build from source: `cargo ndk -t arm64-v8a build --release -p cortiq-ffi`
+in the cmf workspace.
 
-## 3. iOS
+## iOS
+
+Build a static lib and link it into Runner (symbols resolve via
+`DynamicLibrary.process()`):
 
 ```bash
-cargo install cargo-lipo
-cd cmfpublic
+cd cmf
 cargo lipo --release -p cortiq-ffi --targets aarch64-apple-ios
 ```
 
-Add `libcortiq_ffi.a` to the Xcode project (Runner → Build Phases →
-Link Binary With Libraries) plus an "Other Linker Flags" entry
-`-force_load $(PROJECT_DIR)/libcortiq_ffi.a` so the symbols survive
-dead-code stripping. The app resolves symbols via
-`DynamicLibrary.process()`.
+Add `libcortiq_ffi.a` in Xcode (Runner → Build Phases → Link Binary With
+Libraries) with `-force_load $(PROJECT_DIR)/libcortiq_ffi.a` in Other
+Linker Flags so dead-code stripping keeps the symbols.
 
-## 4. Verify
+## Desktop smoke test
 
-Launch the app → Settings → About shows `engine: cortiq-native` instead of
+Real end-to-end inference through the same binding the app uses:
+
+```bash
+cargo build --release -p cortiq-ffi          # in the cmf workspace
+CORTIQ_FFI_LIB=/path/to/libcortiq_ffi.dylib \
+  dart run tool/ffi_smoke.dart /path/to/model.cmf "your prompt"
+```
+
+Verified 2026-07-18 with qwen3-5-4b.cmf (Q8_2F): mmap load 210 ms,
+streaming at ~9 tok/s on an M-series Mac.
+
+## Verify in the app
+
+Settings → About shows `engine: cortiq-native <version>` instead of
 `engine: demo`, and the demo banner disappears from the chat.

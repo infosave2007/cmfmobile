@@ -67,10 +67,14 @@ flutter gen-l10n
 flutter run
 ```
 
-Without the native runtime the app uses a clearly-labeled **demo engine** —
-the whole UX works (streaming, stats, server, converter), replies are
-simulated. To run real inference, build `libcortiq_ffi` from the cmfpublic
-Rust workspace: see [native/README.md](native/README.md).
+**Android (arm64) ships with the real cortiq runtime** —
+`libcortiq_ffi.so` from [cmf v0.3.9](https://github.com/infosave2007/cmf/releases/tag/v0.3.9)
+is bundled in `android/app/src/main/jniLibs/`, so chat and the server run
+actual on-device inference out of the box (verified end-to-end: qwen3-5-4b
+Q8_2F streams through the same binding — see `tool/ffi_smoke.dart`).
+On iOS and simulators without the library the app falls back to a
+clearly-labeled **demo engine**; linking instructions are in
+[native/README.md](native/README.md).
 
 ## Architecture
 

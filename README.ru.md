@@ -59,10 +59,14 @@ flutter gen-l10n
 flutter run
 ```
 
-Без нативного рантайма приложение использует честно подписанный
-**демо-движок** — весь UX работает (стриминг, статистика, сервер,
-конвертер), ответы симулируются. Для настоящего инференса соберите
-`libcortiq_ffi` из Rust-workspace cmfpublic: см. [native/README.md](native/README.md).
+**Android (arm64) идёт с настоящим рантаймом cortiq** —
+`libcortiq_ffi.so` из релиза [cmf v0.3.9](https://github.com/infosave2007/cmf/releases/tag/v0.3.9)
+вшит в `android/app/src/main/jniLibs/`, так что чат и сервер выполняют
+реальный инференс на устройстве из коробки (проверено end-to-end:
+qwen3-5-4b Q8_2F стримит через этот же биндинг — см. `tool/ffi_smoke.dart`).
+На iOS и симуляторах без библиотеки приложение переключается на честно
+подписанный **демо-движок**; инструкция по линковке — в
+[native/README.md](native/README.md).
 
 ## Релизы
 

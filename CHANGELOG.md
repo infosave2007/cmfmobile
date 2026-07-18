@@ -25,8 +25,12 @@ versions follow [SemVer](https://semver.org/).
 - **Settings**: theme, 7 languages (en/ru/de/fr/es/zh/tr), generation
   params (temperature, top-p, max tokens, threads), server port, HF token,
   storage usage.
-- **Native runtime bridge**: `dart:ffi` binding for the cortiq Rust engine
-  (`native/cortiq_ffi.h`), with a clearly-labeled demo engine fallback.
+- **Native runtime**: `dart:ffi` binding to the `cortiq-ffi` C ABI
+  (blocking generate in a worker isolate, streamed tokens, cancel via a
+  shared native flag); `libcortiq_ffi.so` (arm64-v8a, cmf v0.3.9) bundled
+  in the Android APK — real on-device inference out of the box, verified
+  end-to-end with qwen3-5-4b Q8_2F (`tool/ffi_smoke.dart`). Demo engine
+  remains as the clearly-labeled fallback where the library is absent.
 - **CI/CD**: analyze+test+debug-APK on push; tag `v*` builds release APKs
   (universal + per-ABI) and an unsigned iOS archive into GitHub Releases.
 - Unit tests: CMF envelope/header/directory round-trip, streaming hash64,
