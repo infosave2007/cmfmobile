@@ -43,3 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# iCloud workaround: build dirs are symlinks out of the synced folder
+/build
+.dart_tool
