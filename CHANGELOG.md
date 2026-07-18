@@ -4,6 +4,28 @@ All notable changes to CMF Mobile are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
+## [1.0.3] - 2026-07-18
+
+### Added
+- **On-device Qwen3.5 GatedDeltaNet conversion**: nested `text_config`,
+  hybrid layer schedules, faithful vendor GDN tensors, linear-core geometry,
+  RoPE and Gemma-style norm semantics are preserved in the CMF header.
+- **On-device Gemma conversion** matching the reference `cortiq convert`:
+  Gemma 1 and Gemma 3 scaling/GeGLU/sliding-window fields, plus dense
+  Gemma 4 12B/31B dual attention, global/local RoPE, V=K materialization,
+  V-norm and final-logit soft-capping. Gemma 2 soft-capping and unsupported
+  Gemma 4 MoE/E-series/KV-sharing fail before downloading model weights.
+- **Parallel ready-CMF downloads** with 2–8 concurrent HTTP range requests
+  and an automatic single-stream fallback for servers without range support.
+- Safetensors shards use the same segmented downloader; interrupted CDN
+  streams resume from the last received byte with three automatic retries.
+
+### Fixed
+- Ready `.cmf` jobs no longer claim to be converting to the placeholder
+  Q8_2F quantization; the completed file reports its real per-tensor dtype.
+- Structural validation now verifies all Q/K/V/O or all nine GatedDeltaNet
+  tensors per layer before native inference.
+
 ## [1.0.2] - 2026-07-18
 
 ### Fixed

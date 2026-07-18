@@ -109,24 +109,31 @@ int nbytesFor(int dtype, List<int> shape, int numel) => switch (dtype) {
       _ => numel * 2,
     };
 
-/// Rejects architectures the on-device converter cannot produce
-/// correctly. Hybrid models (qwen3.5-style GatedDeltaNet layers) need the
-/// reference converter, which folds the linear-attention operator into
-/// the canonical linear core at convert time — without that fold the
-/// engine crashes at generate.
+/// Returns the language-model config used by the reference converter.
+/// Multimodal wrappers keep the actual text geometry under `text_config`,
+/// while the outer model_type remains the CMF architecture family name.
+Map<String, dynamic> textModelConfig(Map<String, dynamic> config) {
+  final nested = config['text_config'];
+  if (nested is! Map) return config;
+
+  // Recent multimodal configs (notably Qwen3.5) keep the real language
+  // architecture here. Preserve outer tokenizer ids that may be omitted by
+  // text_config, then let the nested architecture override wrapper fields.
+  return <String, dynamic>{
+    ...config,
+    ...nested.cast<String, dynamic>(),
+    'model_type': config['model_type'] ?? nested['model_type'],
+  };
+}
+
+/// Reject only architectures whose tensor layout is not implemented by the
+/// Dart converter. Dense Qwen3.5 GatedDeltaNet hybrids are supported 1:1.
 void ensureSupportedArch(Map<String, dynamic> config) {
+  config = textModelConfig(config);
+  final modelType = (config['model_type'] as String? ?? '').toLowerCase();
+  final isGemma4 = modelType.contains('gemma4');
   final layerTypes =
       (config['layer_types'] as List?)?.cast<String>() ?? const [];
-  final hasLinear = layerTypes.any((t) => t != 'full_attention') ||
-      config.containsKey('linear_conv_kernel_dim') ||
-      config.containsKey('linear_num_key_heads');
-  if (hasLinear) {
-    throw StateError(
-        'hybrid architecture (${config['model_type']}: GatedDeltaNet/linear '
-        'attention layers) — on-device conversion supports dense attention '
-        'models only. Use desktop `cortiq convert`, or download a ready '
-        '.cmf of this model');
-  }
   if (config['num_experts'] != null ||
       config.containsKey('num_local_experts')) {
     throw StateError(
@@ -134,6 +141,66 @@ void ensureSupportedArch(Map<String, dynamic> config) {
         'supports dense models only. Use desktop `cortiq convert`, or '
         'download a ready .cmf');
   }
+  if (config['attn_logit_softcapping'] is num ||
+      (!isGemma4 && config['final_logit_softcapping'] is num)) {
+    throw StateError('$modelType attention/logit soft-capping is not '
+        'supported by the runtime (Gemma 2 cannot be converted safely)');
+  }
+  if (isGemma4) {
+    if (config['enable_moe_block'] == true) {
+      throw StateError('Gemma 4 MoE blocks are not supported yet');
+    }
+    if ((config['hidden_size_per_layer_input'] as int? ?? 0) > 0) {
+      throw StateError('Gemma 4 E-series per-layer inputs are not supported');
+    }
+    if ((config['num_kv_shared_layers'] as int? ?? 0) > 0) {
+      throw StateError('Gemma 4 KV-shared layers are not supported');
+    }
+    _gemma4SlidingPattern(config);
+  }
+  final activation = config['hidden_activation'] ?? config['hidden_act'];
+  if (activation != null &&
+      !const ['silu', 'swish', 'gelu_pytorch_tanh', 'gelu_tanh', 'gelu_new']
+          .contains(activation)) {
+    throw StateError('unsupported hidden activation $activation');
+  }
+  final hasLinear = layerTypes.contains('linear_attention');
+  if (hasLinear) {
+    final layers = config['num_hidden_layers'] as int? ?? 0;
+    if (layerTypes.length != layers) {
+      throw StateError('hybrid architecture has ${layerTypes.length} '
+          'layer_types for $layers layers');
+    }
+    for (final key in [
+      'linear_conv_kernel_dim',
+      'linear_num_key_heads',
+      'linear_num_value_heads',
+      'linear_key_head_dim',
+      'linear_value_head_dim',
+    ]) {
+      if ((config[key] as int? ?? 0) <= 0) {
+        throw StateError('hybrid architecture is missing $key');
+      }
+    }
+  }
+}
+
+int? _gemma4SlidingPattern(Map<String, dynamic> config) {
+  final modelType = (config['model_type'] as String? ?? '').toLowerCase();
+  if (!modelType.contains('gemma4')) return null;
+  final types = (config['layer_types'] as List?)?.cast<String>() ?? const [];
+  final layers = config['num_hidden_layers'] as int? ?? types.length;
+  final full = <int>[
+    for (var i = 0; i < types.length; i++)
+      if (types[i] == 'full_attention') i,
+  ];
+  final pattern = full.isEmpty ? 0 : full.first + 1;
+  if (pattern == 0 ||
+      full.asMap().entries.any((e) => e.value != pattern * (e.key + 1) - 1) ||
+      layers ~/ pattern != full.length) {
+    throw StateError('Gemma 4 has an irregular full/sliding layer schedule');
+  }
+  return pattern;
 }
 
 class ConvertInput {
@@ -161,10 +228,42 @@ class ConvertInput {
 Map<String, dynamic> buildCmfHeader(
     Map<String, dynamic> config, String? tokCfgText, QuantType quant,
     {required String sourceRepo, required int numQuantTensors}) {
+  config = textModelConfig(config);
   final modelType = config['model_type'] as String? ?? 'llama';
   final hidden = config['hidden_size'] as int? ?? 0;
   final heads = config['num_attention_heads'] as int? ?? 1;
   final layers = config['num_hidden_layers'] as int? ?? 0;
+  final rawLayerTypes =
+      (config['layer_types'] as List?)?.cast<String>() ?? const [];
+  final layerTypes = [
+    for (var i = 0; i < layers; i++)
+      i < rawLayerTypes.length && rawLayerTypes[i] == 'linear_attention'
+          ? 'LinearAttention'
+          : 'FullAttention',
+  ];
+  final hasLinear = layerTypes.contains('LinearAttention');
+  final rope = config['rope_parameters'] is Map
+      ? (config['rope_parameters'] as Map).cast<String, dynamic>()
+      : const <String, dynamic>{};
+  final modelTypeLower = modelType.toLowerCase();
+  final isGemma = modelTypeLower.contains('gemma');
+  final isGemma4 = modelTypeLower.contains('gemma4');
+  final g4Pattern = isGemma4 ? _gemma4SlidingPattern(config) : null;
+  final g4FullRope = rope['full_attention'] is Map
+      ? (rope['full_attention'] as Map).cast<String, dynamic>()
+      : const <String, dynamic>{};
+  final g4SlidingRope = rope['sliding_attention'] is Map
+      ? (rope['sliding_attention'] as Map).cast<String, dynamic>()
+      : const <String, dynamic>{};
+  final activation = config['hidden_activation'] ?? config['hidden_act'];
+  final hiddenAct = const [
+    'gelu_pytorch_tanh',
+    'gelu_tanh',
+    'gelu_new',
+  ].contains(activation)
+      ? 'gelu_tanh'
+      : 'silu';
+  final slidingPattern = config['sliding_window_pattern'] ?? g4Pattern;
   final eosRaw = config['eos_token_id'];
   final eos = eosRaw is List
       ? eosRaw.whereType<int>().toList()
@@ -193,17 +292,51 @@ Map<String, dynamic> buildCmfHeader(
       'num_kv_heads': config['num_key_value_heads'] ?? heads,
       'head_dim': config['head_dim'] ?? (heads > 0 ? hidden ~/ heads : 0),
       'vocab_size': config['vocab_size'] ?? 0,
-      'layer_types': [
-        for (var i = 0; i < layers; i++)
-          // Dense-only (ensureSupportedArch): map config layer_types when
-          // present, otherwise every layer is full attention.
-          'FullAttention',
-      ],
+      'layer_types': layerTypes,
       'rms_norm_eps': config['rms_norm_eps'] ?? 1e-6,
-      'norm_style': modelType.contains('gemma') ? 'gemma' : 'qwen',
-      'rope_theta': config['rope_theta'] ?? 10000.0,
-      'tie_word_embeddings': config['tie_word_embeddings'] ?? false,
+      'norm_style': modelTypeLower.startsWith('qwen3_5') ||
+              modelTypeLower.contains('qwen3_next') ||
+              (modelTypeLower.contains('gemma') &&
+                  !modelTypeLower.contains('gemma4'))
+          ? 'gemma'
+          : 'qwen',
+      'rope_theta': isGemma4
+          ? g4FullRope['rope_theta'] ?? 10000.0
+          : config['rope_theta'] ?? rope['rope_theta'] ?? 10000.0,
+      'tie_word_embeddings': config['tie_word_embeddings'] ?? isGemma,
+      'partial_rotary_factor': config['partial_rotary_factor'] ??
+          rope['partial_rotary_factor'] ??
+          1.0,
+      'hidden_act': hiddenAct,
+      'embed_multiplier': isGemma ? math.sqrt(hidden.toDouble()) : 1.0,
+      'query_pre_attn_scalar':
+          config['query_pre_attn_scalar'] ?? (isGemma4 ? 1.0 : null),
+      'sliding_window': slidingPattern != null
+          ? config['sliding_window']
+          : null,
+      'sliding_window_pattern': slidingPattern,
+      'rope_local_base_freq':
+          config['rope_local_base_freq'] ?? g4SlidingRope['rope_theta'],
+      'global_head_dim': isGemma4 ? config['global_head_dim'] : null,
+      'num_global_kv_heads':
+          isGemma4 ? config['num_global_key_value_heads'] : null,
+      'global_partial_rotary_factor':
+          isGemma4 ? g4FullRope['partial_rotary_factor'] : null,
+      'final_logit_softcapping':
+          isGemma4 ? config['final_logit_softcapping'] : null,
+      'attn_v_norm': isGemma4,
+      if (hasLinear)
+        'linear_core': {
+          'kind': 'gated_delta_net',
+          'num_heads': config['linear_num_value_heads'],
+          'value_head_dim': config['linear_value_head_dim'],
+        },
       'max_position_embeddings': config['max_position_embeddings'] ?? 0,
+      'linear_conv_kernel_dim': config['linear_conv_kernel_dim'],
+      'linear_num_key_heads': config['linear_num_key_heads'],
+      'linear_num_value_heads': config['linear_num_value_heads'],
+      'linear_key_head_dim': config['linear_key_head_dim'],
+      'linear_value_head_dim': config['linear_value_head_dim'],
     },
     'quant_type': headerQuantLabel(quant),
     'tokenizer_config': {
@@ -229,6 +362,7 @@ Future<void> convertSafetensorsToCmf(
   void Function(String line)? onLog,
   bool Function()? isCancelled,
 }) async {
+  ensureSupportedArch(input.config);
   // Plan: every float tensor gets a canonical name, a target dtype and a
   // pre-assigned slot in the output file.
   final tasks = <TensorTask>[];
@@ -265,6 +399,50 @@ Future<void> convertSafetensorsToCmf(
         outNbytes: spec.nbytes,
         outOffset: 0, // assigned after begin()
       ));
+    }
+  }
+
+  // Gemma 4 global attention uses K as V and does not publish v_proj.
+  // Materialize the small duplicate so the runtime keeps a uniform Q/K/V/O
+  // contract, matching the reference converter exactly.
+  final config = textModelConfig(input.config);
+  final modelType = (config['model_type'] as String? ?? '').toLowerCase();
+  if (modelType.contains('gemma4') && config['global_head_dim'] != null) {
+    final sourceTasks = List<TensorTask>.of(tasks);
+    final names = specs.map((s) => s.name).toSet();
+    final layerTypes =
+        (config['layer_types'] as List?)?.cast<String>() ?? const [];
+    for (final task in sourceTasks) {
+      final match = RegExp(r'^model\.layers\.(\d+)\.self_attn\.k_proj\.weight$')
+          .firstMatch(task.name);
+      if (match == null) continue;
+      final layer = int.parse(match.group(1)!);
+      if (layer >= layerTypes.length ||
+          layerTypes[layer] != 'full_attention') {
+        continue;
+      }
+      final vName = task.name.replaceFirst('k_proj', 'v_proj');
+      if (names.contains(vName)) continue;
+      final spec = CmfTensorSpec(
+        name: vName,
+        dtype: task.outDtype,
+        shape: task.shape,
+        nbytes: task.outNbytes,
+      );
+      specs.add(spec);
+      tasks.add(TensorTask(
+        shardPath: task.shardPath,
+        shardDataStart: task.shardDataStart,
+        srcDtype: task.srcDtype,
+        srcBegin: task.srcBegin,
+        srcNbytes: task.srcNbytes,
+        shape: task.shape,
+        name: vName,
+        outDtype: task.outDtype,
+        outNbytes: task.outNbytes,
+        outOffset: 0,
+      ));
+      names.add(vName);
     }
   }
   if (specs.isEmpty) throw StateError('no float tensors found');

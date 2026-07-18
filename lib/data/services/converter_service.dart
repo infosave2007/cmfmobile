@@ -98,8 +98,9 @@ class ConverterService {
   Future<void> _run(ConversionJob job, String? hfToken, int threads) async {
     Directory? tempDir;
     try {
-      job.addLog('→ converting ${job.repo} to ${job.name} '
-          '(${job.quant.label}, $threads threads)');
+      // A featured ready-CMF repo receives a placeholder quant value. Do not
+      // present it as the downloaded file's actual quantization.
+      job.addLog('→ inspecting ${job.repo}');
       _progress(job, 0.02, 'listing');
       final files = await hf.listFiles(job.repo, token: hfToken);
 
@@ -107,7 +108,7 @@ class ConverterService {
           files.where((f) => f.path.toLowerCase().endsWith('.cmf')).toList();
       if (cmfFiles.isNotEmpty) {
         job.directDownload = true;
-        await _downloadCmfDirectly(job, cmfFiles, hfToken);
+        await _downloadCmfDirectly(job, cmfFiles, hfToken, threads);
       } else {
         if (!job.quant.supportedOnDevice) {
           throw StateError(
@@ -115,6 +116,8 @@ class ConverterService {
               'on device choose Q8_ROW, Q8_2F, Q1 or F16, or pick a repo '
               'that ships .cmf files');
         }
+        job.addLog('→ converting ${job.repo} to ${job.name} '
+            '(${job.quant.label}, $threads threads)');
         tempDir = Directory(
             '${(await getTemporaryDirectory()).path}/convert/${job.id}');
         await tempDir.create(recursive: true);
@@ -167,14 +170,19 @@ class ConverterService {
   }
 
   Future<void> _downloadCmfDirectly(
-      ConversionJob job, List<HfFileEntry> cmfFiles, String? hfToken) async {
+      ConversionJob job, List<HfFileEntry> cmfFiles, String? hfToken,
+      int threads) async {
     cmfFiles.sort((a, b) => b.size.compareTo(a.size));
     final src = cmfFiles.first;
-    job.addLog('repo ships ${src.path} — downloading directly');
-    await hf.download(
+    final parallelism = threads.clamp(2, 8);
+    job.addLog('repo ships ${src.path} — downloading directly '
+        '($parallelism connections)');
+    await hf.downloadParallel(
       job.repo,
       src.path,
       job.outputPath,
+      totalSize: src.size,
+      parallelism: parallelism,
       token: hfToken,
       isCancelled: () => _isCancelled(job),
       onBytes: (received, total) {
@@ -219,8 +227,8 @@ class ConverterService {
       shardNames = loose;
     }
 
-    // Architecture gate BEFORE the multi-GB download: hybrid/MoE repos
-    // fail here with a clear message instead of crashing the engine later.
+    // Validate the architecture BEFORE the multi-GB download. Dense Qwen3.5
+    // GatedDeltaNet hybrids are supported; unsupported MoE layouts fail here.
     final config = jsonDecode(
             await hf.fetchText(job.repo, 'config.json', token: hfToken))
         as Map<String, dynamic>;
@@ -246,10 +254,14 @@ class ConverterService {
       job.addLog('downloading $shard');
       final dest = '${tempDir.path}/$shard';
       final base = downloaded;
-      await hf.download(
+      final shardSize =
+          files.where((f) => f.path == shard).firstOrNull?.size ?? 0;
+      await hf.downloadParallel(
         job.repo,
         shard,
         dest,
+        totalSize: shardSize,
+        parallelism: threads.clamp(2, 8),
         token: hfToken,
         isCancelled: () => _isCancelled(job),
         onBytes: (received, total) {
@@ -259,7 +271,7 @@ class ConverterService {
           }
         },
       );
-      downloaded += files.where((f) => f.path == shard).firstOrNull?.size ?? 0;
+      downloaded += shardSize;
       shardPaths.add(dest);
     }
     if (_isCancelled(job)) throw const CancelledException();

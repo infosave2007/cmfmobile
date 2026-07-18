@@ -334,18 +334,34 @@ abstract final class CmfValidator {
       }
       for (var i = 0; i < layerTypes.length; i++) {
         if (layerTypes[i] == 'FullAttention') {
-          if (!names.contains('model.layers.$i.self_attn.q_proj.weight')) {
-            problems.add('layer $i is FullAttention but has no '
-                'self_attn.q_proj.weight — the file was likely converted '
-                'by a tool that mislabels hybrid layers; re-convert with '
-                'desktop cortiq or download a ready .cmf');
+          final missing = ['q_proj', 'k_proj', 'v_proj', 'o_proj']
+              .where((n) => !names
+                  .contains('model.layers.$i.self_attn.$n.weight'))
+              .toList();
+          if (missing.isNotEmpty) {
+            problems.add('layer $i is FullAttention but is missing '
+                'self_attn.${missing.join('/')} weights');
             break; // one clear message beats sixty
           }
         } else {
           final prefix = 'model.layers.$i.linear_attn.';
-          if (!names.any((n) => n.startsWith(prefix))) {
-            problems.add('layer $i is ${layerTypes[i]} but carries no '
-                'linear_attn tensors');
+          final required = [
+            'in_proj_qkv.weight',
+            'in_proj_z.weight',
+            'in_proj_a.weight',
+            'in_proj_b.weight',
+            'conv1d.weight',
+            'A_log',
+            'dt_bias',
+            'norm.weight',
+            'out_proj.weight',
+          ];
+          final missing = required
+              .where((n) => !names.contains('$prefix$n'))
+              .toList();
+          if (missing.isNotEmpty) {
+            problems.add('layer $i is ${layerTypes[i]} but is missing '
+                'linear_attn.${missing.join(', linear_attn.')}');
             break;
           }
         }

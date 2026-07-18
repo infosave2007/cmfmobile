@@ -34,6 +34,7 @@ converter, and an OpenAI-compatible server speaking the CMF protocol.
 - Search the HF Hub, pick a model, pick a quantization, watch live progress
 - **On-device, multi-threaded conversion** of safetensors repos to CMF v2
   (reference-exact encoders, isolate pool sized by the CPU-threads setting):
+  - Dense Qwen3.5 GatedDeltaNet and Gemma 1/3/4 architecture descriptors
   - `Q8_2F` — 8-bit two-field (𝒲×θ), the recommended quality/size point
   - `Q8_ROW` — 8-bit per-row
   - `Q1` — **1.5-bit for 1-bit-trained models** (Bonsai/BitNet: a 27B model fits in ~5 GB)
