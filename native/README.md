@@ -8,9 +8,16 @@ crate (header mirrored here as [`cortiq_ffi.h`](cortiq_ffi.h)):
 cortiq_version / cortiq_last_error
 cortiq_load(path) -> handle          # mmap, NULL on error
 cortiq_free(handle)
-cortiq_chat(handle, prompt, max_tokens, cb, user)      # file's chat template
+cortiq_chat(handle, prompt, max_tokens, cb, user)      # single user turn
+cortiq_chat_messages(handle, messages_json, ...)       # multi-turn (0.3.10+)
 cortiq_complete(handle, prompt, max_tokens, cb, user)  # raw prompt
+cortiq_set_options(handle, options_json)               # sampler (0.3.10+)
 ```
+
+The Dart side prefers `cortiq_chat_messages` (conversation as
+`[{"role","content"},…]` through the file's own chat template) and pushes
+temperature/top-p via `cortiq_set_options` before each generate; on
+pre-0.3.10 libraries it falls back to a transcript through `cortiq_chat`.
 
 The token callback fires synchronously on the calling thread, so the Dart
 side (`lib/data/services/inference/native_engine.dart`) runs the blocking
@@ -22,33 +29,26 @@ When the library is missing the app falls back to a clearly-labeled
 
 ## Android
 
-`android/app/src/main/jniLibs/arm64-v8a/libcortiq_ffi.so` is checked in,
-taken from the cmf release
-[v0.3.9](https://github.com/infosave2007/cmf/releases/tag/v0.3.9)
-(`libcortiq-ffi-aarch64-linux-android.tar.gz`). To update:
+All three ABIs are checked into `android/app/src/main/jniLibs/`
+(arm64-v8a, armeabi-v7a, x86_64), taken from the cmf release
+[v0.3.10](https://github.com/infosave2007/cmf/releases/tag/v0.3.10)
+(`libcortiq-ffi-<target>.tar.gz`). To update:
 
 ```bash
-curl -L -o /tmp/ffi.tar.gz \
-  https://github.com/infosave2007/cmf/releases/download/v<VER>/libcortiq-ffi-aarch64-linux-android.tar.gz
-tar -xzf /tmp/ffi.tar.gz -C android/app/src/main/jniLibs/arm64-v8a/
+for t in aarch64-linux-android:arm64-v8a \
+         armv7-linux-androideabi:armeabi-v7a \
+         x86_64-linux-android:x86_64; do
+  curl -L https://github.com/infosave2007/cmf/releases/download/v<VER>/libcortiq-ffi-${t%%:*}.tar.gz \
+    | tar -xz -C android/app/src/main/jniLibs/${t##*:}/
+done
 ```
-
-Or build from source: `cargo ndk -t arm64-v8a build --release -p cortiq-ffi`
-in the cmf workspace.
 
 ## iOS
 
-Build a static lib and link it into Runner (symbols resolve via
-`DynamicLibrary.process()`):
-
-```bash
-cd cmf
-cargo lipo --release -p cortiq-ffi --targets aarch64-apple-ios
-```
-
-Add `libcortiq_ffi.a` in Xcode (Runner → Build Phases → Link Binary With
-Libraries) with `-force_load $(PROJECT_DIR)/libcortiq_ffi.a` in Other
-Linker Flags so dead-code stripping keeps the symbols.
+`ios/Frameworks/libcortiq_ffi.a` (arm64, from the same release) is linked
+via `ios/Flutter/Cortiq.xcconfig` — `-force_load` keeps the C ABI symbols
+alive for `DynamicLibrary.process()` despite dead-code stripping. No
+Xcode project surgery required; drop in a newer `.a` to update.
 
 ## Desktop smoke test
 
@@ -60,8 +60,9 @@ CORTIQ_FFI_LIB=/path/to/libcortiq_ffi.dylib \
   dart run tool/ffi_smoke.dart /path/to/model.cmf "your prompt"
 ```
 
-Verified 2026-07-18 with qwen3-5-4b.cmf (Q8_2F): mmap load 210 ms,
-streaming at ~9 tok/s on an M-series Mac.
+Verified 2026-07-18 with qwen3-5-4b.cmf (Q8_2F), ffi 0.3.9 and 0.3.10
+(multi-turn `cortiq_chat_messages` + `cortiq_set_options`): mmap load
+~210 ms, streaming on an M-series Mac.
 
 ## Verify in the app
 

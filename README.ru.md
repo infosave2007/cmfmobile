@@ -59,14 +59,14 @@ flutter gen-l10n
 flutter run
 ```
 
-**Android (arm64) идёт с настоящим рантаймом cortiq** —
-`libcortiq_ffi.so` из релиза [cmf v0.3.9](https://github.com/infosave2007/cmf/releases/tag/v0.3.9)
+**Приложение идёт с настоящим рантаймом cortiq** —
+`libcortiq_ffi` v0.3.10 (arm64-v8a, armeabi-v7a, x86_64 + статическая библиотека iOS) из [релизов cmf](https://github.com/infosave2007/cmf/releases)
 вшит в `android/app/src/main/jniLibs/`, так что чат и сервер выполняют
 реальный инференс на устройстве из коробки (проверено end-to-end:
 qwen3-5-4b Q8_2F стримит через этот же биндинг — см. `tool/ffi_smoke.dart`).
-На iOS и симуляторах без библиотеки приложение переключается на честно
-подписанный **демо-движок**; инструкция по линковке — в
-[native/README.md](native/README.md).
+Статическая библиотека iOS линкуется через `ios/Flutter/Cortiq.xcconfig`.
+Там, где библиотеки нет, приложение переключается на честно подписанный
+**демо-движок**; детали — в [native/README.md](native/README.md).
 
 ## Релизы
 

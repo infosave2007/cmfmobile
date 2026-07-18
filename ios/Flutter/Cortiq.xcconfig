@@ -1,0 +1,4 @@
+// Links the cortiq inference runtime (Rust staticlib from the cmf
+// release) into Runner. -force_load keeps the C ABI symbols alive for
+// DynamicLibrary.process() despite dead-code stripping.
+OTHER_LDFLAGS = $(inherited) -force_load $(PROJECT_DIR)/Frameworks/libcortiq_ffi.a

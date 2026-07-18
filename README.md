@@ -67,14 +67,14 @@ flutter gen-l10n
 flutter run
 ```
 
-**Android (arm64) ships with the real cortiq runtime** —
-`libcortiq_ffi.so` from [cmf v0.3.9](https://github.com/infosave2007/cmf/releases/tag/v0.3.9)
+**The app ships with the real cortiq runtime** —
+`libcortiq_ffi` v0.3.10 (arm64-v8a, armeabi-v7a, x86_64 + iOS static lib) from the [cmf releases](https://github.com/infosave2007/cmf/releases)
 is bundled in `android/app/src/main/jniLibs/`, so chat and the server run
 actual on-device inference out of the box (verified end-to-end: qwen3-5-4b
 Q8_2F streams through the same binding — see `tool/ffi_smoke.dart`).
-On iOS and simulators without the library the app falls back to a
-clearly-labeled **demo engine**; linking instructions are in
-[native/README.md](native/README.md).
+The iOS static lib is linked via `ios/Flutter/Cortiq.xcconfig`. Where the
+library is absent the app falls back to a clearly-labeled **demo engine**;
+details in [native/README.md](native/README.md).
 
 ## Architecture
 

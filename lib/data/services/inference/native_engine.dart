@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ffi' as ffi;
 import 'dart:io';
 import 'dart:isolate';
@@ -10,14 +11,17 @@ import '../../models/local_model.dart';
 import 'demo_engine.dart' show DemoEngine;
 import 'inference_engine.dart';
 
-// C ABI of cortiq-ffi (cmfpublic/crates/cortiq-ffi, native/cortiq_ffi.h):
+// C ABI of cortiq-ffi >= 0.3.10 (cmf crates/cortiq-ffi, native/cortiq_ffi.h):
 //   const char* cortiq_version(void);
 //   const char* cortiq_last_error(void);           — thread-local
 //   void*       cortiq_load(const char* path);     — mmap, NULL on error
 //   void        cortiq_free(void* handle);
-//   int32_t     cortiq_chat(void* h, const char* prompt, uint32_t max_tokens,
-//                           bool (*cb)(const char* token, void* user), void* user);
-//   int32_t     cortiq_complete(...same...);
+//   int32_t     cortiq_chat(h, prompt, max_tokens, cb, user);
+//   int32_t     cortiq_chat_messages(h, messages_json, max_tokens, cb, user);
+//   int32_t     cortiq_complete(h, prompt, max_tokens, cb, user);
+//   int32_t     cortiq_set_options(h, options_json);  — partial JSON,
+//               keys: temperature top_p top_k repetition_penalty min_p
+//               seed greedy; sticky per handle
 // Callbacks fire synchronously on the calling thread and the call blocks,
 // so generation runs in a worker isolate; cancellation is a shared byte in
 // native memory that the callback checks (returning false stops decoding).
@@ -29,18 +33,22 @@ typedef _FreeNative = ffi.Void Function(ffi.Pointer<ffi.Void>);
 typedef _FreeDart = void Function(ffi.Pointer<ffi.Void>);
 typedef _TokenCbNative = ffi.Bool Function(
     ffi.Pointer<Utf8>, ffi.Pointer<ffi.Void>);
-typedef _ChatNative = ffi.Int32 Function(
+typedef _GenNative = ffi.Int32 Function(
     ffi.Pointer<ffi.Void>,
     ffi.Pointer<Utf8>,
     ffi.Uint32,
     ffi.Pointer<ffi.NativeFunction<_TokenCbNative>>,
     ffi.Pointer<ffi.Void>);
-typedef _ChatDart = int Function(
+typedef _GenDart = int Function(
     ffi.Pointer<ffi.Void>,
     ffi.Pointer<Utf8>,
     int,
     ffi.Pointer<ffi.NativeFunction<_TokenCbNative>>,
     ffi.Pointer<ffi.Void>);
+typedef _SetOptionsNative = ffi.Int32 Function(
+    ffi.Pointer<ffi.Void>, ffi.Pointer<Utf8>);
+typedef _SetOptionsDart = int Function(
+    ffi.Pointer<ffi.Void>, ffi.Pointer<Utf8>);
 
 ffi.DynamicLibrary _openLibrary() {
   if (Platform.isAndroid) return ffi.DynamicLibrary.open('libcortiq_ffi.so');
@@ -63,6 +71,12 @@ class NativeCortiqEngine implements InferenceEngine {
       _version = lib
           .lookupFunction<_VersionNative, _VersionNative>('cortiq_version')()
           .toDartString();
+      try {
+        _setOptions = lib.lookupFunction<_SetOptionsNative, _SetOptionsDart>(
+            'cortiq_set_options');
+      } catch (_) {
+        _setOptions = null; // pre-0.3.10 library
+      }
     } catch (_) {
       _lib = null;
     }
@@ -70,6 +84,7 @@ class NativeCortiqEngine implements InferenceEngine {
 
   ffi.DynamicLibrary? _lib;
   _FreeDart? _free;
+  _SetOptionsDart? _setOptions;
   String _version = '';
 
   ffi.Pointer<ffi.Void> _handle = ffi.nullptr;
@@ -126,8 +141,8 @@ class NativeCortiqEngine implements InferenceEngine {
     }
   }
 
-  /// cortiq_chat wraps the prompt as a single user turn in the model's own
-  /// chat template, so multi-turn context travels as a plain transcript.
+  /// Fallback transcript for pre-0.3.10 libraries without
+  /// cortiq_chat_messages (single user turn through the template).
   static String renderPrompt(List<ChatMessage> messages) {
     if (messages.length == 1 && messages.single.role == ChatRole.user) {
       return messages.single.content;
@@ -146,16 +161,38 @@ class NativeCortiqEngine implements InferenceEngine {
     return buffer.toString();
   }
 
+  void _applyOptions(GenerationRequest request) {
+    final setOptions = _setOptions;
+    if (setOptions == null || _handle == ffi.nullptr) return;
+    final json = jsonEncode({
+      'temperature': request.temperature,
+      'top_p': request.topP,
+    });
+    final ptr = json.toNativeUtf8();
+    try {
+      setOptions(_handle, ptr); // sticky per handle; -1 is non-fatal here
+    } finally {
+      calloc.free(ptr);
+    }
+  }
+
   @override
   Stream<GenerationEvent> generate(GenerationRequest request) {
     if (_handle == ffi.nullptr) {
       return Stream.error(StateError('no model loaded'));
     }
     _cancelFlag.value = 0;
+    _applyOptions(request);
+
     final controller = StreamController<GenerationEvent>();
     final started = DateTime.now();
-    final prompt = renderPrompt(request.messages);
-    final promptTokens = DemoEngine.estimateTokens(prompt);
+    final messagesJson = jsonEncode([
+      for (final m in request.messages)
+        {'role': m.role.name, 'content': m.content},
+    ]);
+    final promptTokens = request.messages
+        .map((m) => DemoEngine.estimateTokens(m.content))
+        .fold<int>(0, (a, b) => a + b);
 
     final receivePort = ReceivePort();
     var completionTokens = 0;
@@ -166,15 +203,14 @@ class NativeCortiqEngine implements InferenceEngine {
           controller.add(GenerationEvent(delta: token));
         case ('done', final int count):
           final elapsed = DateTime.now().difference(started);
+          final tokens = count >= 0 ? count : completionTokens;
           controller.add(GenerationEvent(
             done: true,
             stats: GenerationStats(
               promptTokens: promptTokens,
-              completionTokens: count >= 0 ? count : completionTokens,
+              completionTokens: tokens,
               tokensPerSecond: elapsed.inMilliseconds > 0
-                  ? (count >= 0 ? count : completionTokens) *
-                      1000 /
-                      elapsed.inMilliseconds
+                  ? tokens * 1000 / elapsed.inMilliseconds
                   : 0,
               latencyMs: elapsed.inMilliseconds,
               finishReason: _cancelFlag.value != 0 ? 'cancelled' : 'stop',
@@ -200,7 +236,8 @@ class NativeCortiqEngine implements InferenceEngine {
         sendPort: receivePort.sendPort,
         handleAddress: _handle.address,
         cancelFlagAddress: _cancelFlag.address,
-        prompt: prompt,
+        messagesJson: messagesJson,
+        fallbackPrompt: renderPrompt(request.messages),
         maxTokens: request.maxTokens,
       ),
       onError: receivePort.sendPort,
@@ -218,24 +255,34 @@ class _GenArgs {
     required this.sendPort,
     required this.handleAddress,
     required this.cancelFlagAddress,
-    required this.prompt,
+    required this.messagesJson,
+    required this.fallbackPrompt,
     required this.maxTokens,
   });
 
   final SendPort sendPort;
   final int handleAddress;
   final int cancelFlagAddress;
-  final String prompt;
+  final String messagesJson;
+  final String fallbackPrompt;
   final int maxTokens;
 }
 
-// Streams tokens from the blocking cortiq_chat call. Runs in its own
+// Streams tokens from the blocking generate call. Runs in its own
 // isolate; the callback executes synchronously on this isolate's thread.
 void _generateWorker(_GenArgs args) {
   final port = args.sendPort;
   try {
     final lib = _openLibrary();
-    final chat = lib.lookupFunction<_ChatNative, _ChatDart>('cortiq_chat');
+    _GenDart gen;
+    String payload;
+    try {
+      gen = lib.lookupFunction<_GenNative, _GenDart>('cortiq_chat_messages');
+      payload = args.messagesJson;
+    } catch (_) {
+      gen = lib.lookupFunction<_GenNative, _GenDart>('cortiq_chat');
+      payload = args.fallbackPrompt;
+    }
     final lastError = lib.lookupFunction<_LastErrorNative, _LastErrorNative>(
         'cortiq_last_error');
     final cancelFlag =
@@ -249,22 +296,22 @@ void _generateWorker(_GenArgs args) {
       exceptionalReturn: false,
     );
 
-    final promptPtr = args.prompt.toNativeUtf8();
+    final payloadPtr = payload.toNativeUtf8();
     try {
-      final count = chat(
+      final count = gen(
         ffi.Pointer.fromAddress(args.handleAddress),
-        promptPtr,
+        payloadPtr,
         args.maxTokens,
         callback.nativeFunction,
         ffi.nullptr,
       );
       if (count < 0 && cancelFlag.value == 0) {
-        port.send(('error', 'cortiq_chat: ${lastError().toDartString()}'));
+        port.send(('error', 'generate: ${lastError().toDartString()}'));
       } else {
         port.send(('done', count));
       }
     } finally {
-      calloc.free(promptPtr);
+      calloc.free(payloadPtr);
       callback.close();
     }
   } catch (e) {
