@@ -227,7 +227,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String memoryWarnBody(String need, String total) {
-    return 'This model needs about $need of RAM to run. This device has $total of RAM, of which apps can realistically use a part — loading may fail or be very slow.';
+    return 'This model needs about $need of RAM to run, but only about $total is usable right now. Loading may fail, run very slowly, or the system may kill the app mid-generation.';
   }
 
   @override

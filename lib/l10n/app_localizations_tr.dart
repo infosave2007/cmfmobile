@@ -228,7 +228,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String memoryWarnBody(String need, String total) {
-    return 'Bu modelin çalışması için yaklaşık $need RAM gerekiyor. Bu cihazda $total RAM var ve uygulamalar bunun ancak bir kısmını kullanabilir — yükleme başarısız olabilir veya çok yavaş çalışabilir.';
+    return 'Bu modelin çalışması için yaklaşık $need RAM gerekir, ancak şu anda yalnızca $total kullanılabilir. Yükleme başarısız olabilir, çok yavaş çalışabilir veya sistem üretim sırasında uygulamayı kapatabilir.';
   }
 
   @override

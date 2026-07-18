@@ -495,7 +495,7 @@ abstract class AppLocalizations {
   /// No description provided for @memoryWarnBody.
   ///
   /// In en, this message translates to:
-  /// **'This model needs about {need} of RAM to run. This device has {total} of RAM, of which apps can realistically use a part — loading may fail or be very slow.'**
+  /// **'This model needs about {need} of RAM to run, but only about {total} is usable right now. Loading may fail, run very slowly, or the system may kill the app mid-generation.'**
   String memoryWarnBody(String need, String total);
 
   /// No description provided for @memoryWarnLoadAnyway.

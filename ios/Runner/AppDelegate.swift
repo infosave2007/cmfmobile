@@ -25,5 +25,21 @@ import UIKit
         result(FlutterMethodNotImplemented)
       }
     }
+    let memoryChannel = FlutterMethodChannel(
+      name: "cmf/device_memory",
+      binaryMessenger: registrar.messenger())
+    memoryChannel.setMethodCallHandler { call, result in
+      if call.method == "memoryInfo" {
+        // os_proc_available_memory: what this process may still allocate
+        // before jetsam — the honest number for "will this model fit".
+        result([
+          "availBytes": Int64(os_proc_available_memory()),
+          "totalBytes": Int64(ProcessInfo.processInfo.physicalMemory),
+          "lowMemory": false,
+        ])
+      } else {
+        result(FlutterMethodNotImplemented)
+      }
+    }
   }
 }

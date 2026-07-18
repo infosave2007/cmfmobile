@@ -64,7 +64,7 @@
   "modelsAttachmentsOk": "belgeler",
   "modelsMetaRam": "~{size} RAM",
   "memoryWarnTitle": "Belleğe sığmayabilir",
-  "memoryWarnBody": "Bu modelin çalışması için yaklaşık {need} RAM gerekiyor. Bu cihazda {total} RAM var ve uygulamalar bunun ancak bir kısmını kullanabilir — yükleme başarısız olabilir veya çok yavaş çalışabilir.",
+  "memoryWarnBody": "Bu modelin çalışması için yaklaşık {need} RAM gerekir, ancak şu anda yalnızca {total} kullanılabilir. Yükleme başarısız olabilir, çok yavaş çalışabilir veya sistem üretim sırasında uygulamayı kapatabilir.",
   "memoryWarnLoadAnyway": "Yine de yükle",
   "importTitle": "Hugging Face",
   "importSubtitle": "Hugging Face'te arayın, yerel bir .cmf dosyasına dönüştürün ve bu telefonda çalıştırın.",

@@ -229,7 +229,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String memoryWarnBody(String need, String total) {
-    return 'Dieses Modell benötigt etwa $need RAM. Dieses Gerät hat $total RAM, wovon Apps realistisch nur einen Teil nutzen können — das Laden kann fehlschlagen oder sehr langsam sein.';
+    return 'Dieses Modell benötigt etwa $need RAM, aktuell sind aber nur rund $total nutzbar. Das Laden kann fehlschlagen, sehr langsam laufen, oder das System beendet die App während der Generierung.';
   }
 
   @override

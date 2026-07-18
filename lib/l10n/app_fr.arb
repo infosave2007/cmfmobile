@@ -64,7 +64,7 @@
   "modelsAttachmentsOk": "documents",
   "modelsMetaRam": "~{size} RAM",
   "memoryWarnTitle": "Risque de mémoire insuffisante",
-  "memoryWarnBody": "Ce modèle nécessite environ {need} de RAM. Cet appareil dispose de {total} de RAM, dont les applications ne peuvent réellement utiliser qu'une partie — le chargement peut échouer ou être très lent.",
+  "memoryWarnBody": "Ce modèle nécessite environ {need} de RAM, mais seulement {total} sont utilisables actuellement. Le chargement peut échouer, être très lent, ou le système peut fermer l’application pendant la génération.",
   "memoryWarnLoadAnyway": "Charger quand même",
   "importTitle": "Hugging Face",
   "importSubtitle": "Recherchez sur Hugging Face, convertissez en .cmf local et exécutez-le sur ce téléphone.",

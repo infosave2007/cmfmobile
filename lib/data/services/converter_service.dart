@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
 import '../models/conversion.dart';
+import 'cmf_format.dart';
 import 'converter_core.dart';
 import 'hf_api.dart';
 import 'model_repository.dart';
@@ -105,6 +106,7 @@ class ConverterService {
       final cmfFiles =
           files.where((f) => f.path.toLowerCase().endsWith('.cmf')).toList();
       if (cmfFiles.isNotEmpty) {
+        job.directDownload = true;
         await _downloadCmfDirectly(job, cmfFiles, hfToken);
       } else {
         if (!job.quant.supportedOnDevice) {
@@ -121,6 +123,12 @@ class ConverterService {
 
       final size = await File(job.outputPath).length();
       job.sizeBytes = size;
+      try {
+        job.resultQuant =
+            (await CmfReader.readMetadata(job.outputPath)).quantType;
+      } catch (_) {
+        // Display-only; a parse hiccup must not fail the finished job.
+      }
       job.state = JobState.done;
       job.finished = DateTime.now();
       job.progress = 1;
@@ -211,10 +219,14 @@ class ConverterService {
       shardNames = loose;
     }
 
-    // Phase 1: download (0.02 → 0.55), weighted by bytes.
+    // Architecture gate BEFORE the multi-GB download: hybrid/MoE repos
+    // fail here with a clear message instead of crashing the engine later.
     final config = jsonDecode(
             await hf.fetchText(job.repo, 'config.json', token: hfToken))
         as Map<String, dynamic>;
+    ensureSupportedArch(config);
+
+    // Phase 1: download (0.02 → 0.55), weighted by bytes.
     String? tokenizerConfigText;
     if (has('tokenizer_config.json')) {
       tokenizerConfigText = await hf.fetchText(

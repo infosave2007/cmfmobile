@@ -194,12 +194,38 @@ class CmfReader {
       final header =
           jsonDecode(utf8.decode(headerBytes)) as Map<String, dynamic>;
 
-      // Tensor count: first u64 of the directory.
+      // Directory: tensor count + the ACTUAL quantization. The header's
+      // quant_type is informational (q1 files legitimately carry VBIT
+      // there); the per-tensor truth lives in the directory, so report
+      // the dtype that owns the most bytes.
       var tensorCount = 0;
+      String? dominantQuant;
       if (env.dirLen >= 16) {
         await raf.setPosition(env.dirOff);
-        final dirHead = Uint8List.fromList(await raf.read(8));
-        tensorCount = ByteData.sublistView(dirHead).getUint64(0, Endian.little);
+        final dir = Uint8List.fromList(
+            await raf.read(env.dirLen.clamp(16, 8 * 1024 * 1024)));
+        final d = ByteData.sublistView(dir);
+        tensorCount = d.getUint64(0, Endian.little);
+        final bytesPerDtype = <int, int>{};
+        for (var i = 0; i < tensorCount; i++) {
+          final rec = 16 + i * Cmf.dirRecordLen;
+          if (rec + Cmf.dirRecordLen > dir.length) break;
+          final dtype = d.getUint8(rec + 6);
+          final nbytes = d.getUint64(rec + 40, Endian.little);
+          bytesPerDtype[dtype] = (bytesPerDtype[dtype] ?? 0) + nbytes;
+        }
+        // Quantized dtypes take priority over the f16/f32 remainder
+        // (norms and embeddings are often f16 even in quantized files).
+        final quantized = Map.of(bytesPerDtype)
+          ..removeWhere((k, _) =>
+              k == Cmf.dtF32 || k == Cmf.dtF16 || k == Cmf.dtBf16);
+        final pool = quantized.isNotEmpty ? quantized : bytesPerDtype;
+        if (pool.isNotEmpty) {
+          final top = pool.entries
+              .reduce((a, b) => a.value >= b.value ? a : b)
+              .key;
+          dominantQuant = Cmf.dtypeName(top).toUpperCase();
+        }
       }
 
       // Task-mask names from the masks section meta JSON.
@@ -237,7 +263,8 @@ class CmfReader {
       return CmfMetadata(
         version: env.version,
         archName: arch['arch_name'] as String? ?? '?',
-        quantType: header['quant_type'] as String? ?? '?',
+        quantType:
+            dominantQuant ?? header['quant_type'] as String? ?? '?',
         numLayers: arch['num_layers'] as int? ?? 0,
         hiddenSize: arch['hidden_size'] as int? ?? 0,
         numKvHeads: arch['num_kv_heads'] as int? ?? 0,
@@ -254,6 +281,81 @@ class CmfReader {
     } finally {
       await raf.close();
     }
+  }
+}
+
+/// Structural pre-flight for a .cmf file: catches inconsistent files
+/// (e.g. hybrid models converted by tools that mislabel layer_types) with
+/// a clear Dart-side error instead of a native crash at generate time.
+abstract final class CmfValidator {
+  static Future<List<String>> validate(String path) async {
+    final problems = <String>[];
+    final raf = await File(path).open();
+    try {
+      final env = CmfEnvelope.parse(
+          Uint8List.fromList(await raf.read(Cmf.envelopeLen)));
+
+      await raf.setPosition(env.headerOff);
+      final header = jsonDecode(utf8.decode(await raf.read(env.headerLen)))
+          as Map<String, dynamic>;
+      final arch = header['arch'] as Map<String, dynamic>? ?? const {};
+      final layerTypes =
+          (arch['layer_types'] as List?)?.cast<String>() ?? const [];
+      final tied = arch['tie_word_embeddings'] == true;
+
+      // Tensor names from the directory pool.
+      if (env.dirLen < 16 || env.dirLen > 64 * 1024 * 1024) {
+        return ['directory section has implausible size ${env.dirLen}'];
+      }
+      await raf.setPosition(env.dirOff);
+      final dir = Uint8List.fromList(await raf.read(env.dirLen));
+      final d = ByteData.sublistView(dir);
+      final count = d.getUint64(0, Endian.little);
+      final poolOff = d.getUint64(8, Endian.little);
+      final names = <String>{};
+      for (var i = 0; i < count; i++) {
+        final rec = 16 + i * Cmf.dirRecordLen;
+        if (rec + Cmf.dirRecordLen > dir.length) break;
+        final nameOff = d.getUint32(rec, Endian.little);
+        final nameLen = d.getUint16(rec + 4, Endian.little);
+        final start = poolOff + nameOff;
+        if (start + nameLen <= dir.length) {
+          names.add(utf8.decode(dir.sublist(start, start + nameLen),
+              allowMalformed: true));
+        }
+      }
+
+      if (!names.contains('model.embed_tokens.weight')) {
+        problems.add('missing model.embed_tokens.weight');
+      }
+      if (!tied && !names.contains('lm_head.weight')) {
+        problems.add(
+            'missing lm_head.weight (and tie_word_embeddings is false)');
+      }
+      for (var i = 0; i < layerTypes.length; i++) {
+        if (layerTypes[i] == 'FullAttention') {
+          if (!names.contains('model.layers.$i.self_attn.q_proj.weight')) {
+            problems.add('layer $i is FullAttention but has no '
+                'self_attn.q_proj.weight — the file was likely converted '
+                'by a tool that mislabels hybrid layers; re-convert with '
+                'desktop cortiq or download a ready .cmf');
+            break; // one clear message beats sixty
+          }
+        } else {
+          final prefix = 'model.layers.$i.linear_attn.';
+          if (!names.any((n) => n.startsWith(prefix))) {
+            problems.add('layer $i is ${layerTypes[i]} but carries no '
+                'linear_attn tensors');
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      problems.add('unreadable CMF structure: $e');
+    } finally {
+      await raf.close();
+    }
+    return problems;
   }
 }
 

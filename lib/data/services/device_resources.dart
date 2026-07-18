@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/services.dart';
 
 import '../models/local_model.dart';
 
@@ -59,11 +60,31 @@ class DeviceResources {
     return model.sizeBytes + kvCache + runtimeOverhead;
   }
 
-  /// Apps can't take all physical RAM: the OS, other apps and platform
-  /// limits (iOS jetsam) leave roughly half usable for a big allocation.
+  static const _memoryChannel = MethodChannel('cmf/device_memory');
+
+  /// Actually-available memory right now: ActivityManager.availMem on
+  /// Android, os_proc_available_memory on iOS. 0 when unavailable.
+  Future<int> availableRamBytes() async {
+    try {
+      final info = await _memoryChannel
+          .invokeMapMethod<String, dynamic>('memoryInfo');
+      return (info?['availBytes'] as num?)?.toInt() ?? 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  /// Prefers the platform's live available-memory figure (with 20%
+  /// headroom for the OS watermark); falls back to the "roughly half of
+  /// physical RAM" heuristic when the channel is unavailable.
   Future<MemoryCheck> checkFit(LocalModel model) async {
     final total = await totalRamBytes();
-    final usable = total > 0 ? (total * 0.55).round() : 1 << 62;
+    final available = await availableRamBytes();
+    final usable = available > 0
+        ? (available * 0.8).round()
+        : total > 0
+            ? (total * 0.55).round()
+            : 1 << 62;
     return MemoryCheck(
       requiredBytes: estimateRequiredBytes(model),
       totalRamBytes: total,

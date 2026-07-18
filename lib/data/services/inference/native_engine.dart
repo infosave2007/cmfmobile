@@ -8,6 +8,7 @@ import 'package:ffi/ffi.dart';
 
 import '../../models/chat.dart';
 import '../../models/local_model.dart';
+import '../cmf_format.dart';
 import 'demo_engine.dart' show DemoEngine;
 import 'inference_engine.dart';
 
@@ -107,6 +108,12 @@ class NativeCortiqEngine implements InferenceEngine {
   Future<void> loadModel(LocalModel model, {int threads = 4}) async {
     if (!isAvailable) {
       throw StateError('native cortiq runtime is not bundled');
+    }
+    // Structural pre-flight: a clear Dart error beats a native crash
+    // mid-generation (missing attention tensors, mislabeled layers…).
+    final problems = await CmfValidator.validate(model.filePath);
+    if (problems.isNotEmpty) {
+      throw StateError(problems.first);
     }
     await unload();
     // mmap + header parse can take a moment on big files — off the UI

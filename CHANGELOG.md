@@ -4,6 +4,28 @@ All notable changes to CMF Mobile are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
+## [1.0.2] - 2026-07-18
+
+### Fixed
+- **Honest quantization labels**: model cards and finished jobs now show
+  the dominant tensor dtype read from the file's directory — a q1 file
+  shows Q1 (not the header's informational VBIT, and not the quant that
+  happened to be selected in the UI for a direct .cmf download).
+- **Chat crash with on-device-converted hybrid models** (qwen3.5-style
+  GatedDeltaNet): the converter labeled every layer FullAttention and
+  passed linear-attention tensors through unfolded, which crashed the
+  engine at generate. The converter now refuses hybrid/MoE architectures
+  before downloading weights with a clear message (use desktop
+  `cortiq convert` or a ready .cmf); dense models are unaffected.
+- **Load-time structural validation**: the engine pre-checks the file
+  (embed/lm_head presence, per-layer attention tensors vs layer_types)
+  and reports a readable error instead of dying natively.
+- Memory fit check now uses the platform's live available-RAM figure
+  (ActivityManager / os_proc_available_memory) instead of a heuristic.
+
+Verified on desktop through the app's own binding: bonsai-27b-q1.cmf
+(27B hybrid, ready .cmf) loads in 0.7 s and generates at 6.2 tok/s.
+
 ## [1.0.1] - 2026-07-18
 
 ### Added

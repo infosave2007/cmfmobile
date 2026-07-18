@@ -22,7 +22,7 @@ Future<void> loadModelWithMemoryCheck(
         title: Text(l.memoryWarnTitle),
         content: Text(l.memoryWarnBody(
           formatBytes(check.requiredBytes),
-          formatBytes(check.totalRamBytes),
+          formatBytes(check.usableRamBytes),
         )),
         actions: [
           TextButton(

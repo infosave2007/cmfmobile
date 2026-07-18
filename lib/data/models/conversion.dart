@@ -87,6 +87,17 @@ class ConversionJob {
   int? sizeBytes;
   String? error;
 
+  /// True when the repo ships ready .cmf files (the requested [quant]
+  /// is not used — the file keeps whatever quantization it was built with).
+  bool directDownload = false;
+
+  /// Actual quantization read from the finished file's tensor directory.
+  String? resultQuant;
+
+  /// What the jobs UI should show as the quantization.
+  String get displayQuant =>
+      resultQuant ?? (directDownload ? '.cmf' : quant.label);
+
   void addLog(String line) {
     log.add(line);
     if (log.length > 200) log.removeAt(0);

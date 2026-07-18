@@ -223,7 +223,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String memoryWarnBody(String need, String total) {
-    return '运行此模型约需 $need 内存。本设备共有 $total 内存,应用实际只能使用其中一部分——加载可能失败或非常缓慢。';
+    return '运行此模型约需 $need 内存，但当前仅有约 $total 可用。加载可能失败、运行极慢，或系统可能在生成过程中终止应用。';
   }
 
   @override

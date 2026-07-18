@@ -64,7 +64,7 @@
   "modelsAttachmentsOk": "Dokumente",
   "modelsMetaRam": "~{size} RAM",
   "memoryWarnTitle": "Passt möglicherweise nicht in den Speicher",
-  "memoryWarnBody": "Dieses Modell benötigt etwa {need} RAM. Dieses Gerät hat {total} RAM, wovon Apps realistisch nur einen Teil nutzen können — das Laden kann fehlschlagen oder sehr langsam sein.",
+  "memoryWarnBody": "Dieses Modell benötigt etwa {need} RAM, aktuell sind aber nur rund {total} nutzbar. Das Laden kann fehlschlagen, sehr langsam laufen, oder das System beendet die App während der Generierung.",
   "memoryWarnLoadAnyway": "Trotzdem laden",
   "importTitle": "Hugging Face",
   "importSubtitle": "Durchsuche Hugging Face, konvertiere in eine lokale .cmf-Datei und führe sie auf diesem Telefon aus.",

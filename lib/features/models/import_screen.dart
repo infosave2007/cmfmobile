@@ -691,7 +691,7 @@ class _JobsTab extends ConsumerWidget {
                   ],
                 ),
                 Text(
-                  '${job.repo} · ${job.quant.label}'
+                  '${job.repo} · ${job.displayQuant}'
                   '${job.sizeBytes != null ? ' · ${formatBytes(job.sizeBytes!)}' : ''}',
                   style: TextStyle(
                       fontSize: 12, color: scheme.onSurfaceVariant),

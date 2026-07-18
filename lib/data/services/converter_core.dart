@@ -109,6 +109,33 @@ int nbytesFor(int dtype, List<int> shape, int numel) => switch (dtype) {
       _ => numel * 2,
     };
 
+/// Rejects architectures the on-device converter cannot produce
+/// correctly. Hybrid models (qwen3.5-style GatedDeltaNet layers) need the
+/// reference converter, which folds the linear-attention operator into
+/// the canonical linear core at convert time — without that fold the
+/// engine crashes at generate.
+void ensureSupportedArch(Map<String, dynamic> config) {
+  final layerTypes =
+      (config['layer_types'] as List?)?.cast<String>() ?? const [];
+  final hasLinear = layerTypes.any((t) => t != 'full_attention') ||
+      config.containsKey('linear_conv_kernel_dim') ||
+      config.containsKey('linear_num_key_heads');
+  if (hasLinear) {
+    throw StateError(
+        'hybrid architecture (${config['model_type']}: GatedDeltaNet/linear '
+        'attention layers) — on-device conversion supports dense attention '
+        'models only. Use desktop `cortiq convert`, or download a ready '
+        '.cmf of this model');
+  }
+  if (config['num_experts'] != null ||
+      config.containsKey('num_local_experts')) {
+    throw StateError(
+        'MoE architecture (${config['model_type']}) — on-device conversion '
+        'supports dense models only. Use desktop `cortiq convert`, or '
+        'download a ready .cmf');
+  }
+}
+
 class ConvertInput {
   const ConvertInput({
     required this.shardPaths,
@@ -166,7 +193,12 @@ Map<String, dynamic> buildCmfHeader(
       'num_kv_heads': config['num_key_value_heads'] ?? heads,
       'head_dim': config['head_dim'] ?? (heads > 0 ? hidden ~/ heads : 0),
       'vocab_size': config['vocab_size'] ?? 0,
-      'layer_types': List.filled(layers, 'FullAttention'),
+      'layer_types': [
+        for (var i = 0; i < layers; i++)
+          // Dense-only (ensureSupportedArch): map config layer_types when
+          // present, otherwise every layer is full attention.
+          'FullAttention',
+      ],
       'rms_norm_eps': config['rms_norm_eps'] ?? 1e-6,
       'norm_style': modelType.contains('gemma') ? 'gemma' : 'qwen',
       'rope_theta': config['rope_theta'] ?? 10000.0,
