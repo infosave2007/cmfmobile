@@ -13,22 +13,26 @@ class HfApi {
   static const _base = 'https://huggingface.co';
 
   Map<String, String> _headers(String? token) => {
-        'User-Agent': 'cmf-mobile',
-        if (token != null && token.isNotEmpty)
-          'Authorization': 'Bearer $token',
-      };
+    'User-Agent': 'cmf-mobile',
+    if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+  };
 
   /// GET /api/models?search=...&sort=trendingScore|downloads&direction=-1
-  Future<List<HfModel>> search(String query,
-      {int limit = 24, String? token}) async {
+  Future<List<HfModel>> search(
+    String query, {
+    int limit = 24,
+    String? token,
+  }) async {
     final sort = query.trim().isEmpty ? 'trendingScore' : 'downloads';
-    final uri = Uri.parse('$_base/api/models').replace(queryParameters: {
-      if (query.trim().isNotEmpty) 'search': query.trim(),
-      'sort': sort,
-      'direction': '-1',
-      'limit': '${limit.clamp(1, 50)}',
-      'full': 'false',
-    });
+    final uri = Uri.parse('$_base/api/models').replace(
+      queryParameters: {
+        if (query.trim().isNotEmpty) 'search': query.trim(),
+        'sort': sort,
+        'direction': '-1',
+        'limit': '${limit.clamp(1, 50)}',
+        'full': 'false',
+      },
+    );
     final res = await _client
         .get(uri, headers: _headers(token))
         .timeout(const Duration(seconds: 15));
@@ -50,8 +54,7 @@ class HfApi {
     if (res.statusCode != 200) {
       throw HttpException('HF model failed: HTTP ${res.statusCode}');
     }
-    return HfModel.fromJson(
-        jsonDecode(res.body) as Map<String, dynamic>);
+    return HfModel.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
 
   /// GET /api/models/{repo}/tree/main?recursive=true → [{path, size, type}]
@@ -67,10 +70,12 @@ class HfApi {
     return list
         .whereType<Map<String, dynamic>>()
         .where((e) => e['type'] == 'file')
-        .map((e) => HfFileEntry(
-              path: e['path'] as String,
-              size: e['size'] as int? ?? 0,
-            ))
+        .map(
+          (e) => HfFileEntry(
+            path: e['path'] as String,
+            size: e['size'] as int? ?? 0,
+          ),
+        )
         .toList();
   }
 
@@ -129,12 +134,15 @@ class HfApi {
   }) async {
     final requestedWorkers = parallelism.clamp(2, 8);
     final workers = totalSize < requestedWorkers ? totalSize : requestedWorkers;
-    if (workers < 2 ||
-        !await _supportsRanges(repo, path, token: token)) {
-      return download(repo, path, destPath,
-          token: token,
-          onBytes: onBytes,
-          isCancelled: isCancelled);
+    if (workers < 2 || !await _supportsRanges(repo, path, token: token)) {
+      return download(
+        repo,
+        path,
+        destPath,
+        token: token,
+        onBytes: onBytes,
+        isCancelled: isCancelled,
+      );
     }
 
     final file = File(destPath);
@@ -155,12 +163,14 @@ class HfApi {
       var writeOffset = start;
       try {
         Object? lastError;
-        for (var attempt = 1; attempt <= 3; attempt++) {
+        var stalledFailures = 0;
+        while (received[index] < expected) {
           if (aborted || isCancelled?.call() == true) {
             throw const CancelledException();
           }
           final rangeStart = start + received[index];
           if (rangeStart > end) break;
+          final beforeRequest = received[index];
           final req = http.Request('GET', uri)
             ..headers.addAll(_headers(token))
             ..headers['Range'] = 'bytes=$rangeStart-$end';
@@ -168,41 +178,81 @@ class HfApi {
             final res = await _client.send(req);
             if (res.statusCode != 206) {
               throw HttpException(
-                  'parallel download $path: expected HTTP 206, got '
-                  '${res.statusCode}');
+                'parallel download $path: expected HTTP 206, got '
+                '${res.statusCode}',
+              );
+            }
+            final contentRange = res.headers['content-range'];
+            if (contentRange != null) {
+              final match = RegExp(
+                r'^bytes (\d+)-(\d+)/(?:\d+|\*)$',
+              ).firstMatch(contentRange);
+              final responseStart = match == null
+                  ? null
+                  : int.tryParse(match.group(1)!);
+              final responseEnd = match == null
+                  ? null
+                  : int.tryParse(match.group(2)!);
+              if (responseStart != rangeStart ||
+                  responseEnd == null ||
+                  responseEnd < responseStart! ||
+                  responseEnd > end) {
+                throw HttpException(
+                  'parallel download $path: invalid Content-Range '
+                  '$contentRange for bytes=$rangeStart-$end',
+                );
+              }
             }
             await for (final chunk in res.stream) {
               if (aborted || isCancelled?.call() == true) {
                 throw const CancelledException();
               }
+              final remaining = expected - received[index];
+              if (remaining <= 0) break;
+              final bytes = chunk.length <= remaining
+                  ? chunk
+                  : chunk.sublist(0, remaining);
               final offset = writeOffset;
-              writeOffset += chunk.length;
+              writeOffset += bytes.length;
               // RandomAccessFile has one shared cursor. Serialize only the
               // short disk writes; HTTP streams remain concurrent.
               writeTail = writeTail.then((_) async {
                 await out.setPosition(offset);
-                await out.writeFrom(chunk);
+                await out.writeFrom(bytes);
               });
               await writeTail;
-              received[index] += chunk.length;
-              onBytes?.call(
-                  received.fold(0, (a, b) => a + b), totalSize);
+              received[index] += bytes.length;
+              onBytes?.call(received.fold(0, (a, b) => a + b), totalSize);
+              if (received[index] == expected) break;
             }
             if (received[index] == expected) break;
             throw HttpException('range $rangeStart-$end ended early');
           } catch (e) {
             if (e is CancelledException) rethrow;
             lastError = e;
-            if (attempt < 3) {
-              await Future<void>.delayed(
-                  Duration(milliseconds: 400 * attempt));
+            if (received[index] > beforeRequest) {
+              // A multi-GB range may need many connections. Any useful
+              // progress resets the retry budget; resume at the next byte.
+              stalledFailures = 0;
+            } else {
+              stalledFailures++;
+            }
+            if (stalledFailures >= 8) break;
+            final backoffStep = stalledFailures.clamp(1, 5);
+            await Future<void>.delayed(
+              Duration(milliseconds: 500 * backoffStep),
+            );
+            if (aborted || isCancelled?.call() == true) {
+              throw const CancelledException();
             }
           }
         }
         if (received[index] != expected) {
-          throw HttpException('parallel download $path: range $start-$end '
-              'returned ${received[index]} bytes, expected $expected '
-              '(last error: $lastError)');
+          throw HttpException(
+            'parallel download $path: range $start-$end '
+            'returned ${received[index]} bytes, expected $expected '
+            '(last error: $lastError)',
+          );
         }
       } catch (e) {
         aborted = true;
@@ -220,8 +270,11 @@ class HfApi {
     if (isCancelled?.call() == true) throw const CancelledException();
   }
 
-  Future<bool> _supportsRanges(String repo, String path,
-      {String? token}) async {
+  Future<bool> _supportsRanges(
+    String repo,
+    String path, {
+    String? token,
+  }) async {
     final uri = Uri.parse('$_base/$repo/resolve/main/$path');
     final req = http.Request('GET', uri)
       ..headers.addAll(_headers(token))

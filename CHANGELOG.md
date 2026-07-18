@@ -4,6 +4,20 @@ All notable changes to CMF Mobile are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
+## [1.0.8] - 2026-07-18
+
+### Fixed
+- Parallel Hugging Face downloads now resume large byte ranges from the exact
+  last written byte after interrupted streams and temporary DNS failures.
+- Useful partial progress resets the retry budget, so a multi-gigabyte range is
+  no longer aborted merely because it required more than three connections.
+- Range responses are bounded and their `Content-Range` is validated before
+  writing, preventing malformed CDN responses from corrupting the destination.
+
+### Tests
+- Added a regression that downloads part of a range, survives three consecutive
+  DNS failures, resumes at the next byte, and verifies the complete file.
+
 ## [1.0.7] - 2026-07-18
 
 ### Fixed
