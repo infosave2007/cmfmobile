@@ -12,9 +12,11 @@ import UIKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    guard let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "CmfKeepAwake")
+    else { return }
     let channel = FlutterMethodChannel(
       name: "cmf/keep_awake",
-      binaryMessenger: engineBridge.applicationBinaryMessenger)
+      binaryMessenger: registrar.messenger())
     channel.setMethodCallHandler { call, result in
       if call.method == "setKeepAwake" {
         UIApplication.shared.isIdleTimerDisabled = (call.arguments as? Bool) ?? false
