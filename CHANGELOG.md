@@ -4,6 +4,23 @@ All notable changes to CMF Mobile are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
+## [1.0.4] - 2026-07-18
+
+### Fixed
+- OpenAI-compatible API validation now returns structured `400`/`404`
+  responses for malformed JSON, empty or invalid messages and prompts,
+  bad parameter types, unknown task masks, and model-name mismatches.
+- Server responses no longer expose Dart exceptions or native runtime details;
+  unexpected generation failures return a stable `internal_error` response.
+- Token-limit completions now report `finish_reason: length`, including the
+  final SSE chunk; streaming chat finishes with an empty delta and `[DONE]`.
+- CORS preflight responses advertise `GET`, `POST`, and `OPTIONS`, while the
+  request log and error counters retain the actual response status.
+
+### Tests
+- Added real loopback HTTP tests covering completions, error schemas, model
+  and task validation, CORS, status accounting, and exception redaction.
+
 ## [1.0.3] - 2026-07-18
 
 ### Added
