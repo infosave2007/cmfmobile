@@ -1,0 +1,487 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Turkish (`tr`).
+class AppLocalizationsTr extends AppLocalizations {
+  AppLocalizationsTr([String locale = 'tr']) : super(locale);
+
+  @override
+  String get appTitle => 'CMF Mobile';
+
+  @override
+  String get navChat => 'Sohbet';
+
+  @override
+  String get navModels => 'Modeller';
+
+  @override
+  String get navServer => 'Sunucu';
+
+  @override
+  String get navSettings => 'Ayarlar';
+
+  @override
+  String get actionCancel => 'İptal';
+
+  @override
+  String get actionDelete => 'Sil';
+
+  @override
+  String get actionClose => 'Kapat';
+
+  @override
+  String get actionCopy => 'Kopyala';
+
+  @override
+  String get actionSave => 'Kaydet';
+
+  @override
+  String get actionRetry => 'Yeniden dene';
+
+  @override
+  String get actionLoad => 'Yükle';
+
+  @override
+  String get copiedToClipboard => 'Panoya kopyalandı';
+
+  @override
+  String get chatEmptyTitle => 'Bir sohbet başlatın';
+
+  @override
+  String get chatEmptyBody =>
+      'Her şey bu cihazda yerel olarak çalışır — bulut yok, veriler telefonunuzdan çıkmaz.';
+
+  @override
+  String get chatNoModelTitle => 'Yüklü model yok';
+
+  @override
+  String get chatNoModelBody =>
+      'Hugging Face\'ten bir model indirin veya bir .cmf dosyası içe aktarın, ardından motora yükleyin.';
+
+  @override
+  String get chatGoToModels => 'Modeller\'i aç';
+
+  @override
+  String get chatInputHint => 'Mesaj…';
+
+  @override
+  String get chatAttachDocument => 'Belge ekle';
+
+  @override
+  String get chatAttachmentsNotSupported =>
+      'Bu model belge eklerini desteklemiyor.';
+
+  @override
+  String chatAttachmentTooLarge(String limit) {
+    return 'Dosya çok büyük — en fazla $limit metin destekleniyor.';
+  }
+
+  @override
+  String get chatAttachmentUnreadable => 'Bu dosya metin olarak okunamadı.';
+
+  @override
+  String get chatStop => 'Durdur';
+
+  @override
+  String get chatSend => 'Gönder';
+
+  @override
+  String get chatRegenerate => 'Yeniden oluştur';
+
+  @override
+  String get chatSessions => 'Sohbetler';
+
+  @override
+  String get chatNewChat => 'Yeni sohbet';
+
+  @override
+  String get chatRename => 'Yeniden adlandır';
+
+  @override
+  String get chatRenameTitle => 'Sohbeti yeniden adlandır';
+
+  @override
+  String get chatDeleteChat => 'Sohbeti sil';
+
+  @override
+  String get chatDeleteChatConfirm => 'Bu sohbet ve geçmişi silinsin mi?';
+
+  @override
+  String get chatUntitled => 'Yeni sohbet';
+
+  @override
+  String chatSessionTokens(String prompt, String completion) {
+    return '$prompt istem · $completion yanıt tokenı';
+  }
+
+  @override
+  String get chatModelPickerTitle => 'Model';
+
+  @override
+  String get chatModelLoading => 'Model yükleniyor…';
+
+  @override
+  String get chatDemoBadge => 'demo motor';
+
+  @override
+  String get chatDemoBanner =>
+      'Yerel cortiq çalışma zamanı bu derlemede yok — yanıtlar simüle ediliyor. Bkz. native/README.md.';
+
+  @override
+  String get chatGenerationError => 'Oluşturma başarısız';
+
+  @override
+  String get chatSuggestion1 =>
+      'CMF görev maskelerinin nasıl çalıştığını açıkla';
+
+  @override
+  String get chatSuggestion2 => 'Ekli belgeyi özetle';
+
+  @override
+  String get chatSuggestion3 => 'Aylık gelir için bir SQL sorgusu yaz';
+
+  @override
+  String statsTokensPerSecond(String tps) {
+    return '$tps tok/sn';
+  }
+
+  @override
+  String get statsFinishLength => 'maksimum token sınırında kesildi';
+
+  @override
+  String get modelsTitle => 'Modeller';
+
+  @override
+  String get modelsEmptyTitle => 'Henüz model yok';
+
+  @override
+  String get modelsEmptyBody =>
+      'Hugging Face\'ten bir model indirin veya bu cihazdan bir .cmf dosyası içe aktarın.';
+
+  @override
+  String get modelsImportFile => '.cmf içe aktar';
+
+  @override
+  String get modelsGetFromHf => 'Hugging Face';
+
+  @override
+  String get modelsLoadedBadge => 'yüklü';
+
+  @override
+  String get modelsLoadIntoEngine => 'Motora yükle';
+
+  @override
+  String get modelsUnload => 'Bellekten çıkar';
+
+  @override
+  String get modelsUnloadHint => 'Belleği boşaltır, pil tasarrufu sağlar';
+
+  @override
+  String get modelsDeleteTitle => 'Modeli sil';
+
+  @override
+  String modelsDeleteConfirm(String name) {
+    return '\"$name\" bu cihazdan silinsin mi?';
+  }
+
+  @override
+  String get modelsInvalidFile => 'Okunamayan CMF dosyası';
+
+  @override
+  String modelsImportedSnack(String name) {
+    return '$name içe aktarıldı';
+  }
+
+  @override
+  String modelsMetaLayers(int n) {
+    return '$n katman';
+  }
+
+  @override
+  String modelsMetaContext(String n) {
+    return '$n bağlam';
+  }
+
+  @override
+  String modelsMetaTasks(int n) {
+    return '$n görev';
+  }
+
+  @override
+  String get modelsAttachmentsOk => 'belgeler';
+
+  @override
+  String modelsMetaRam(String size) {
+    return '~$size RAM';
+  }
+
+  @override
+  String get memoryWarnTitle => 'Belleğe sığmayabilir';
+
+  @override
+  String memoryWarnBody(String need, String total) {
+    return 'Bu modelin çalışması için yaklaşık $need RAM gerekiyor. Bu cihazda $total RAM var ve uygulamalar bunun ancak bir kısmını kullanabilir — yükleme başarısız olabilir veya çok yavaş çalışabilir.';
+  }
+
+  @override
+  String get memoryWarnLoadAnyway => 'Yine de yükle';
+
+  @override
+  String get importTitle => 'Hugging Face';
+
+  @override
+  String get importSubtitle =>
+      'Hugging Face\'te arayın, yerel bir .cmf dosyasına dönüştürün ve bu telefonda çalıştırın.';
+
+  @override
+  String get importSearchPlaceholder => 'Model ara (örn. qwen3, llama)…';
+
+  @override
+  String get importNoResults => 'Model bulunamadı.';
+
+  @override
+  String get importGatedBadge => 'gated';
+
+  @override
+  String get importGatedHint =>
+      'Gated depo — Ayarlar\'da bir Hugging Face tokenı girin.';
+
+  @override
+  String get importConfigureTitle => 'Dönüştürmeyi yapılandır';
+
+  @override
+  String get importOutputName => 'Çıktı adı';
+
+  @override
+  String get importOutputNameHint => 'Harf, rakam, - ve _';
+
+  @override
+  String get importQuantization => 'Kuantizasyon';
+
+  @override
+  String get importStartConvert => 'Dönüştür ve indir';
+
+  @override
+  String get importStartedSnack => 'Dönüştürme başlatıldı';
+
+  @override
+  String get importJobsTitle => 'Dönüştürmeler';
+
+  @override
+  String get importNoJobs => 'Henüz dönüştürme yok.';
+
+  @override
+  String get importDeleteConfirm =>
+      'Bu dönüştürme ve .cmf dosyası diskten silinsin mi?';
+
+  @override
+  String get importShowLog => 'Günlüğü göster';
+
+  @override
+  String get importOnDeviceNote =>
+      'Cihaz üzerinde dönüştürme Q8_ROW, Q1 ve F16\'yı destekler. Hazır .cmf dosyaları içeren depolar doğrudan indirilir — kuantizasyon fark etmez.';
+
+  @override
+  String get importStateRunning => 'çalışıyor';
+
+  @override
+  String get importStateDone => 'tamamlandı';
+
+  @override
+  String get importStateError => 'hata';
+
+  @override
+  String get importStateCancelled => 'iptal edildi';
+
+  @override
+  String get importPhaseListing => 'dosyalar listeleniyor';
+
+  @override
+  String get importPhaseDownloading => 'indiriliyor';
+
+  @override
+  String get importPhaseConverting => 'dönüştürülüyor';
+
+  @override
+  String get importPhaseQuantizing => 'kuantize ediliyor';
+
+  @override
+  String get importPhaseFinalizing => 'tamamlanıyor';
+
+  @override
+  String get quantQ8_2fDesc =>
+      '8 bit, iki alanlı (𝒲×θ) — en iyi kalite/boyut oranı. Bir .cmf deposu veya masaüstü araç zinciri gerektirir.';
+
+  @override
+  String get quantQ8RowDesc =>
+      'Satır başına 8 bit — basit ve sağlam. Cihazda dönüştürülür.';
+
+  @override
+  String get quantQ4Desc =>
+      '4 bit blok — en küçük boyut, daha düşük kalite. Bir .cmf deposu veya masaüstü araç zinciri gerektirir.';
+
+  @override
+  String get quantVbitDesc =>
+      'Değişken 3–8 bit — uzman başına bütçe. Bir .cmf deposu veya masaüstü araç zinciri gerektirir.';
+
+  @override
+  String get quantQ1Desc =>
+      '1,5 bit — 1 bit eğitilmiş modeller için (Bonsai, BitNet). 27B bir model ~5 GB\'a sığar. Cihazda dönüştürülür.';
+
+  @override
+  String get quantF16Desc =>
+      '16 bit — kuantizasyon yok, büyük dosya. Cihazda dönüştürülür.';
+
+  @override
+  String get serverTitle => 'Sunucu';
+
+  @override
+  String get serverSubtitle =>
+      'Yüklü modeli CMF protokolüyle (OpenAI uyumlu API) ağınıza sunun.';
+
+  @override
+  String get serverStart => 'Sunucuyu başlat';
+
+  @override
+  String get serverStop => 'Sunucuyu durdur';
+
+  @override
+  String get serverStarting => 'Başlatılıyor…';
+
+  @override
+  String get serverRunning => 'Çalışıyor';
+
+  @override
+  String get serverStopped => 'Durduruldu';
+
+  @override
+  String get serverNoModelWarning =>
+      'Yüklü model yok — Modeller sekmesinden bir model yükleyene kadar API istekleri 503 döndürecek.';
+
+  @override
+  String get serverAddresses => 'Adresler';
+
+  @override
+  String get serverQrHint =>
+      'Temel URL\'yi almak için başka bir cihazdan tarayın';
+
+  @override
+  String get serverAuthRequire => 'Bearer token iste';
+
+  @override
+  String get serverAuthHint =>
+      'İstemciler Authorization: Bearer <token> göndermeli';
+
+  @override
+  String get serverAccessToken => 'Erişim tokenı';
+
+  @override
+  String get serverStatRequests => 'İstekler';
+
+  @override
+  String get serverStatErrors => 'Hatalar';
+
+  @override
+  String get serverStatTokens => 'Token';
+
+  @override
+  String get serverStatSpeed => 'Ort. hız';
+
+  @override
+  String get serverStatUptime => 'Çalışma süresi';
+
+  @override
+  String get serverRecentRequests => 'Son istekler';
+
+  @override
+  String get serverNoRequestsYet =>
+      'Henüz istek yok. OpenAI uyumlu herhangi bir istemciyi bu telefona yönlendirin.';
+
+  @override
+  String get serverKeepAwakeNote => 'Sunucu çalışırken ekran açık kalır.';
+
+  @override
+  String get serverEndpointsTitle => 'Uç noktalar';
+
+  @override
+  String get settingsTitle => 'Ayarlar';
+
+  @override
+  String get settingsAppearance => 'Görünüm';
+
+  @override
+  String get settingsTheme => 'Tema';
+
+  @override
+  String get settingsThemeSystem => 'Sistem';
+
+  @override
+  String get settingsThemeLight => 'Açık';
+
+  @override
+  String get settingsThemeDark => 'Koyu';
+
+  @override
+  String get settingsLanguage => 'Dil';
+
+  @override
+  String get settingsLanguageSystem => 'Sistem';
+
+  @override
+  String get settingsGeneration => 'Üretim';
+
+  @override
+  String get settingsTemperature => 'Sıcaklık';
+
+  @override
+  String get settingsTopP => 'Top-p';
+
+  @override
+  String get settingsMaxTokens => 'Maks. token';
+
+  @override
+  String get settingsThreads => 'CPU iş parçacığı';
+
+  @override
+  String get settingsServerSection => 'Sunucu';
+
+  @override
+  String get settingsServerPort => 'Port';
+
+  @override
+  String get settingsServerPortHint =>
+      'Bir sonraki sunucu başlatmada uygulanır';
+
+  @override
+  String get settingsHfSection => 'Hugging Face';
+
+  @override
+  String get settingsHfToken => 'Erişim tokenı';
+
+  @override
+  String get settingsHfTokenHint => 'hf_… (gated modeller için gerekli)';
+
+  @override
+  String get settingsStorage => 'Depolama';
+
+  @override
+  String settingsStorageUsage(String size, int count) {
+    return '$count modelde $size';
+  }
+
+  @override
+  String get settingsAbout => 'Hakkında';
+
+  @override
+  String settingsAboutLine(String engine) {
+    return 'CMF protokolü v2 · motor: $engine';
+  }
+
+  @override
+  String settingsVersionLine(String version) {
+    return 'CMF Mobile $version';
+  }
+}

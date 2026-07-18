@@ -1,0 +1,1019 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations_de.dart';
+import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
+import 'app_localizations_fr.dart';
+import 'app_localizations_ru.dart';
+import 'app_localizations_tr.dart';
+import 'app_localizations_zh.dart';
+
+// ignore_for_file: type=lint
+
+/// Callers can lookup localized strings with an instance of AppLocalizations
+/// returned by `AppLocalizations.of(context)`.
+///
+/// Applications need to include `AppLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'l10n/app_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: AppLocalizations.localizationsDelegates,
+///   supportedLocales: AppLocalizations.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the AppLocalizations.supportedLocales
+/// property.
+abstract class AppLocalizations {
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+
+  final String localeName;
+
+  static AppLocalizations of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
+  }
+
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
+
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
+
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('de'),
+    Locale('en'),
+    Locale('es'),
+    Locale('fr'),
+    Locale('ru'),
+    Locale('tr'),
+    Locale('zh'),
+  ];
+
+  /// No description provided for @appTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'CMF Mobile'**
+  String get appTitle;
+
+  /// No description provided for @navChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get navChat;
+
+  /// No description provided for @navModels.
+  ///
+  /// In en, this message translates to:
+  /// **'Models'**
+  String get navModels;
+
+  /// No description provided for @navServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get navServer;
+
+  /// No description provided for @navSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get navSettings;
+
+  /// No description provided for @actionCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get actionCancel;
+
+  /// No description provided for @actionDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get actionDelete;
+
+  /// No description provided for @actionClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get actionClose;
+
+  /// No description provided for @actionCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get actionCopy;
+
+  /// No description provided for @actionSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get actionSave;
+
+  /// No description provided for @actionRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get actionRetry;
+
+  /// No description provided for @actionLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Load'**
+  String get actionLoad;
+
+  /// No description provided for @copiedToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get copiedToClipboard;
+
+  /// No description provided for @chatEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a conversation'**
+  String get chatEmptyTitle;
+
+  /// No description provided for @chatEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything runs locally on this device — no cloud, no data leaves your phone.'**
+  String get chatEmptyBody;
+
+  /// No description provided for @chatNoModelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No model loaded'**
+  String get chatNoModelTitle;
+
+  /// No description provided for @chatNoModelBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Get a model from Hugging Face or import a .cmf file, then load it into the engine.'**
+  String get chatNoModelBody;
+
+  /// No description provided for @chatGoToModels.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Models'**
+  String get chatGoToModels;
+
+  /// No description provided for @chatInputHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Message…'**
+  String get chatInputHint;
+
+  /// No description provided for @chatAttachDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach document'**
+  String get chatAttachDocument;
+
+  /// No description provided for @chatAttachmentsNotSupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This model cannot take document attachments.'**
+  String get chatAttachmentsNotSupported;
+
+  /// No description provided for @chatAttachmentTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'File is too large — up to {limit} of text is supported.'**
+  String chatAttachmentTooLarge(String limit);
+
+  /// No description provided for @chatAttachmentUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read this file as text.'**
+  String get chatAttachmentUnreadable;
+
+  /// No description provided for @chatStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get chatStop;
+
+  /// No description provided for @chatSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get chatSend;
+
+  /// No description provided for @chatRegenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate'**
+  String get chatRegenerate;
+
+  /// No description provided for @chatSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats'**
+  String get chatSessions;
+
+  /// No description provided for @chatNewChat.
+  ///
+  /// In en, this message translates to:
+  /// **'New chat'**
+  String get chatNewChat;
+
+  /// No description provided for @chatRename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get chatRename;
+
+  /// No description provided for @chatRenameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename chat'**
+  String get chatRenameTitle;
+
+  /// No description provided for @chatDeleteChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete chat'**
+  String get chatDeleteChat;
+
+  /// No description provided for @chatDeleteChatConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this chat and its history?'**
+  String get chatDeleteChatConfirm;
+
+  /// No description provided for @chatUntitled.
+  ///
+  /// In en, this message translates to:
+  /// **'New chat'**
+  String get chatUntitled;
+
+  /// No description provided for @chatSessionTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'{prompt} prompt · {completion} completion tokens'**
+  String chatSessionTokens(String prompt, String completion);
+
+  /// No description provided for @chatModelPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get chatModelPickerTitle;
+
+  /// No description provided for @chatModelLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading model…'**
+  String get chatModelLoading;
+
+  /// No description provided for @chatDemoBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'demo engine'**
+  String get chatDemoBadge;
+
+  /// No description provided for @chatDemoBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'The native cortiq runtime is not bundled in this build — replies are simulated. See native/README.md.'**
+  String get chatDemoBanner;
+
+  /// No description provided for @chatGenerationError.
+  ///
+  /// In en, this message translates to:
+  /// **'Generation failed'**
+  String get chatGenerationError;
+
+  /// No description provided for @chatSuggestion1.
+  ///
+  /// In en, this message translates to:
+  /// **'Explain how CMF task masks work'**
+  String get chatSuggestion1;
+
+  /// No description provided for @chatSuggestion2.
+  ///
+  /// In en, this message translates to:
+  /// **'Summarize the attached document'**
+  String get chatSuggestion2;
+
+  /// No description provided for @chatSuggestion3.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a SQL query for monthly revenue'**
+  String get chatSuggestion3;
+
+  /// No description provided for @statsTokensPerSecond.
+  ///
+  /// In en, this message translates to:
+  /// **'{tps} tok/s'**
+  String statsTokensPerSecond(String tps);
+
+  /// No description provided for @statsFinishLength.
+  ///
+  /// In en, this message translates to:
+  /// **'cut off at max tokens'**
+  String get statsFinishLength;
+
+  /// No description provided for @modelsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Models'**
+  String get modelsTitle;
+
+  /// No description provided for @modelsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No models yet'**
+  String get modelsEmptyTitle;
+
+  /// No description provided for @modelsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Download a model from Hugging Face or import a .cmf file from this device.'**
+  String get modelsEmptyBody;
+
+  /// No description provided for @modelsImportFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Import .cmf'**
+  String get modelsImportFile;
+
+  /// No description provided for @modelsGetFromHf.
+  ///
+  /// In en, this message translates to:
+  /// **'Hugging Face'**
+  String get modelsGetFromHf;
+
+  /// No description provided for @modelsLoadedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'loaded'**
+  String get modelsLoadedBadge;
+
+  /// No description provided for @modelsLoadIntoEngine.
+  ///
+  /// In en, this message translates to:
+  /// **'Load into engine'**
+  String get modelsLoadIntoEngine;
+
+  /// No description provided for @modelsUnload.
+  ///
+  /// In en, this message translates to:
+  /// **'Unload'**
+  String get modelsUnload;
+
+  /// No description provided for @modelsUnloadHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Frees memory and battery'**
+  String get modelsUnloadHint;
+
+  /// No description provided for @modelsDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete model'**
+  String get modelsDeleteTitle;
+
+  /// No description provided for @modelsDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\" from this device?'**
+  String modelsDeleteConfirm(String name);
+
+  /// No description provided for @modelsInvalidFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Unreadable CMF file'**
+  String get modelsInvalidFile;
+
+  /// No description provided for @modelsImportedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {name}'**
+  String modelsImportedSnack(String name);
+
+  /// No description provided for @modelsMetaLayers.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} layers'**
+  String modelsMetaLayers(int n);
+
+  /// No description provided for @modelsMetaContext.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} ctx'**
+  String modelsMetaContext(String n);
+
+  /// No description provided for @modelsMetaTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} tasks'**
+  String modelsMetaTasks(int n);
+
+  /// No description provided for @modelsAttachmentsOk.
+  ///
+  /// In en, this message translates to:
+  /// **'documents'**
+  String get modelsAttachmentsOk;
+
+  /// No description provided for @modelsMetaRam.
+  ///
+  /// In en, this message translates to:
+  /// **'~{size} RAM'**
+  String modelsMetaRam(String size);
+
+  /// No description provided for @memoryWarnTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Might not fit in memory'**
+  String get memoryWarnTitle;
+
+  /// No description provided for @memoryWarnBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This model needs about {need} of RAM to run. This device has {total} of RAM, of which apps can realistically use a part — loading may fail or be very slow.'**
+  String memoryWarnBody(String need, String total);
+
+  /// No description provided for @memoryWarnLoadAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Load anyway'**
+  String get memoryWarnLoadAnyway;
+
+  /// No description provided for @importTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hugging Face'**
+  String get importTitle;
+
+  /// No description provided for @importSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search Hugging Face, convert to a local .cmf, and run it on this phone.'**
+  String get importSubtitle;
+
+  /// No description provided for @importSearchPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Search models (e.g. qwen3, llama)…'**
+  String get importSearchPlaceholder;
+
+  /// No description provided for @importNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No models found.'**
+  String get importNoResults;
+
+  /// No description provided for @importGatedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'gated'**
+  String get importGatedBadge;
+
+  /// No description provided for @importGatedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Gated repo — set a Hugging Face token in Settings.'**
+  String get importGatedHint;
+
+  /// No description provided for @importConfigureTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure conversion'**
+  String get importConfigureTitle;
+
+  /// No description provided for @importOutputName.
+  ///
+  /// In en, this message translates to:
+  /// **'Output name'**
+  String get importOutputName;
+
+  /// No description provided for @importOutputNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Letters, digits, - and _'**
+  String get importOutputNameHint;
+
+  /// No description provided for @importQuantization.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantization'**
+  String get importQuantization;
+
+  /// No description provided for @importStartConvert.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert & download'**
+  String get importStartConvert;
+
+  /// No description provided for @importStartedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversion started'**
+  String get importStartedSnack;
+
+  /// No description provided for @importJobsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversions'**
+  String get importJobsTitle;
+
+  /// No description provided for @importNoJobs.
+  ///
+  /// In en, this message translates to:
+  /// **'No conversions yet.'**
+  String get importNoJobs;
+
+  /// No description provided for @importDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this conversion and its .cmf file from disk?'**
+  String get importDeleteConfirm;
+
+  /// No description provided for @importShowLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Show log'**
+  String get importShowLog;
+
+  /// No description provided for @importOnDeviceNote.
+  ///
+  /// In en, this message translates to:
+  /// **'On-device conversion supports Q8_ROW, Q1 and F16. Repos that already ship .cmf files are downloaded directly — any quantization.'**
+  String get importOnDeviceNote;
+
+  /// No description provided for @importStateRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'running'**
+  String get importStateRunning;
+
+  /// No description provided for @importStateDone.
+  ///
+  /// In en, this message translates to:
+  /// **'done'**
+  String get importStateDone;
+
+  /// No description provided for @importStateError.
+  ///
+  /// In en, this message translates to:
+  /// **'error'**
+  String get importStateError;
+
+  /// No description provided for @importStateCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'cancelled'**
+  String get importStateCancelled;
+
+  /// No description provided for @importPhaseListing.
+  ///
+  /// In en, this message translates to:
+  /// **'listing files'**
+  String get importPhaseListing;
+
+  /// No description provided for @importPhaseDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'downloading'**
+  String get importPhaseDownloading;
+
+  /// No description provided for @importPhaseConverting.
+  ///
+  /// In en, this message translates to:
+  /// **'converting'**
+  String get importPhaseConverting;
+
+  /// No description provided for @importPhaseQuantizing.
+  ///
+  /// In en, this message translates to:
+  /// **'quantizing'**
+  String get importPhaseQuantizing;
+
+  /// No description provided for @importPhaseFinalizing.
+  ///
+  /// In en, this message translates to:
+  /// **'finalizing'**
+  String get importPhaseFinalizing;
+
+  /// No description provided for @quantQ8_2fDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'8-bit two-field (𝒲×θ) — best quality/size. Needs a .cmf repo or the desktop toolchain.'**
+  String get quantQ8_2fDesc;
+
+  /// No description provided for @quantQ8RowDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'8-bit per-row — simple, robust. Converts on device.'**
+  String get quantQ8RowDesc;
+
+  /// No description provided for @quantQ4Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'4-bit block — smallest, lower quality. Needs a .cmf repo or the desktop toolchain.'**
+  String get quantQ4Desc;
+
+  /// No description provided for @quantVbitDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Variable 3–8 bit — per-expert budgets. Needs a .cmf repo or the desktop toolchain.'**
+  String get quantVbitDesc;
+
+  /// No description provided for @quantQ1Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'1.5-bit — for 1-bit-trained models (Bonsai, BitNet). A 27B model fits in ~5 GB. Converts on device.'**
+  String get quantQ1Desc;
+
+  /// No description provided for @quantF16Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'16-bit — no quantization, large file. Converts on device.'**
+  String get quantF16Desc;
+
+  /// No description provided for @serverTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get serverTitle;
+
+  /// No description provided for @serverSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Serve the loaded model to your network over the CMF protocol (OpenAI-compatible API).'**
+  String get serverSubtitle;
+
+  /// No description provided for @serverStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start server'**
+  String get serverStart;
+
+  /// No description provided for @serverStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop server'**
+  String get serverStop;
+
+  /// No description provided for @serverStarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting…'**
+  String get serverStarting;
+
+  /// No description provided for @serverRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get serverRunning;
+
+  /// No description provided for @serverStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get serverStopped;
+
+  /// No description provided for @serverNoModelWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'No model is loaded — API requests will return 503 until you load one on the Models tab.'**
+  String get serverNoModelWarning;
+
+  /// No description provided for @serverAddresses.
+  ///
+  /// In en, this message translates to:
+  /// **'Addresses'**
+  String get serverAddresses;
+
+  /// No description provided for @serverQrHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan from another device to get the base URL'**
+  String get serverQrHint;
+
+  /// No description provided for @serverAuthRequire.
+  ///
+  /// In en, this message translates to:
+  /// **'Require bearer token'**
+  String get serverAuthRequire;
+
+  /// No description provided for @serverAuthHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Clients must send Authorization: Bearer <token>'**
+  String get serverAuthHint;
+
+  /// No description provided for @serverAccessToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Access token'**
+  String get serverAccessToken;
+
+  /// No description provided for @serverStatRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests'**
+  String get serverStatRequests;
+
+  /// No description provided for @serverStatErrors.
+  ///
+  /// In en, this message translates to:
+  /// **'Errors'**
+  String get serverStatErrors;
+
+  /// No description provided for @serverStatTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'Tokens'**
+  String get serverStatTokens;
+
+  /// No description provided for @serverStatSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg speed'**
+  String get serverStatSpeed;
+
+  /// No description provided for @serverStatUptime.
+  ///
+  /// In en, this message translates to:
+  /// **'Uptime'**
+  String get serverStatUptime;
+
+  /// No description provided for @serverRecentRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent requests'**
+  String get serverRecentRequests;
+
+  /// No description provided for @serverNoRequestsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No requests yet. Point any OpenAI-compatible client at this phone.'**
+  String get serverNoRequestsYet;
+
+  /// No description provided for @serverKeepAwakeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The screen stays awake while the server is running.'**
+  String get serverKeepAwakeNote;
+
+  /// No description provided for @serverEndpointsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Endpoints'**
+  String get serverEndpointsTitle;
+
+  /// No description provided for @settingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsTitle;
+
+  /// No description provided for @settingsAppearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get settingsAppearance;
+
+  /// No description provided for @settingsTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get settingsTheme;
+
+  /// No description provided for @settingsThemeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get settingsThemeSystem;
+
+  /// No description provided for @settingsThemeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get settingsThemeLight;
+
+  /// No description provided for @settingsThemeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get settingsThemeDark;
+
+  /// No description provided for @settingsLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsLanguage;
+
+  /// No description provided for @settingsLanguageSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get settingsLanguageSystem;
+
+  /// No description provided for @settingsGeneration.
+  ///
+  /// In en, this message translates to:
+  /// **'Generation'**
+  String get settingsGeneration;
+
+  /// No description provided for @settingsTemperature.
+  ///
+  /// In en, this message translates to:
+  /// **'Temperature'**
+  String get settingsTemperature;
+
+  /// No description provided for @settingsTopP.
+  ///
+  /// In en, this message translates to:
+  /// **'Top-p'**
+  String get settingsTopP;
+
+  /// No description provided for @settingsMaxTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'Max tokens'**
+  String get settingsMaxTokens;
+
+  /// No description provided for @settingsThreads.
+  ///
+  /// In en, this message translates to:
+  /// **'CPU threads'**
+  String get settingsThreads;
+
+  /// No description provided for @settingsServerSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get settingsServerSection;
+
+  /// No description provided for @settingsServerPort.
+  ///
+  /// In en, this message translates to:
+  /// **'Port'**
+  String get settingsServerPort;
+
+  /// No description provided for @settingsServerPortHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Applied on next server start'**
+  String get settingsServerPortHint;
+
+  /// No description provided for @settingsHfSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Hugging Face'**
+  String get settingsHfSection;
+
+  /// No description provided for @settingsHfToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Access token'**
+  String get settingsHfToken;
+
+  /// No description provided for @settingsHfTokenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'hf_… (needed for gated models)'**
+  String get settingsHfTokenHint;
+
+  /// No description provided for @settingsStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get settingsStorage;
+
+  /// No description provided for @settingsStorageUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} in {count} models'**
+  String settingsStorageUsage(String size, int count);
+
+  /// No description provided for @settingsAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsAbout;
+
+  /// No description provided for @settingsAboutLine.
+  ///
+  /// In en, this message translates to:
+  /// **'CMF protocol v2 · engine: {engine}'**
+  String settingsAboutLine(String engine);
+
+  /// No description provided for @settingsVersionLine.
+  ///
+  /// In en, this message translates to:
+  /// **'CMF Mobile {version}'**
+  String settingsVersionLine(String version);
+}
+
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  Future<AppLocalizations> load(Locale locale) {
+    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
+  }
+
+  @override
+  bool isSupported(Locale locale) => <String>[
+    'de',
+    'en',
+    'es',
+    'fr',
+    'ru',
+    'tr',
+    'zh',
+  ].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
+}
+
+AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'de':
+      return AppLocalizationsDe();
+    case 'en':
+      return AppLocalizationsEn();
+    case 'es':
+      return AppLocalizationsEs();
+    case 'fr':
+      return AppLocalizationsFr();
+    case 'ru':
+      return AppLocalizationsRu();
+    case 'tr':
+      return AppLocalizationsTr();
+    case 'zh':
+      return AppLocalizationsZh();
+  }
+
+  throw FlutterError(
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
+}
