@@ -11,7 +11,10 @@ import '../../l10n/app_localizations.dart';
 
 /// Ready-to-run .cmf repos pinned above the search results — one tap to
 /// download, no conversion needed.
-const featuredRepos = ['infosave/Bonsai-27Bcmf'];
+const featuredRepos = [
+  'infosave/Bonsai-1.7Bcmf',
+  'infosave/Bonsai-27Bcmf',
+];
 
 class _FeaturedEntry {
   const _FeaturedEntry(this.model, this.cmfSizeBytes);

@@ -4,6 +4,18 @@ All notable changes to CMF Mobile are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
+## [1.0.5] - 2026-07-18
+
+### Added
+- Added the ready-to-run
+  [`infosave/Bonsai-1.7Bcmf`](https://huggingface.co/infosave/Bonsai-1.7Bcmf)
+  Q1 model as the first featured download, above Bonsai 27B. Its 319 MiB CMF
+  file downloads directly with the parallel downloader and needs no conversion.
+
+### Verified
+- All bundled Android ABIs and the iOS static library remain on cortiq runtime
+  v0.3.11, which is required by the ready Bonsai CMF models.
+
 ## [1.0.4] - 2026-07-18
 
 ### Fixed

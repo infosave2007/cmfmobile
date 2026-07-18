@@ -40,7 +40,9 @@ iOS-устройство в полностью локальную AI-станц�
   - `Q1` — **1,5 бита для 1-битно обученных моделей** (Bonsai/BitNet: 27B-модель — ~5 ГБ)
   - `F16` — без квантизации
 - **Рекомендуемые модели** закреплены сверху — готовые `.cmf` качаются в один тап
-  (например, [infosave/Bonsai-27Bcmf](https://huggingface.co/infosave/Bonsai-27Bcmf))
+  (включая мобильную
+  [infosave/Bonsai-1.7Bcmf](https://huggingface.co/infosave/Bonsai-1.7Bcmf)
+  и [infosave/Bonsai-27Bcmf](https://huggingface.co/infosave/Bonsai-27Bcmf))
 - Репозитории с готовыми `.cmf` скачиваются напрямую — любая квантизация
 - Очередь задач с фазами, логами и отменой — тот же flow, что в gateway
 

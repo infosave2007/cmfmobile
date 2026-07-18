@@ -40,7 +40,9 @@ converter, and an OpenAI-compatible server speaking the CMF protocol.
   - `Q1` — **1.5-bit for 1-bit-trained models** (Bonsai/BitNet: a 27B model fits in ~5 GB)
   - `F16` — no quantization
 - **Featured models** pinned on top — ready `.cmf` repos download in one tap
-  (e.g. [infosave/Bonsai-27Bcmf](https://huggingface.co/infosave/Bonsai-27Bcmf))
+  (including the mobile-sized
+  [infosave/Bonsai-1.7Bcmf](https://huggingface.co/infosave/Bonsai-1.7Bcmf)
+  and [infosave/Bonsai-27Bcmf](https://huggingface.co/infosave/Bonsai-27Bcmf))
 - Repos that ship ready `.cmf` files download directly — any quantization
 - Job queue with phases, logs, cancel — same flow as the gateway's Import view
 
