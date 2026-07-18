@@ -42,39 +42,91 @@ void main() {
     });
 
     test('unnests language_model wrappers', () {
-      expect(canonName('model.language_model.layers.0.mlp.gate_proj.weight'),
-          'model.layers.0.mlp.gate_proj.weight');
-      expect(canonName('language_model.model.embed_tokens.weight'),
-          'model.embed_tokens.weight');
+      expect(
+        canonName('model.language_model.layers.0.mlp.gate_proj.weight'),
+        'model.layers.0.mlp.gate_proj.weight',
+      );
+      expect(
+        canonName('language_model.model.embed_tokens.weight'),
+        'model.embed_tokens.weight',
+      );
     });
 
     test('passes ordinary names through', () {
       expect(canonName('lm_head.weight'), 'lm_head.weight');
     });
+
+    test('maps LFM2 vendor tensors without touching Qwen names', () {
+      expect(canonName('model.embedding_norm.weight'), 'model.norm.weight');
+      expect(
+        canonName('model.layers.0.conv.in_proj.weight'),
+        'model.layers.0.short_conv.in_proj.weight',
+      );
+      expect(
+        canonName('model.layers.0.feed_forward.experts.7.w1.weight'),
+        'model.layers.0.mlp.experts.7.gate_proj.weight',
+      );
+      expect(
+        canonName('model.layers.0.feed_forward.experts.7.w3.weight'),
+        'model.layers.0.mlp.experts.7.up_proj.weight',
+      );
+      expect(
+        canonName('model.layers.0.feed_forward.experts.7.w2.weight'),
+        'model.layers.0.mlp.experts.7.down_proj.weight',
+      );
+      expect(
+        canonName('model.layers.0.self_attn.out_proj.weight'),
+        'model.layers.0.self_attn.o_proj.weight',
+      );
+      expect(
+        canonName('model.layers.0.mlp.experts.7.gate_proj.weight'),
+        'model.layers.0.mlp.experts.7.gate_proj.weight',
+      );
+    });
   });
 
   group('targetDtype', () {
     test('follows the reference dispatch', () {
-      expect(targetDtype(QuantType.q8Row, 'a.weight', [64, 64], 4096),
-          Cmf.dtQ8Row);
-      expect(targetDtype(QuantType.q8_2f, 'a.weight', [64, 64], 4096),
-          Cmf.dtQ8_2f);
+      expect(
+        targetDtype(QuantType.q8Row, 'a.weight', [64, 64], 4096),
+        Cmf.dtQ8Row,
+      );
+      expect(
+        targetDtype(QuantType.q8_2f, 'a.weight', [64, 64], 4096),
+        Cmf.dtQ8_2f,
+      );
       // q1 needs in % 32 == 0, otherwise q8_2f fallback.
+      expect(targetDtype(QuantType.q1, 'a.weight', [64, 64], 4096), Cmf.dtQ1);
       expect(
-          targetDtype(QuantType.q1, 'a.weight', [64, 64], 4096), Cmf.dtQ1);
-      expect(targetDtype(QuantType.q1, 'a.weight', [64, 63], 4032),
-          Cmf.dtQ8_2f);
+        targetDtype(QuantType.q1, 'a.weight', [64, 63], 4032),
+        Cmf.dtQ8_2f,
+      );
       // 1-D and noise-sensitive tensors stay f16.
-      expect(targetDtype(QuantType.q8Row, 'norm.weight', [64], 64),
-          Cmf.dtF16);
+      expect(targetDtype(QuantType.q8Row, 'norm.weight', [64], 64), Cmf.dtF16);
       expect(
-          targetDtype(
-              QuantType.q8Row, 'model.layers.0.mlp.gate.weight', [8, 64], 512),
-          Cmf.dtF16);
+        targetDtype(QuantType.q8Row, 'model.layers.0.mlp.gate.weight', [
+          8,
+          64,
+        ], 512),
+        Cmf.dtF16,
+      );
     });
   });
 
   group('header', () {
+    test('merges sidecar chat template and keeps tokenizer fields', () {
+      final merged =
+          jsonDecode(
+                mergeTokenizerChatTemplate(
+                  '{"bos_token":"<s>","chat_template":"old"}',
+                  'new {{ messages }}',
+                ),
+              )
+              as Map;
+      expect(merged['bos_token'], '<s>');
+      expect(merged['chat_template'], 'new {{ messages }}');
+    });
+
     test('q1 files carry VBIT quant_type (enum has no Q1)', () {
       expect(headerQuantLabel(QuantType.q1), 'VBIT');
       expect(headerQuantLabel(QuantType.q8_2f), 'Q8_2F');
@@ -102,9 +154,17 @@ void main() {
       );
       final arch = h['arch'] as Map<String, dynamic>;
       for (final key in [
-        'arch_name', 'hidden_size', 'intermediate_size', 'num_layers',
-        'num_attention_heads', 'num_kv_heads', 'head_dim', 'vocab_size',
-        'layer_types', 'rms_norm_eps', 'max_position_embeddings',
+        'arch_name',
+        'hidden_size',
+        'intermediate_size',
+        'num_layers',
+        'num_attention_heads',
+        'num_kv_heads',
+        'head_dim',
+        'vocab_size',
+        'layer_types',
+        'rms_norm_eps',
+        'max_position_embeddings',
       ]) {
         expect(arch, contains(key), reason: key);
       }
@@ -139,6 +199,160 @@ void main() {
   });
 
   group('architecture guard', () {
+    test('accepts the official LiquidAI LFM2.5-8B-A1B config', () {
+      final config = <String, dynamic>{
+        'model_type': 'lfm2_moe',
+        'hidden_size': 2048,
+        'intermediate_size': 7168,
+        'num_hidden_layers': 24,
+        'num_attention_heads': 32,
+        'num_key_value_heads': 8,
+        'vocab_size': 128000,
+        'layer_types': [
+          'conv',
+          'conv',
+          'full_attention',
+          'conv',
+          'conv',
+          'conv',
+          'full_attention',
+          'conv',
+          'conv',
+          'conv',
+          'full_attention',
+          'conv',
+          'conv',
+          'conv',
+          'full_attention',
+          'conv',
+          'conv',
+          'conv',
+          'full_attention',
+          'conv',
+          'conv',
+          'full_attention',
+          'conv',
+          'conv',
+        ],
+        'conv_L_cache': 3,
+        'norm_eps': 1e-5,
+        'num_experts': 32,
+        'num_experts_per_tok': 4,
+        'moe_intermediate_size': 1792,
+        'norm_topk_prob': true,
+        'routed_scaling_factor': 1.0,
+        'tie_word_embeddings': true,
+        'max_position_embeddings': 128000,
+        'rope_parameters': {'rope_theta': 5000000.0},
+      };
+      expect(() => ensureSupportedArch(config), returnsNormally);
+
+      final h = buildCmfHeader(
+        config,
+        null,
+        QuantType.q8_2f,
+        sourceRepo: 'LiquidAI/LFM2.5-8B-A1B',
+        numQuantTensors: 1,
+      );
+      final arch = h['arch'] as Map;
+      expect(
+        (arch['layer_types'] as List).where((t) => t == 'ShortConv'),
+        hasLength(18),
+      );
+      expect(
+        (arch['layer_types'] as List).where((t) => t == 'FullAttention'),
+        hasLength(6),
+      );
+      expect(arch['head_dim'], 64);
+      expect(arch['rms_norm_eps'], 1e-5);
+      expect(arch['rope_theta'], 5000000.0);
+      expect(arch['linear_conv_kernel_dim'], 3);
+      expect((arch['moe'] as Map)['router_sigmoid'], isTrue);
+    });
+
+    test('keeps canonical Qwen MoE conversion enabled', () {
+      final config = <String, dynamic>{
+        'model_type': 'qwen3_moe',
+        'hidden_size': 64,
+        'intermediate_size': 128,
+        'num_hidden_layers': 2,
+        'num_attention_heads': 4,
+        'num_key_value_heads': 2,
+        'vocab_size': 100,
+        'num_experts': 8,
+        'num_experts_per_tok': 2,
+        'moe_intermediate_size': 32,
+        'norm_topk_prob': true,
+      };
+      expect(() => ensureSupportedArch(config), returnsNormally);
+
+      final h = buildCmfHeader(
+        config,
+        null,
+        QuantType.q8_2f,
+        sourceRepo: 'Qwen/Qwen3-MoE',
+        numQuantTensors: 1,
+      );
+      final moe = (h['arch'] as Map)['moe'] as Map;
+      expect(moe['num_experts'], 8);
+      expect(moe['top_k'], 2);
+      expect(moe['moe_intermediate_size'], 32);
+      expect(moe['norm_topk_prob'], isTrue);
+      expect(moe['router_sigmoid'], isFalse);
+    });
+
+    test('converts canonical Qwen MoE experts into a valid CMF', () async {
+      final dir = await Directory.systemTemp.createTemp('cmf_qwen_moe_test');
+      addTearDown(() => dir.delete(recursive: true));
+      final shard = '${dir.path}/model.safetensors';
+      final vocab = '${dir.path}/tokenizer.json';
+      final output = '${dir.path}/model.cmf';
+      await _writeF32Safetensors(shard, {
+        'model.embed_tokens.weight': [4, 4],
+        'model.norm.weight': [4],
+        'model.layers.0.input_layernorm.weight': [4],
+        'model.layers.0.post_attention_layernorm.weight': [4],
+        for (final projection in ['q_proj', 'k_proj', 'v_proj', 'o_proj'])
+          'model.layers.0.self_attn.$projection.weight': [4, 4],
+        'model.layers.0.mlp.gate.weight': [2, 4],
+        for (var expert = 0; expert < 2; expert++) ...{
+          'model.layers.0.mlp.experts.$expert.gate_proj.weight': [8, 4],
+          'model.layers.0.mlp.experts.$expert.up_proj.weight': [8, 4],
+          'model.layers.0.mlp.experts.$expert.down_proj.weight': [4, 8],
+        },
+      });
+      await File(vocab).writeAsString('{}');
+      final config = <String, dynamic>{
+        'model_type': 'qwen3_moe',
+        'hidden_size': 4,
+        'intermediate_size': 8,
+        'num_hidden_layers': 1,
+        'num_attention_heads': 1,
+        'num_key_value_heads': 1,
+        'vocab_size': 4,
+        'num_experts': 2,
+        'num_experts_per_tok': 1,
+        'moe_intermediate_size': 8,
+        'norm_topk_prob': true,
+        'tie_word_embeddings': true,
+      };
+
+      await convertSafetensorsToCmf(
+        ConvertInput(
+          shardPaths: [shard],
+          config: config,
+          vocabPath: vocab,
+          outputPath: output,
+          quant: QuantType.f16,
+          sourceRepo: 'Qwen/Qwen3-MoE-test',
+          threads: 2,
+        ),
+      );
+
+      expect(await CmfValidator.validate(output), isEmpty);
+      expect((await CmfReader.readMetadata(output)).archName, 'qwen3_moe');
+    });
+
     test('accepts Qwen3.5 hybrid fields nested under text_config', () {
       expect(
         () => ensureSupportedArch({
@@ -207,14 +421,11 @@ void main() {
       expect(arch['tie_word_embeddings'], isTrue);
     });
 
-    test('rejects nested MoE configs', () {
+    test('still rejects unsupported num_local_experts layouts', () {
       expect(
         () => ensureSupportedArch({
           'model_type': 'wrapper',
-          'text_config': {
-            'model_type': 'moe_text',
-            'num_local_experts': 64,
-          },
+          'text_config': {'model_type': 'moe_text', 'num_local_experts': 64},
         }),
         throwsA(isA<StateError>()),
       );
@@ -295,6 +506,89 @@ void main() {
       final meta = await CmfReader.readMetadata(output);
       expect(meta.archName, 'qwen3_5');
       expect(meta.numLayers, 2);
+    });
+
+    test('converts LFM2 ShortConv plus sigmoid MoE into a valid CMF', () async {
+      final dir = await Directory.systemTemp.createTemp('cmf_lfm2_moe_test');
+      addTearDown(() => dir.delete(recursive: true));
+      final shard = '${dir.path}/model.safetensors';
+      final vocab = '${dir.path}/tokenizer.json';
+      final output = '${dir.path}/model.cmf';
+      final tensors = <String, List<int>>{
+        'model.embed_tokens.weight': [4, 4],
+        'model.embedding_norm.weight': [4],
+        'model.layers.0.operator_norm.weight': [4],
+        'model.layers.0.ffn_norm.weight': [4],
+        'model.layers.0.conv.in_proj.weight': [12, 4],
+        'model.layers.0.conv.conv.weight': [4, 1, 3],
+        'model.layers.0.conv.out_proj.weight': [4, 4],
+        'model.layers.0.feed_forward.gate.weight': [2, 4],
+        'model.layers.0.feed_forward.expert_bias': [2],
+        for (var expert = 0; expert < 2; expert++) ...{
+          'model.layers.0.feed_forward.experts.$expert.w1.weight': [8, 4],
+          'model.layers.0.feed_forward.experts.$expert.w3.weight': [8, 4],
+          'model.layers.0.feed_forward.experts.$expert.w2.weight': [4, 8],
+        },
+      };
+      await _writeF32Safetensors(shard, tensors);
+      await File(vocab).writeAsString('{}');
+      final config = <String, dynamic>{
+        'model_type': 'lfm2_moe',
+        'hidden_size': 4,
+        'intermediate_size': 8,
+        'num_hidden_layers': 1,
+        'num_attention_heads': 1,
+        'num_key_value_heads': 1,
+        'vocab_size': 4,
+        'layer_types': ['conv'],
+        'conv_L_cache': 3,
+        'norm_eps': 1e-5,
+        'num_experts': 2,
+        'num_experts_per_tok': 1,
+        'moe_intermediate_size': 8,
+        'norm_topk_prob': true,
+        'use_expert_bias': true,
+        'routed_scaling_factor': 1.0,
+        'tie_word_embeddings': true,
+        'rope_parameters': {'rope_theta': 5000000.0},
+      };
+
+      await convertSafetensorsToCmf(
+        ConvertInput(
+          shardPaths: [shard],
+          config: config,
+          vocabPath: vocab,
+          outputPath: output,
+          quant: QuantType.f16,
+          sourceRepo: 'LiquidAI/LFM2-test',
+          threads: 2,
+        ),
+      );
+
+      expect(await CmfValidator.validate(output), isEmpty);
+      final meta = await CmfReader.readMetadata(output);
+      expect(meta.archName, 'lfm2_moe');
+      final raf = await File(output).open();
+      addTearDown(raf.close);
+      final envelope = CmfEnvelope.parse(
+        Uint8List.fromList(await raf.read(Cmf.envelopeLen)),
+      );
+      await raf.setPosition(envelope.headerOff);
+      final header =
+          jsonDecode(utf8.decode(await raf.read(envelope.headerLen))) as Map;
+      final arch = header['arch'] as Map;
+      expect(arch['layer_types'], ['ShortConv']);
+      expect(arch['linear_conv_kernel_dim'], 3);
+      expect(arch['rms_norm_eps'], 1e-5);
+      expect(arch['moe'], {
+        'num_experts': 2,
+        'top_k': 1,
+        'moe_intermediate_size': 8,
+        'norm_topk_prob': true,
+        'shared_expert_intermediate_size': null,
+        'router_sigmoid': true,
+        'routed_scaling_factor': null,
+      });
     });
 
     test('writes Gemma 3 scaling, activation and sliding-window fields', () {
@@ -448,8 +742,7 @@ void main() {
     test('q1 nbytes = numel/32*6, q8_2f adds the column field', () {
       expect(nbytesFor(Cmf.dtQ1, [4, 64], 256), 4 * 2 * 6);
       expect(nbytesFor(Cmf.dtQ8Row, [4, 64], 256), 4 * 64 + 4 * 2);
-      expect(nbytesFor(Cmf.dtQ8_2f, [4, 64], 256),
-          4 * 64 + 4 * 2 + 64 * 2);
+      expect(nbytesFor(Cmf.dtQ8_2f, [4, 64], 256), 4 * 64 + 4 * 2 + 64 * 2);
       expect(nbytesFor(Cmf.dtF16, [4, 64], 256), 512);
     });
 
@@ -466,7 +759,9 @@ void main() {
 }
 
 Future<void> _writeF32Safetensors(
-    String path, Map<String, List<int>> tensors) async {
+  String path,
+  Map<String, List<int>> tensors,
+) async {
   var offset = 0;
   final header = <String, dynamic>{};
   for (final entry in tensors.entries) {
@@ -480,9 +775,11 @@ Future<void> _writeF32Safetensors(
   }
   final headerBytes = utf8.encode(jsonEncode(header));
   final bytes = BytesBuilder(copy: false)
-    ..add((ByteData(8)..setUint64(0, headerBytes.length, Endian.little))
-        .buffer
-        .asUint8List())
+    ..add(
+      (ByteData(
+        8,
+      )..setUint64(0, headerBytes.length, Endian.little)).buffer.asUint8List(),
+    )
     ..add(headerBytes)
     ..add(Uint8List(offset));
   await File(path).writeAsBytes(bytes.takeBytes());

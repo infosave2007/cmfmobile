@@ -54,7 +54,8 @@ class ConverterService {
   }) async {
     final dir = await models.modelsDir();
     final outName = sanitizeName(
-        (name == null || name.trim().isEmpty) ? repo.split('/').last : name);
+      (name == null || name.trim().isEmpty) ? repo.split('/').last : name,
+    );
     final job = ConversionJob(
       id: DateTime.now().microsecondsSinceEpoch.toRadixString(16),
       repo: repo,
@@ -104,22 +105,27 @@ class ConverterService {
       _progress(job, 0.02, 'listing');
       final files = await hf.listFiles(job.repo, token: hfToken);
 
-      final cmfFiles =
-          files.where((f) => f.path.toLowerCase().endsWith('.cmf')).toList();
+      final cmfFiles = files
+          .where((f) => f.path.toLowerCase().endsWith('.cmf'))
+          .toList();
       if (cmfFiles.isNotEmpty) {
         job.directDownload = true;
         await _downloadCmfDirectly(job, cmfFiles, hfToken, threads);
       } else {
         if (!job.quant.supportedOnDevice) {
           throw StateError(
-              '${job.quant.label} requires the desktop cortiq toolchain; '
-              'on device choose Q8_ROW, Q8_2F, Q1 or F16, or pick a repo '
-              'that ships .cmf files');
+            '${job.quant.label} requires the desktop cortiq toolchain; '
+            'on device choose Q8_ROW, Q8_2F, Q1 or F16, or pick a repo '
+            'that ships .cmf files',
+          );
         }
-        job.addLog('→ converting ${job.repo} to ${job.name} '
-            '(${job.quant.label}, $threads threads)');
+        job.addLog(
+          '→ converting ${job.repo} to ${job.name} '
+          '(${job.quant.label}, $threads threads)',
+        );
         tempDir = Directory(
-            '${(await getTemporaryDirectory()).path}/convert/${job.id}');
+          '${(await getTemporaryDirectory()).path}/convert/${job.id}',
+        );
         await tempDir.create(recursive: true);
         await _convertSafetensors(job, files, tempDir, hfToken, threads);
       }
@@ -127,8 +133,9 @@ class ConverterService {
       final size = await File(job.outputPath).length();
       job.sizeBytes = size;
       try {
-        job.resultQuant =
-            (await CmfReader.readMetadata(job.outputPath)).quantType;
+        job.resultQuant = (await CmfReader.readMetadata(
+          job.outputPath,
+        )).quantType;
       } catch (_) {
         // Display-only; a parse hiccup must not fail the finished job.
       }
@@ -170,13 +177,18 @@ class ConverterService {
   }
 
   Future<void> _downloadCmfDirectly(
-      ConversionJob job, List<HfFileEntry> cmfFiles, String? hfToken,
-      int threads) async {
+    ConversionJob job,
+    List<HfFileEntry> cmfFiles,
+    String? hfToken,
+    int threads,
+  ) async {
     cmfFiles.sort((a, b) => b.size.compareTo(a.size));
     final src = cmfFiles.first;
     final parallelism = threads.clamp(2, 8);
-    job.addLog('repo ships ${src.path} — downloading directly '
-        '($parallelism connections)');
+    job.addLog(
+      'repo ships ${src.path} — downloading directly '
+      '($parallelism connections)',
+    );
     await hf.downloadParallel(
       job.repo,
       src.path,
@@ -192,58 +204,95 @@ class ConverterService {
     );
   }
 
-  Future<void> _convertSafetensors(ConversionJob job, List<HfFileEntry> files,
-      Directory tempDir, String? hfToken, int threads) async {
+  Future<void> _convertSafetensors(
+    ConversionJob job,
+    List<HfFileEntry> files,
+    Directory tempDir,
+    String? hfToken,
+    int threads,
+  ) async {
     bool has(String name) => files.any((f) => f.path == name);
     if (!has('config.json')) {
       throw StateError('repo has no config.json (not a transformers model)');
     }
     if (!has('tokenizer.json')) {
-      throw StateError('repo has no tokenizer.json '
-          '(sentencepiece-only repos are not supported yet)');
+      throw StateError(
+        'repo has no tokenizer.json '
+        '(sentencepiece-only repos are not supported yet)',
+      );
     }
 
     // Resolve safetensors shards (single file or index + shards).
     List<String> shardNames;
     if (has('model.safetensors.index.json')) {
-      final indexJson = jsonDecode(await hf.fetchText(
-              job.repo, 'model.safetensors.index.json',
-              token: hfToken)) as Map<String, dynamic>;
+      final indexJson =
+          jsonDecode(
+                await hf.fetchText(
+                  job.repo,
+                  'model.safetensors.index.json',
+                  token: hfToken,
+                ),
+              )
+              as Map<String, dynamic>;
       final weightMap = indexJson['weight_map'] as Map<String, dynamic>;
       shardNames = weightMap.values.cast<String>().toSet().toList()..sort();
     } else if (has('model.safetensors')) {
       shardNames = ['model.safetensors'];
     } else {
-      final loose = files
-          .where((f) =>
-              f.path.endsWith('.safetensors') && !f.path.contains('/'))
-          .map((f) => f.path)
-          .toList()
-        ..sort();
+      final loose =
+          files
+              .where(
+                (f) => f.path.endsWith('.safetensors') && !f.path.contains('/'),
+              )
+              .map((f) => f.path)
+              .toList()
+            ..sort();
       if (loose.isEmpty) {
-        throw StateError('repo has no safetensors weights '
-            '(GGUF-only repos need the desktop `cortiq import-gguf`)');
+        throw StateError(
+          'repo has no safetensors weights '
+          '(GGUF-only repos need the desktop `cortiq import-gguf`)',
+        );
       }
       shardNames = loose;
     }
 
-    // Validate the architecture BEFORE the multi-GB download. Dense Qwen3.5
-    // GatedDeltaNet hybrids are supported; unsupported MoE layouts fail here.
-    final config = jsonDecode(
-            await hf.fetchText(job.repo, 'config.json', token: hfToken))
-        as Map<String, dynamic>;
+    // Validate the architecture BEFORE the multi-GB download. Qwen MoE,
+    // Qwen3.5 GatedDeltaNet and LFM2-MoE/ShortConv are supported.
+    final config =
+        jsonDecode(await hf.fetchText(job.repo, 'config.json', token: hfToken))
+            as Map<String, dynamic>;
     ensureSupportedArch(config);
 
     // Phase 1: download (0.02 → 0.55), weighted by bytes.
     String? tokenizerConfigText;
     if (has('tokenizer_config.json')) {
       tokenizerConfigText = await hf.fetchText(
-          job.repo, 'tokenizer_config.json',
-          token: hfToken);
+        job.repo,
+        'tokenizer_config.json',
+        token: hfToken,
+      );
+    }
+    // LFM2 and newer Qwen releases may publish the authoritative template as
+    // a sidecar rather than embedding it in tokenizer_config.json.
+    if (has('chat_template.jinja')) {
+      final sidecar = await hf.fetchText(
+        job.repo,
+        'chat_template.jinja',
+        token: hfToken,
+      );
+      tokenizerConfigText = mergeTokenizerChatTemplate(
+        tokenizerConfigText,
+        sidecar,
+      );
     }
     final vocabPath = '${tempDir.path}/tokenizer.json';
-    await hf.download(job.repo, 'tokenizer.json', vocabPath,
-        token: hfToken, isCancelled: () => _isCancelled(job));
+    await hf.download(
+      job.repo,
+      'tokenizer.json',
+      vocabPath,
+      token: hfToken,
+      isCancelled: () => _isCancelled(job),
+    );
 
     final totalBytes = shardNames
         .map((n) => files.where((f) => f.path == n).firstOrNull?.size ?? 0)

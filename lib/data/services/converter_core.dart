@@ -59,28 +59,62 @@ String? canonName(String raw) {
     'language_model.',
   ]) {
     if (raw.startsWith(pfx)) {
-      return 'model.${raw.substring(pfx.length)}';
+      return _lfm2Canon('model.${raw.substring(pfx.length)}');
     }
   }
-  return raw;
+  return _lfm2Canon(raw);
+}
+
+/// LFM2 checkpoints use a vendor-specific layout. These markers are unique
+/// to LFM2 among the supported families, so ordinary Qwen/Gemma names pass
+/// through byte-for-byte.
+String _lfm2Canon(String name) {
+  final isLfm2 =
+      name == 'model.embedding_norm.weight' ||
+      name.contains('.operator_norm') ||
+      name.contains('.ffn_norm') ||
+      name.contains('.feed_forward.') ||
+      name.contains('.conv.') ||
+      name.contains('.self_attn.out_proj') ||
+      name.contains('.self_attn.q_layernorm') ||
+      name.contains('.self_attn.k_layernorm');
+  if (!isLfm2) return name;
+  if (name == 'model.embedding_norm.weight') return 'model.norm.weight';
+  return name
+      .replaceAll('.operator_norm.', '.input_layernorm.')
+      .replaceAll('.ffn_norm.', '.post_attention_layernorm.')
+      .replaceAll('.self_attn.out_proj.', '.self_attn.o_proj.')
+      .replaceAll('.self_attn.q_layernorm.', '.self_attn.q_norm.')
+      .replaceAll('.self_attn.k_layernorm.', '.self_attn.k_norm.')
+      .replaceAll('.conv.in_proj.', '.short_conv.in_proj.')
+      .replaceAll('.conv.out_proj.', '.short_conv.out_proj.')
+      .replaceAll('.conv.conv.', '.short_conv.conv.')
+      .replaceAll('.feed_forward.gate.weight', '.mlp.gate.weight')
+      .replaceAll('.feed_forward.expert_bias', '.mlp.expert_bias')
+      .replaceAll('.feed_forward.experts.', '.mlp.experts.')
+      .replaceAll('.feed_forward.', '.mlp.')
+      .replaceAll('.w1.weight', '.gate_proj.weight')
+      .replaceAll('.w3.weight', '.up_proj.weight')
+      .replaceAll('.w2.weight', '.down_proj.weight');
 }
 
 /// Noise-sensitive projections the reference converter keeps at f16.
 bool forceF16(String name) =>
     name.endsWith('linear_attn.in_proj_a.weight') ||
     name.endsWith('linear_attn.in_proj_b.weight') ||
-    name.endsWith('mlp.gate.weight');
+    name.endsWith('mlp.gate.weight') ||
+    name.endsWith('shared_expert_gate.weight');
 
 /// Header quant_type label (reference: Q1 files carry VBIT — the enum has
 /// no Q1 variant; per-tensor truth is in the directory).
 String headerQuantLabel(QuantType quant) => switch (quant) {
-      QuantType.q8Row => 'Q8_ROW',
-      QuantType.q8_2f => 'Q8_2F',
-      QuantType.q4Block => 'Q4_BLOCK',
-      QuantType.vbit => 'VBIT',
-      QuantType.q1 => 'VBIT',
-      QuantType.f16 => 'F16',
-    };
+  QuantType.q8Row => 'Q8_ROW',
+  QuantType.q8_2f => 'Q8_2F',
+  QuantType.q4Block => 'Q4_BLOCK',
+  QuantType.vbit => 'VBIT',
+  QuantType.q1 => 'VBIT',
+  QuantType.f16 => 'F16',
+};
 
 /// Per-tensor target dtype (reference dispatch): 2-D tensors with ≥32
 /// elements quantize; q1 needs in_dim % 32 == 0, otherwise that tensor
@@ -103,11 +137,11 @@ int targetDtype(QuantType quant, String name, List<int> shape, int numel) {
 }
 
 int nbytesFor(int dtype, List<int> shape, int numel) => switch (dtype) {
-      Cmf.dtQ8Row => shape[0] * shape[1] + shape[0] * 2,
-      Cmf.dtQ8_2f => shape[0] * shape[1] + shape[0] * 2 + shape[1] * 2,
-      Cmf.dtQ1 => (shape[0] * shape[1]) ~/ 32 * 6,
-      _ => numel * 2,
-    };
+  Cmf.dtQ8Row => shape[0] * shape[1] + shape[0] * 2,
+  Cmf.dtQ8_2f => shape[0] * shape[1] + shape[0] * 2 + shape[1] * 2,
+  Cmf.dtQ1 => (shape[0] * shape[1]) ~/ 32 * 6,
+  _ => numel * 2,
+};
 
 /// Returns the language-model config used by the reference converter.
 /// Multimodal wrappers keep the actual text geometry under `text_config`,
@@ -126,25 +160,50 @@ Map<String, dynamic> textModelConfig(Map<String, dynamic> config) {
   };
 }
 
+/// Inserts a separately-published chat_template.jinja into the tokenizer
+/// config consumed by the CMF writer. Existing tokenizer fields are kept.
+String mergeTokenizerChatTemplate(
+  String? tokenizerConfigText,
+  String template,
+) {
+  final config = tokenizerConfigText == null
+      ? <String, dynamic>{}
+      : (jsonDecode(tokenizerConfigText) as Map<String, dynamic>);
+  config['chat_template'] = template;
+  return jsonEncode(config);
+}
+
 /// Reject only architectures whose tensor layout is not implemented by the
-/// Dart converter. Dense Qwen3.5 GatedDeltaNet hybrids are supported 1:1.
+/// Dart converter. Standard Qwen MoE and LFM2-MoE use the same canonical
+/// expert layout as the runtime and are supported 1:1.
 void ensureSupportedArch(Map<String, dynamic> config) {
   config = textModelConfig(config);
   final modelType = (config['model_type'] as String? ?? '').toLowerCase();
   final isGemma4 = modelType.contains('gemma4');
   final layerTypes =
       (config['layer_types'] as List?)?.cast<String>() ?? const [];
-  if (config['num_experts'] != null ||
-      config.containsKey('num_local_experts')) {
+  final numExperts = config['num_experts'] as int? ?? 0;
+  if (config.containsKey('num_local_experts') && numExperts == 0) {
     throw StateError(
-        'MoE architecture (${config['model_type']}) — on-device conversion '
-        'supports dense models only. Use desktop `cortiq convert`, or '
-        'download a ready .cmf');
+      '${config['model_type']}: num_local_experts tensor '
+      'layout is not supported; expected canonical num_experts MoE',
+    );
+  }
+  if (numExperts > 0) {
+    if ((config['num_experts_per_tok'] as int? ?? 0) <= 0 ||
+        (config['moe_intermediate_size'] as int? ?? 0) <= 0) {
+      throw StateError(
+        '${config['model_type']}: MoE config is missing '
+        'num_experts_per_tok or moe_intermediate_size',
+      );
+    }
   }
   if (config['attn_logit_softcapping'] is num ||
       (!isGemma4 && config['final_logit_softcapping'] is num)) {
-    throw StateError('$modelType attention/logit soft-capping is not '
-        'supported by the runtime (Gemma 2 cannot be converted safely)');
+    throw StateError(
+      '$modelType attention/logit soft-capping is not '
+      'supported by the runtime (Gemma 2 cannot be converted safely)',
+    );
   }
   if (isGemma4) {
     if (config['enable_moe_block'] == true) {
@@ -160,16 +219,23 @@ void ensureSupportedArch(Map<String, dynamic> config) {
   }
   final activation = config['hidden_activation'] ?? config['hidden_act'];
   if (activation != null &&
-      !const ['silu', 'swish', 'gelu_pytorch_tanh', 'gelu_tanh', 'gelu_new']
-          .contains(activation)) {
+      !const [
+        'silu',
+        'swish',
+        'gelu_pytorch_tanh',
+        'gelu_tanh',
+        'gelu_new',
+      ].contains(activation)) {
     throw StateError('unsupported hidden activation $activation');
   }
   final hasLinear = layerTypes.contains('linear_attention');
   if (hasLinear) {
     final layers = config['num_hidden_layers'] as int? ?? 0;
     if (layerTypes.length != layers) {
-      throw StateError('hybrid architecture has ${layerTypes.length} '
-          'layer_types for $layers layers');
+      throw StateError(
+        'hybrid architecture has ${layerTypes.length} '
+        'layer_types for $layers layers',
+      );
     }
     for (final key in [
       'linear_conv_kernel_dim',
@@ -181,6 +247,28 @@ void ensureSupportedArch(Map<String, dynamic> config) {
       if ((config[key] as int? ?? 0) <= 0) {
         throw StateError('hybrid architecture is missing $key');
       }
+    }
+  }
+  final hasShortConv = layerTypes.any((t) => t == 'conv' || t == 'short_conv');
+  if (hasShortConv) {
+    final layers = config['num_hidden_layers'] as int? ?? 0;
+    if (layerTypes.length != layers) {
+      throw StateError(
+        'ShortConv architecture has ${layerTypes.length} '
+        'layer_types for $layers layers',
+      );
+    }
+    if ((config['conv_L_cache'] as int? ??
+            config['linear_conv_kernel_dim'] as int? ??
+            0) <=
+        0) {
+      throw StateError('ShortConv architecture is missing conv_L_cache');
+    }
+    final invalid = layerTypes.where(
+      (t) => t != 'conv' && t != 'short_conv' && t != 'full_attention',
+    );
+    if (invalid.isNotEmpty) {
+      throw StateError('unsupported LFM2 layer type ${invalid.first}');
     }
   }
 }
@@ -226,8 +314,12 @@ class ConvertInput {
 }
 
 Map<String, dynamic> buildCmfHeader(
-    Map<String, dynamic> config, String? tokCfgText, QuantType quant,
-    {required String sourceRepo, required int numQuantTensors}) {
+  Map<String, dynamic> config,
+  String? tokCfgText,
+  QuantType quant, {
+  required String sourceRepo,
+  required int numQuantTensors,
+}) {
   config = textModelConfig(config);
   final modelType = config['model_type'] as String? ?? 'llama';
   final hidden = config['hidden_size'] as int? ?? 0;
@@ -237,15 +329,21 @@ Map<String, dynamic> buildCmfHeader(
       (config['layer_types'] as List?)?.cast<String>() ?? const [];
   final layerTypes = [
     for (var i = 0; i < layers; i++)
-      i < rawLayerTypes.length && rawLayerTypes[i] == 'linear_attention'
-          ? 'LinearAttention'
-          : 'FullAttention',
+      if (i < rawLayerTypes.length && rawLayerTypes[i] == 'linear_attention')
+        'LinearAttention'
+      else if (i < rawLayerTypes.length &&
+          (rawLayerTypes[i] == 'conv' || rawLayerTypes[i] == 'short_conv'))
+        'ShortConv'
+      else
+        'FullAttention',
   ];
   final hasLinear = layerTypes.contains('LinearAttention');
   final rope = config['rope_parameters'] is Map
       ? (config['rope_parameters'] as Map).cast<String, dynamic>()
       : const <String, dynamic>{};
   final modelTypeLower = modelType.toLowerCase();
+  final numExperts = config['num_experts'] as int? ?? 0;
+  final isMoe = numExperts > 0;
   final isGemma = modelTypeLower.contains('gemma');
   final isGemma4 = modelTypeLower.contains('gemma4');
   final g4Pattern = isGemma4 ? _gemma4SlidingPattern(config) : null;
@@ -256,11 +354,8 @@ Map<String, dynamic> buildCmfHeader(
       ? (rope['sliding_attention'] as Map).cast<String, dynamic>()
       : const <String, dynamic>{};
   final activation = config['hidden_activation'] ?? config['hidden_act'];
-  final hiddenAct = const [
-    'gelu_pytorch_tanh',
-    'gelu_tanh',
-    'gelu_new',
-  ].contains(activation)
+  final hiddenAct =
+      const ['gelu_pytorch_tanh', 'gelu_tanh', 'gelu_new'].contains(activation)
       ? 'gelu_tanh'
       : 'silu';
   final slidingPattern = config['sliding_window_pattern'] ?? g4Pattern;
@@ -268,8 +363,8 @@ Map<String, dynamic> buildCmfHeader(
   final eos = eosRaw is List
       ? eosRaw.whereType<int>().toList()
       : eosRaw is int
-          ? [eosRaw]
-          : <int>[];
+      ? [eosRaw]
+      : <int>[];
 
   String? chatTemplate;
   if (tokCfgText != null) {
@@ -286,15 +381,17 @@ Map<String, dynamic> buildCmfHeader(
     'arch': {
       'arch_name': modelType,
       'hidden_size': hidden,
-      'intermediate_size': config['intermediate_size'] ?? 0,
+      'intermediate_size':
+          config['intermediate_size'] ?? config['moe_intermediate_size'] ?? 0,
       'num_layers': layers,
       'num_attention_heads': heads,
       'num_kv_heads': config['num_key_value_heads'] ?? heads,
       'head_dim': config['head_dim'] ?? (heads > 0 ? hidden ~/ heads : 0),
       'vocab_size': config['vocab_size'] ?? 0,
       'layer_types': layerTypes,
-      'rms_norm_eps': config['rms_norm_eps'] ?? 1e-6,
-      'norm_style': modelTypeLower.startsWith('qwen3_5') ||
+      'rms_norm_eps': config['rms_norm_eps'] ?? config['norm_eps'] ?? 1e-6,
+      'norm_style':
+          modelTypeLower.startsWith('qwen3_5') ||
               modelTypeLower.contains('qwen3_next') ||
               (modelTypeLower.contains('gemma') &&
                   !modelTypeLower.contains('gemma4'))
@@ -304,7 +401,8 @@ Map<String, dynamic> buildCmfHeader(
           ? g4FullRope['rope_theta'] ?? 10000.0
           : config['rope_theta'] ?? rope['rope_theta'] ?? 10000.0,
       'tie_word_embeddings': config['tie_word_embeddings'] ?? isGemma,
-      'partial_rotary_factor': config['partial_rotary_factor'] ??
+      'partial_rotary_factor':
+          config['partial_rotary_factor'] ??
           rope['partial_rotary_factor'] ??
           1.0,
       'hidden_act': hiddenAct,
@@ -318,12 +416,15 @@ Map<String, dynamic> buildCmfHeader(
       'rope_local_base_freq':
           config['rope_local_base_freq'] ?? g4SlidingRope['rope_theta'],
       'global_head_dim': isGemma4 ? config['global_head_dim'] : null,
-      'num_global_kv_heads':
-          isGemma4 ? config['num_global_key_value_heads'] : null,
-      'global_partial_rotary_factor':
-          isGemma4 ? g4FullRope['partial_rotary_factor'] : null,
-      'final_logit_softcapping':
-          isGemma4 ? config['final_logit_softcapping'] : null,
+      'num_global_kv_heads': isGemma4
+          ? config['num_global_key_value_heads']
+          : null,
+      'global_partial_rotary_factor': isGemma4
+          ? g4FullRope['partial_rotary_factor']
+          : null,
+      'final_logit_softcapping': isGemma4
+          ? config['final_logit_softcapping']
+          : null,
       'attn_v_norm': isGemma4,
       if (hasLinear)
         'linear_core': {
@@ -331,8 +432,27 @@ Map<String, dynamic> buildCmfHeader(
           'num_heads': config['linear_num_value_heads'],
           'value_head_dim': config['linear_value_head_dim'],
         },
+      if (isMoe)
+        'moe': {
+          'num_experts': numExperts,
+          'top_k': config['num_experts_per_tok'] ?? 2,
+          'moe_intermediate_size': config['moe_intermediate_size'] ?? 0,
+          'norm_topk_prob':
+              config['norm_topk_prob'] ??
+              (modelTypeLower.startsWith('qwen3_5') ||
+                  modelTypeLower.contains('qwen3_next')),
+          'shared_expert_intermediate_size':
+              config['shared_expert_intermediate_size'],
+          'router_sigmoid': modelTypeLower.startsWith('lfm2'),
+          'routed_scaling_factor': switch (config['routed_scaling_factor']) {
+            final num value when (value.toDouble() - 1.0).abs() > 1e-9 =>
+              value.toDouble(),
+            _ => null,
+          },
+        },
       'max_position_embeddings': config['max_position_embeddings'] ?? 0,
-      'linear_conv_kernel_dim': config['linear_conv_kernel_dim'],
+      'linear_conv_kernel_dim':
+          config['linear_conv_kernel_dim'] ?? config['conv_L_cache'],
       'linear_num_key_heads': config['linear_num_key_heads'],
       'linear_num_value_heads': config['linear_num_value_heads'],
       'linear_key_head_dim': config['linear_key_head_dim'],
@@ -343,8 +463,9 @@ Map<String, dynamic> buildCmfHeader(
       'chat_template': ?chatTemplate,
       'eos_token_ids': eos,
       'bos_token_id': config['bos_token_id'],
-      'pad_token_id':
-          config['pad_token_id'] is int ? config['pad_token_id'] : null,
+      'pad_token_id': config['pad_token_id'] is int
+          ? config['pad_token_id']
+          : null,
     },
     'provenance': {
       'tool': 'cmf-mobile 1.0',
@@ -387,18 +508,20 @@ Future<void> convertSafetensorsToCmf(
         nbytes: nbytesFor(dtype, t.shape, t.numel),
       );
       specs.add(spec);
-      tasks.add(TensorTask(
-        shardPath: path,
-        shardDataStart: shard.dataStart,
-        srcDtype: t.dtype,
-        srcBegin: t.begin,
-        srcNbytes: t.nbytes,
-        shape: t.shape,
-        name: name,
-        outDtype: dtype,
-        outNbytes: spec.nbytes,
-        outOffset: 0, // assigned after begin()
-      ));
+      tasks.add(
+        TensorTask(
+          shardPath: path,
+          shardDataStart: shard.dataStart,
+          srcDtype: t.dtype,
+          srcBegin: t.begin,
+          srcNbytes: t.nbytes,
+          shape: t.shape,
+          name: name,
+          outDtype: dtype,
+          outNbytes: spec.nbytes,
+          outOffset: 0, // assigned after begin()
+        ),
+      );
     }
   }
 
@@ -413,12 +536,12 @@ Future<void> convertSafetensorsToCmf(
     final layerTypes =
         (config['layer_types'] as List?)?.cast<String>() ?? const [];
     for (final task in sourceTasks) {
-      final match = RegExp(r'^model\.layers\.(\d+)\.self_attn\.k_proj\.weight$')
-          .firstMatch(task.name);
+      final match = RegExp(
+        r'^model\.layers\.(\d+)\.self_attn\.k_proj\.weight$',
+      ).firstMatch(task.name);
       if (match == null) continue;
       final layer = int.parse(match.group(1)!);
-      if (layer >= layerTypes.length ||
-          layerTypes[layer] != 'full_attention') {
+      if (layer >= layerTypes.length || layerTypes[layer] != 'full_attention') {
         continue;
       }
       final vName = task.name.replaceFirst('k_proj', 'v_proj');
@@ -430,25 +553,26 @@ Future<void> convertSafetensorsToCmf(
         nbytes: task.outNbytes,
       );
       specs.add(spec);
-      tasks.add(TensorTask(
-        shardPath: task.shardPath,
-        shardDataStart: task.shardDataStart,
-        srcDtype: task.srcDtype,
-        srcBegin: task.srcBegin,
-        srcNbytes: task.srcNbytes,
-        shape: task.shape,
-        name: vName,
-        outDtype: task.outDtype,
-        outNbytes: task.outNbytes,
-        outOffset: 0,
-      ));
+      tasks.add(
+        TensorTask(
+          shardPath: task.shardPath,
+          shardDataStart: task.shardDataStart,
+          srcDtype: task.srcDtype,
+          srcBegin: task.srcBegin,
+          srcNbytes: task.srcNbytes,
+          shape: task.shape,
+          name: vName,
+          outDtype: task.outDtype,
+          outNbytes: task.outNbytes,
+          outOffset: 0,
+        ),
+      );
       names.add(vName);
     }
   }
   if (specs.isEmpty) throw StateError('no float tensors found');
 
-  final quantCount =
-      specs.where((s) => s.dtype != Cmf.dtF16).length;
+  final quantCount = specs.where((s) => s.dtype != Cmf.dtF16).length;
   final header = buildCmfHeader(
     input.config,
     input.tokenizerConfigText,
@@ -518,16 +642,18 @@ Future<void> convertSafetensorsToCmf(
             workerFinished();
         }
       });
-      isolates.add(await Isolate.spawn(
-        quantizeWorker,
-        WorkerArgs(
-          tasks: partition,
-          outputPath: input.outputPath,
-          sendPort: port.sendPort,
+      isolates.add(
+        await Isolate.spawn(
+          quantizeWorker,
+          WorkerArgs(
+            tasks: partition,
+            outputPath: input.outputPath,
+            sendPort: port.sendPort,
+          ),
+          onError: port.sendPort,
+          errorsAreFatal: true,
         ),
-        onError: port.sendPort,
-        errorsAreFatal: true,
-      ));
+      );
     }
 
     // Wait for the pool; poll so cancellation stays responsive.
@@ -593,17 +719,17 @@ class TensorTask {
   final int outOffset;
 
   TensorTask withOutOffset(int offset) => TensorTask(
-        shardPath: shardPath,
-        shardDataStart: shardDataStart,
-        srcDtype: srcDtype,
-        srcBegin: srcBegin,
-        srcNbytes: srcNbytes,
-        shape: shape,
-        name: name,
-        outDtype: outDtype,
-        outNbytes: outNbytes,
-        outOffset: offset,
-      );
+    shardPath: shardPath,
+    shardDataStart: shardDataStart,
+    srcDtype: srcDtype,
+    srcBegin: srcBegin,
+    srcNbytes: srcNbytes,
+    shape: shape,
+    name: name,
+    outDtype: outDtype,
+    outNbytes: outNbytes,
+    outOffset: offset,
+  );
 }
 
 class WorkerArgs {
@@ -627,10 +753,15 @@ Future<void> quantizeWorker(WorkerArgs args) async {
   try {
     out = await File(args.outputPath).open(mode: FileMode.append);
     for (final task in args.tasks) {
-      final shard = shardFiles[task.shardPath] ??=
-          await File(task.shardPath).open();
-      final hash = await _processTensor(task, shard, out,
-          onBytes: (n) => port.send(('p', n)));
+      final shard = shardFiles[task.shardPath] ??= await File(
+        task.shardPath,
+      ).open();
+      final hash = await _processTensor(
+        task,
+        shard,
+        out,
+        onBytes: (n) => port.send(('p', n)),
+      );
       port.send(('h', task.name, hash));
     }
     port.send(('d', null));
@@ -645,8 +776,11 @@ Future<void> quantizeWorker(WorkerArgs args) async {
 }
 
 Future<int> _processTensor(
-    TensorTask task, RandomAccessFile shard, RandomAccessFile out,
-    {required void Function(int bytes) onBytes}) async {
+  TensorTask task,
+  RandomAccessFile shard,
+  RandomAccessFile out, {
+  required void Function(int bytes) onBytes,
+}) async {
   final hash = CmfHash64();
   var writePos = task.outOffset;
   Future<void> emit(Uint8List bytes) async {
@@ -683,13 +817,11 @@ Future<int> _processTensor(
             if (a > absMax) absMax = a;
           }
           final scale = f16ScaleOf(absMax / 127.0);
-          scaleData.setUint16(
-              (r0 + r) * 2, f32ToF16Bits(scale), Endian.little);
+          scaleData.setUint16((r0 + r) * 2, f32ToF16Bits(scale), Endian.little);
           for (var c = 0; c < cols; c++) {
-            q[r * cols + c] = roundTiesEven(values[r * cols + c] / scale)
-                .clamp(-128.0, 127.0)
-                .toInt()
-                .toUnsigned(8);
+            q[r * cols + c] = roundTiesEven(
+              values[r * cols + c] / scale,
+            ).clamp(-128.0, 127.0).toInt().toUnsigned(8);
           }
         }
         await emit(q);
@@ -737,14 +869,12 @@ Future<int> _processTensor(
             if (a > absMax) absMax = a;
           }
           final scale = f16ScaleOf(math.max(absMax, 1e-12) / 127.0);
-          scaleData.setUint16(
-              (r0 + r) * 2, f32ToF16Bits(scale), Endian.little);
+          scaleData.setUint16((r0 + r) * 2, f32ToF16Bits(scale), Endian.little);
           for (var c = 0; c < cols; c++) {
             final wn = values[r * cols + c] / col[c];
-            q[r * cols + c] = roundTiesEven(wn / scale)
-                .clamp(-127.0, 127.0)
-                .toInt()
-                .toUnsigned(8);
+            q[r * cols + c] = roundTiesEven(
+              wn / scale,
+            ).clamp(-127.0, 127.0).toInt().toUnsigned(8);
           }
         }
         await emit(q);
@@ -789,9 +919,7 @@ Future<int> _processTensor(
       }
 
     default: // f16
-      final numel = task.shape.isEmpty
-          ? 1
-          : task.shape.reduce((a, b) => a * b);
+      final numel = task.shape.isEmpty ? 1 : task.shape.reduce((a, b) => a * b);
       await shard.setPosition(srcStart);
       if (task.srcDtype == 'F16') {
         var remaining = numel * 2;
@@ -822,8 +950,10 @@ Future<int> _processTensor(
   }
 
   if (writePos - task.outOffset != task.outNbytes) {
-    throw StateError('${task.name}: wrote ${writePos - task.outOffset}, '
-        'expected ${task.outNbytes}');
+    throw StateError(
+      '${task.name}: wrote ${writePos - task.outOffset}, '
+      'expected ${task.outNbytes}',
+    );
   }
   return hash.digest();
 }

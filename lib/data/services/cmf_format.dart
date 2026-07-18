@@ -303,6 +303,8 @@ abstract final class CmfValidator {
       final arch = header['arch'] as Map<String, dynamic>? ?? const {};
       final layerTypes =
           (arch['layer_types'] as List?)?.cast<String>() ?? const [];
+      final moe = arch['moe'] as Map<String, dynamic>?;
+      final numExperts = moe?['num_experts'] as int? ?? 0;
       final tied = arch['tie_word_embeddings'] == true;
 
       // Tensor names from the directory pool.
@@ -392,6 +394,30 @@ abstract final class CmfValidator {
         } else {
           problems.add('layer $i has unsupported type ${layerTypes[i]}');
           break;
+        }
+
+        final router = 'model.layers.$i.mlp.gate.weight';
+        if (names.contains(router)) {
+          if (numExperts <= 0) {
+            problems.add('layer $i has an MoE router but arch.moe is missing');
+            break;
+          }
+          final missingExperts = <String>[];
+          for (var expert = 0; expert < numExperts; expert++) {
+            for (final projection in ['gate_proj', 'up_proj', 'down_proj']) {
+              final name =
+                  'model.layers.$i.mlp.experts.$expert.'
+                  '$projection.weight';
+              if (!names.contains(name)) missingExperts.add(name);
+            }
+          }
+          if (missingExperts.isNotEmpty) {
+            problems.add(
+              'layer $i MoE is missing ${missingExperts.first}'
+              '${missingExperts.length > 1 ? ' and ${missingExperts.length - 1} more' : ''}',
+            );
+            break;
+          }
         }
       }
     } catch (e) {

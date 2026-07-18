@@ -44,6 +44,8 @@ converter, and an OpenAI-compatible server speaking the CMF protocol.
   [infosave/Bonsai-1.7Bcmf](https://huggingface.co/infosave/Bonsai-1.7Bcmf)
   and [infosave/Bonsai-27Bcmf](https://huggingface.co/infosave/Bonsai-27Bcmf))
 - Repos that ship ready `.cmf` files download directly — any quantization
+- On-device conversion supports canonical Qwen MoE and LFM2-MoE/ShortConv
+  checkpoints, including sidecar chat templates
 - Job queue with phases, logs, cancel — same flow as the gateway's Import view
 
 ### 📡 Server

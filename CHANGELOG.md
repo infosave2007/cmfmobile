@@ -4,6 +4,30 @@ All notable changes to CMF Mobile are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
+## [1.0.7] - 2026-07-18
+
+### Fixed
+- Restored the standard Qwen2/Qwen3/Qwen3.5 MoE conversion path that was
+  already supported by `cortiq convert` but remained blocked by the mobile
+  architecture guard. Router and shared-expert gates remain F16 while expert
+  matrices use the selected quantization.
+- Added complete on-device `LiquidAI/LFM2.5-8B-A1B` conversion: all 2,302
+  vendor tensor names map collision-free to the canonical CMF layout,
+  ShortConv schedules and kernel geometry are preserved, and the header carries
+  sigmoid routing, expert-selection bias semantics, top-k normalization, and
+  per-expert dimensions.
+- `chat_template.jinja` sidecars are now embedded into the CMF tokenizer bundle
+  instead of silently falling back to an incorrect default chat template.
+- Structural validation checks every routed expert's gate/up/down tensors before
+  native loading. Unsupported `num_local_experts` layouts remain blocked rather
+  than being mislabeled as supported.
+
+### Tests
+- Added independent end-to-end synthetic conversions for canonical Qwen MoE and
+  LFM2 ShortConv+MoE, plus the exact public LFM2.5-8B-A1B config and tokenizer
+  sidecar regression coverage. Existing Qwen3.5, Gemma, dense, downloader, and
+  API tests remain unchanged and passing.
+
 ## [1.0.6] - 2026-07-18
 
 ### Changed

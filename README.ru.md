@@ -44,6 +44,8 @@ iOS-устройство в полностью локальную AI-станц�
   [infosave/Bonsai-1.7Bcmf](https://huggingface.co/infosave/Bonsai-1.7Bcmf)
   и [infosave/Bonsai-27Bcmf](https://huggingface.co/infosave/Bonsai-27Bcmf))
 - Репозитории с готовыми `.cmf` скачиваются напрямую — любая квантизация
+- На устройстве конвертируются канонические Qwen MoE и LFM2-MoE/ShortConv,
+  включая отдельные файлы шаблонов чата
 - Очередь задач с фазами, логами и отменой — тот же flow, что в gateway
 
 ### 📡 Сервер
