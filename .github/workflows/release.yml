@@ -68,6 +68,18 @@ jobs:
       - name: Build iOS (no codesign)
         run: flutter build ios --release --no-codesign
 
+      # A hollow build (runtime not linked) must fail loudly, not ship.
+      - name: Verify cortiq runtime is linked
+        run: |
+          BIN=build/ios/iphoneos/Runner.app/Runner
+          if dyld_info -exports "$BIN" 2>/dev/null | grep -q _cortiq_load \
+             || nm -gU "$BIN" 2>/dev/null | grep -q _cortiq_load; then
+            echo "cortiq symbols present"
+          else
+            echo "::error::cortiq_ffi is not linked into Runner"
+            exit 1
+          fi
+
       # Unsigned .ipa: install via AltStore/Sideloadly or sign with your
       # own certificate; App Store builds need Xcode signing set up.
       - name: Package unsigned ipa
