@@ -9,6 +9,16 @@ import '../../core/util/formats.dart';
 import '../../data/models/conversion.dart';
 import '../../l10n/app_localizations.dart';
 
+/// Ready-to-run .cmf repos pinned above the search results — one tap to
+/// download, no conversion needed.
+const featuredRepos = ['infosave/Bonsai-27Bcmf'];
+
+class _FeaturedEntry {
+  const _FeaturedEntry(this.model, this.cmfSizeBytes);
+  final HfModel model;
+  final int cmfSizeBytes;
+}
+
 /// HuggingFace import: search → configure quantization → conversion jobs
 /// with live progress (the same flow as cortiq-gateway's Import view).
 class ImportScreen extends ConsumerStatefulWidget {
@@ -29,10 +39,31 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
 
   StreamSubscription<void>? _jobsSub;
   final Set<String> _seenDone = {};
+  List<_FeaturedEntry> _featured = const [];
+
+  Future<void> _loadFeatured() async {
+    final hf = ref.read(hfApiProvider);
+    final token = ref.read(settingsProvider).value?.hfToken;
+    final entries = <_FeaturedEntry>[];
+    for (final repo in featuredRepos) {
+      try {
+        final model = await hf.fetchModel(repo, token: token);
+        final files = await hf.listFiles(repo, token: token);
+        final size = files
+            .where((f) => f.path.toLowerCase().endsWith('.cmf'))
+            .fold<int>(0, (s, f) => s + f.size);
+        entries.add(_FeaturedEntry(model, size));
+      } catch (_) {
+        // Featured cards are best-effort; search still works offline.
+      }
+    }
+    if (mounted) setState(() => _featured = entries);
+  }
 
   @override
   void initState() {
     super.initState();
+    _loadFeatured();
     _runSearch('');
     _jobsSub = ref.read(converterProvider).updates.listen((_) {
       if (!mounted) return;
@@ -150,6 +181,54 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
     );
   }
 
+  /// One tap on a featured .cmf repo starts the direct download — no
+  /// conversion, nothing to configure.
+  Future<void> _startDirect(HfModel model) async {
+    final settings = ref.read(settingsProvider).value;
+    await ref.read(converterProvider).start(
+          repo: model.id,
+          quant: QuantType.q8_2f, // ignored: the repo ships .cmf
+          hfToken: settings?.hfToken,
+          threads: settings?.threads ?? 4,
+        );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppLocalizations.of(context).importStartedSnack)));
+    _tabs.animateTo(1);
+  }
+
+  Widget _buildResultsList(AppLocalizations l) {
+    final results = _results!
+        .where((m) => !featuredRepos.contains(m.id))
+        .toList();
+    final showFeatured = _featured.isNotEmpty;
+    if (!showFeatured && results.isEmpty) {
+      return Center(child: Text(l.importNoResults));
+    }
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+      children: [
+        if (showFeatured) ...[
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Text(
+              l.importFeaturedTitle,
+              style: Theme.of(context)
+                  .textTheme
+                  .labelLarge
+                  ?.copyWith(color: Theme.of(context).colorScheme.primary),
+            ),
+          ),
+          for (final entry in _featured)
+            _FeaturedCard(entry: entry, onTap: () => _startDirect(entry.model)),
+          const SizedBox(height: 10),
+        ],
+        for (final model in results)
+          _HfModelCard(model: model, onTap: () => _configure(model)),
+      ],
+    );
+  }
+
   Widget _buildSearchTab(AppLocalizations l) {
     return Column(
       children: [
@@ -196,19 +275,93 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
                 )
               : (_results == null)
                   ? const Center(child: CircularProgressIndicator())
-                  : _results!.isEmpty
-                      ? Center(child: Text(l.importNoResults))
-                      : ListView.builder(
-                          padding:
-                              const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                          itemCount: _results!.length,
-                          itemBuilder: (context, i) => _HfModelCard(
-                            model: _results![i],
-                            onTap: () => _configure(_results![i]),
-                          ),
-                        ),
+                  : _buildResultsList(l),
         ),
       ],
+    );
+  }
+}
+
+class _FeaturedCard extends StatelessWidget {
+  const _FeaturedCard({required this.entry, required this.onTap});
+
+  final _FeaturedEntry entry;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final model = entry.model;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      color: scheme.primary.withValues(alpha: 0.08),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: scheme.primary.withValues(alpha: 0.15),
+                ),
+                child: Icon(Icons.bolt, color: scheme.primary),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      model.id,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: scheme.primary.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            l.importReadyCmfBadge,
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: scheme.primary),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        if (entry.cmfSizeBytes > 0)
+                          Text(
+                            formatBytes(entry.cmfSizeBytes),
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: scheme.onSurfaceVariant),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.download_for_offline_outlined,
+                  color: scheme.primary),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

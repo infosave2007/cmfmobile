@@ -4,6 +4,33 @@ All notable changes to CMF Mobile are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
+## [1.0.1] - 2026-07-18
+
+### Added
+- **Q8_2F on-device conversion** — the recommended two-field quantization
+  now converts right on the phone (f16-RMS column field + per-row
+  residual scale, reference-exact).
+- **Featured models**: ready-to-run `.cmf` repos pinned above the search
+  results (infosave/Bonsai-27Bcmf — 27B at 1-bit in 4.8 GB); one tap
+  starts the direct download.
+- Engine load failures now surface as a snackbar with the error text.
+
+### Changed
+- Conversion is **multi-threaded**: quantization runs on an isolate pool
+  sized by the CPU-threads setting (Qwen3-0.6B → Q8_2F in 143 s on 8
+  threads), and no longer blocks the UI.
+- Bundled cortiq runtime updated to **v0.3.11** (q1 speed batch) on all
+  ABIs: arm64-v8a, armeabi-v7a, x86_64, iOS static lib.
+
+### Fixed
+- Converted files are now byte-exact against the reference converter:
+  f16-rounded scales (previous output degraded inference), `quant_type`
+  Q1→VBIT, q1 width guard with per-tensor q8_2f fallback, tensor-name
+  canonicalization, f16 for noise-sensitive projections, QUANT_2F
+  feature bit. Files converted by 1.0.0 should be re-converted.
+- End-to-end verified: an app-converted Q8_2F model loads through the
+  cortiq runtime and generates at 100 tok/s (`tool/convert_smoke.dart`).
+
 ## [1.0.0] - 2026-07-18
 
 ### Added

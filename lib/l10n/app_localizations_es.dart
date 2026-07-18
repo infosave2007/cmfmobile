@@ -247,6 +247,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get importSearchPlaceholder => 'Buscar modelos (p. ej. qwen3, llama)…';
 
   @override
+  String get importFeaturedTitle => 'Recomendados';
+
+  @override
+  String get importReadyCmfBadge => '.cmf listo — toca para descargar';
+
+  @override
   String get importNoResults => 'No se encontraron modelos.';
 
   @override

@@ -246,6 +246,12 @@ class AppLocalizationsRu extends AppLocalizations {
       'Поиск моделей (например, qwen3, llama)…';
 
   @override
+  String get importFeaturedTitle => 'Рекомендуемые';
+
+  @override
+  String get importReadyCmfBadge => 'готовый .cmf — нажмите, чтобы скачать';
+
+  @override
   String get importNoResults => 'Модели не найдены.';
 
   @override

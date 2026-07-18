@@ -87,6 +87,8 @@
   "importTitle": "Hugging Face",
   "importSubtitle": "Search Hugging Face, convert to a local .cmf, and run it on this phone.",
   "importSearchPlaceholder": "Search models (e.g. qwen3, llama)…",
+  "importFeaturedTitle": "Recommended",
+  "importReadyCmfBadge": "ready .cmf — tap to download",
   "importNoResults": "No models found.",
   "importGatedBadge": "gated",
   "importGatedHint": "Gated repo — set a Hugging Face token in Settings.",

@@ -69,6 +69,8 @@
   "importTitle": "Hugging Face",
   "importSubtitle": "Hugging Face'te arayın, yerel bir .cmf dosyasına dönüştürün ve bu telefonda çalıştırın.",
   "importSearchPlaceholder": "Model ara (örn. qwen3, llama)…",
+  "importFeaturedTitle": "Önerilenler",
+  "importReadyCmfBadge": "hazır .cmf — indirmek için dokunun",
   "importNoResults": "Model bulunamadı.",
   "importGatedBadge": "gated",
   "importGatedHint": "Gated depo — Ayarlar'da bir Hugging Face tokenı girin.",

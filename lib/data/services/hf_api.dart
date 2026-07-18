@@ -41,6 +41,19 @@ class HfApi {
         .toList();
   }
 
+  /// GET /api/models/{repo} → one model card (used for featured models).
+  Future<HfModel> fetchModel(String repo, {String? token}) async {
+    final uri = Uri.parse('$_base/api/models/$repo');
+    final res = await _client
+        .get(uri, headers: _headers(token))
+        .timeout(const Duration(seconds: 15));
+    if (res.statusCode != 200) {
+      throw HttpException('HF model failed: HTTP ${res.statusCode}');
+    }
+    return HfModel.fromJson(
+        jsonDecode(res.body) as Map<String, dynamic>);
+  }
+
   /// GET /api/models/{repo}/tree/main?recursive=true → [{path, size, type}]
   Future<List<HfFileEntry>> listFiles(String repo, {String? token}) async {
     final uri = Uri.parse('$_base/api/models/$repo/tree/main?recursive=true');

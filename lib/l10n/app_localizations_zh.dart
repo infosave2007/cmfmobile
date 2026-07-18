@@ -239,6 +239,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get importSearchPlaceholder => '搜索模型(如 qwen3、llama)…';
 
   @override
+  String get importFeaturedTitle => '推荐';
+
+  @override
+  String get importReadyCmfBadge => '现成 .cmf——点按即可下载';
+
+  @override
   String get importNoResults => '未找到模型。';
 
   @override

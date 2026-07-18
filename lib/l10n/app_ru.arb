@@ -69,6 +69,8 @@
   "importTitle": "Hugging Face",
   "importSubtitle": "Найдите модель на Hugging Face, сконвертируйте в локальный .cmf и запускайте на этом телефоне.",
   "importSearchPlaceholder": "Поиск моделей (например, qwen3, llama)…",
+  "importFeaturedTitle": "Рекомендуемые",
+  "importReadyCmfBadge": "готовый .cmf — нажмите, чтобы скачать",
   "importNoResults": "Модели не найдены.",
   "importGatedBadge": "gated",
   "importGatedHint": "Закрытый репозиторий — укажите токен Hugging Face в настройках.",

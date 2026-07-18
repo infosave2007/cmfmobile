@@ -249,6 +249,12 @@ class AppLocalizationsFr extends AppLocalizations {
       'Rechercher des modèles (ex. qwen3, llama)…';
 
   @override
+  String get importFeaturedTitle => 'Recommandés';
+
+  @override
+  String get importReadyCmfBadge => '.cmf prêt — touchez pour télécharger';
+
+  @override
   String get importNoResults => 'Aucun modèle trouvé.';
 
   @override

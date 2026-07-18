@@ -32,11 +32,15 @@ converter, and an OpenAI-compatible server speaking the CMF protocol.
 
 ### ⬇️ Hugging Face converter (like cortiq-gateway, but on the phone)
 - Search the HF Hub, pick a model, pick a quantization, watch live progress
-- **On-device conversion** of safetensors repos to CMF v2:
+- **On-device, multi-threaded conversion** of safetensors repos to CMF v2
+  (reference-exact encoders, isolate pool sized by the CPU-threads setting):
+  - `Q8_2F` — 8-bit two-field (𝒲×θ), the recommended quality/size point
   - `Q8_ROW` — 8-bit per-row
   - `Q1` — **1.5-bit for 1-bit-trained models** (Bonsai/BitNet: a 27B model fits in ~5 GB)
   - `F16` — no quantization
-- Repos that ship ready `.cmf` files download directly — any quantization (Q8_2F, VBIT, …)
+- **Featured models** pinned on top — ready `.cmf` repos download in one tap
+  (e.g. [infosave/Bonsai-27Bcmf](https://huggingface.co/infosave/Bonsai-27Bcmf))
+- Repos that ship ready `.cmf` files download directly — any quantization
 - Job queue with phases, logs, cancel — same flow as the gateway's Import view
 
 ### 📡 Server
@@ -68,7 +72,7 @@ flutter run
 ```
 
 **The app ships with the real cortiq runtime** —
-`libcortiq_ffi` v0.3.10 (arm64-v8a, armeabi-v7a, x86_64 + iOS static lib) from the [cmf releases](https://github.com/infosave2007/cmf/releases)
+`libcortiq_ffi` v0.3.11 (arm64-v8a, armeabi-v7a, x86_64 + iOS static lib) from the [cmf releases](https://github.com/infosave2007/cmf/releases)
 is bundled in `android/app/src/main/jniLibs/`, so chat and the server run
 actual on-device inference out of the box (verified end-to-end: qwen3-5-4b
 Q8_2F streams through the same binding — see `tool/ffi_smoke.dart`).

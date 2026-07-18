@@ -245,6 +245,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get importSearchPlaceholder => 'Model ara (örn. qwen3, llama)…';
 
   @override
+  String get importFeaturedTitle => 'Önerilenler';
+
+  @override
+  String get importReadyCmfBadge => 'hazır .cmf — indirmek için dokunun';
+
+  @override
   String get importNoResults => 'Model bulunamadı.';
 
   @override

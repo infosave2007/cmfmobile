@@ -244,6 +244,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importSearchPlaceholder => 'Search models (e.g. qwen3, llama)…';
 
   @override
+  String get importFeaturedTitle => 'Recommended';
+
+  @override
+  String get importReadyCmfBadge => 'ready .cmf — tap to download';
+
+  @override
   String get importNoResults => 'No models found.';
 
   @override

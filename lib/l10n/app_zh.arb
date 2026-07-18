@@ -69,6 +69,8 @@
   "importTitle": "Hugging Face",
   "importSubtitle": "搜索 Hugging Face,转换为本地 .cmf,并在这台手机上运行。",
   "importSearchPlaceholder": "搜索模型(如 qwen3、llama)…",
+  "importFeaturedTitle": "推荐",
+  "importReadyCmfBadge": "现成 .cmf——点按即可下载",
   "importNoResults": "未找到模型。",
   "importGatedBadge": "gated",
   "importGatedHint": "gated 仓库——请在设置中填写 Hugging Face token。",

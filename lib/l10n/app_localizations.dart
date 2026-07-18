@@ -522,6 +522,18 @@ abstract class AppLocalizations {
   /// **'Search models (e.g. qwen3, llama)…'**
   String get importSearchPlaceholder;
 
+  /// No description provided for @importFeaturedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended'**
+  String get importFeaturedTitle;
+
+  /// No description provided for @importReadyCmfBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'ready .cmf — tap to download'**
+  String get importReadyCmfBadge;
+
   /// No description provided for @importNoResults.
   ///
   /// In en, this message translates to:
