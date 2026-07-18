@@ -1,12 +1,10 @@
 {
   "@@locale": "fr",
   "appTitle": "CMF Mobile",
-
   "navChat": "Chat",
   "navModels": "Modèles",
   "navServer": "Serveur",
   "navSettings": "Réglages",
-
   "actionCancel": "Annuler",
   "actionDelete": "Supprimer",
   "actionClose": "Fermer",
@@ -15,7 +13,6 @@
   "actionRetry": "Réessayer",
   "actionLoad": "Charger",
   "copiedToClipboard": "Copié dans le presse-papiers",
-
   "chatEmptyTitle": "Démarrez une conversation",
   "chatEmptyBody": "Tout s'exécute localement sur cet appareil — pas de cloud, aucune donnée ne quitte votre téléphone.",
   "chatNoModelTitle": "Aucun modèle chargé",
@@ -39,16 +36,15 @@
   "chatSessionTokens": "{prompt} tokens de prompt · {completion} de réponse",
   "chatModelPickerTitle": "Modèle",
   "chatModelLoading": "Chargement du modèle…",
+  "engineLoadFailed": "Échec du chargement du modèle : {error}",
   "chatDemoBadge": "moteur démo",
   "chatDemoBanner": "Le runtime natif cortiq n'est pas inclus dans cette build — les réponses sont simulées. Voir native/README.md.",
   "chatGenerationError": "Échec de la génération",
   "chatSuggestion1": "Explique le fonctionnement des masques de tâches CMF",
   "chatSuggestion2": "Résume le document joint",
   "chatSuggestion3": "Écris une requête SQL pour le chiffre d'affaires mensuel",
-
   "statsTokensPerSecond": "{tps} tok/s",
   "statsFinishLength": "tronqué à la limite de tokens",
-
   "modelsTitle": "Modèles",
   "modelsEmptyTitle": "Aucun modèle pour l'instant",
   "modelsEmptyBody": "Téléchargez un modèle depuis Hugging Face ou importez un fichier .cmf depuis cet appareil.",
@@ -67,11 +63,9 @@
   "modelsMetaTasks": "{n} tâches",
   "modelsAttachmentsOk": "documents",
   "modelsMetaRam": "~{size} RAM",
-
   "memoryWarnTitle": "Risque de mémoire insuffisante",
   "memoryWarnBody": "Ce modèle nécessite environ {need} de RAM. Cet appareil dispose de {total} de RAM, dont les applications ne peuvent réellement utiliser qu'une partie — le chargement peut échouer ou être très lent.",
   "memoryWarnLoadAnyway": "Charger quand même",
-
   "importTitle": "Hugging Face",
   "importSubtitle": "Recherchez sur Hugging Face, convertissez en .cmf local et exécutez-le sur ce téléphone.",
   "importSearchPlaceholder": "Rechercher des modèles (ex. qwen3, llama)…",
@@ -88,7 +82,7 @@
   "importNoJobs": "Aucune conversion pour l'instant.",
   "importDeleteConfirm": "Supprimer cette conversion et son fichier .cmf du stockage ?",
   "importShowLog": "Afficher le journal",
-  "importOnDeviceNote": "La conversion sur l'appareil prend en charge Q8_ROW, Q1 et F16. Les dépôts qui fournissent déjà des fichiers .cmf sont téléchargés directement — quelle que soit la quantification.",
+  "importOnDeviceNote": "La conversion sur l’appareil prend en charge Q8_ROW, Q8_2F, Q1 et F16 (multithread). Les dépôts fournissant des .cmf sont téléchargés directement — quelle que soit la quantification.",
   "importStateRunning": "en cours",
   "importStateDone": "terminé",
   "importStateError": "erreur",
@@ -98,14 +92,12 @@
   "importPhaseConverting": "conversion",
   "importPhaseQuantizing": "quantification",
   "importPhaseFinalizing": "finalisation",
-
-  "quantQ8_2fDesc": "8 bits à deux champs (𝒲×θ) — meilleur rapport qualité/taille. Nécessite un dépôt .cmf ou la toolchain de bureau.",
+  "quantQ8_2fDesc": "8 bits, deux champs (𝒲×θ) — meilleur rapport qualité/taille. Conversion sur l’appareil.",
   "quantQ8RowDesc": "8 bits par ligne — simple et robuste. Conversion sur l'appareil.",
   "quantQ4Desc": "Blocs 4 bits — le plus compact, qualité moindre. Nécessite un dépôt .cmf ou la toolchain de bureau.",
   "quantVbitDesc": "3–8 bits variables — budgets par expert. Nécessite un dépôt .cmf ou la toolchain de bureau.",
   "quantQ1Desc": "1,5 bit — pour les modèles entraînés en 1 bit (Bonsai, BitNet). Un modèle 27B tient dans ~5 Go. Conversion sur l'appareil.",
   "quantF16Desc": "16 bits — sans quantification, fichier volumineux. Conversion sur l'appareil.",
-
   "serverTitle": "Serveur",
   "serverSubtitle": "Servez le modèle chargé sur votre réseau via le protocole CMF (API compatible OpenAI).",
   "serverStart": "Démarrer le serveur",
@@ -128,7 +120,6 @@
   "serverNoRequestsYet": "Aucune requête pour l'instant. Pointez n'importe quel client compatible OpenAI vers ce téléphone.",
   "serverKeepAwakeNote": "L'écran reste allumé tant que le serveur est en marche.",
   "serverEndpointsTitle": "Endpoints",
-
   "settingsTitle": "Réglages",
   "settingsAppearance": "Apparence",
   "settingsTheme": "Thème",

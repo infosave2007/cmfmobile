@@ -121,6 +121,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chatModelLoading => '正在加载模型…';
 
   @override
+  String engineLoadFailed(String error) {
+    return '模型加载失败：$error';
+  }
+
+  @override
   String get chatDemoBadge => '演示引擎';
 
   @override
@@ -274,7 +279,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get importOnDeviceNote =>
-      '设备端转换支持 Q8_ROW、Q1 和 F16。已包含 .cmf 文件的仓库可直接下载——不限量化格式。';
+      '设备端转换支持 Q8_ROW、Q8_2F、Q1 和 F16（多线程）。已包含 .cmf 文件的仓库将直接下载——任何量化格式均可。';
 
   @override
   String get importStateRunning => '进行中';
@@ -304,7 +309,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get importPhaseFinalizing => '正在完成';
 
   @override
-  String get quantQ8_2fDesc => '8 位双字段(𝒲×θ)——质量/体积比最佳。需要 .cmf 仓库或桌面工具链。';
+  String get quantQ8_2fDesc => '8 位双字段（𝒲×θ）——质量/体积最佳。可在设备端转换。';
 
   @override
   String get quantQ8RowDesc => '8 位按行量化——简单可靠。可在设备上转换。';

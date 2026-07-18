@@ -124,6 +124,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatModelLoading => 'Загрузка модели…';
 
   @override
+  String engineLoadFailed(String error) {
+    return 'Не удалось загрузить модель: $error';
+  }
+
+  @override
   String get chatDemoBadge => 'демо-движок';
 
   @override
@@ -283,7 +288,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get importOnDeviceNote =>
-      'На устройстве доступны Q8_ROW, Q1 и F16. Репозитории с готовыми .cmf скачиваются напрямую — в любой квантизации.';
+      'На устройстве доступны Q8_ROW, Q8_2F, Q1 и F16 (многопоточно). Репозитории с готовыми .cmf скачиваются напрямую — в любой квантизации.';
 
   @override
   String get importStateRunning => 'выполняется';
@@ -314,7 +319,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get quantQ8_2fDesc =>
-      '8 бит, два поля (𝒲×θ) — лучшее качество/размер. Нужен .cmf-репозиторий или десктопный тулчейн.';
+      '8 бит, два поля (𝒲×θ) — лучшее качество/размер. Конвертируется на устройстве.';
 
   @override
   String get quantQ8RowDesc =>

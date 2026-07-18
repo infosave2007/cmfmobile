@@ -14,8 +14,14 @@ enum QuantType {
 
   /// Quantizations the on-device Dart converter can produce itself.
   /// The rest require the native cortiq toolchain.
-  bool get supportedOnDevice =>
-      this == QuantType.q8Row || this == QuantType.q1 || this == QuantType.f16;
+  bool get supportedOnDevice => switch (this) {
+        QuantType.q8Row ||
+        QuantType.q8_2f ||
+        QuantType.q1 ||
+        QuantType.f16 =>
+          true,
+        _ => false,
+      };
 }
 
 /// A HuggingFace model card from the search API.

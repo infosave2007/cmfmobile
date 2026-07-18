@@ -18,6 +18,18 @@ class HomeShell extends ConsumerWidget {
     final serverRunning = ref.watch(
         serverControllerProvider.select((s) => s.running));
 
+    // Engine failures (bad file, unsupported arch, OOM) must be loud —
+    // a silent spinner reset reads as "nothing happened".
+    ref.listen(engineControllerProvider, (previous, next) {
+      if (next.error != null && next.error != previous?.error) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(l.engineLoadFailed(next.error!)),
+          duration: const Duration(seconds: 8),
+          showCloseIcon: true,
+        ));
+      }
+    });
+
     return Scaffold(
       body: IndexedStack(
         index: index,

@@ -1,12 +1,10 @@
 {
   "@@locale": "ru",
   "appTitle": "CMF Mobile",
-
   "navChat": "Чат",
   "navModels": "Модели",
   "navServer": "Сервер",
   "navSettings": "Настройки",
-
   "actionCancel": "Отмена",
   "actionDelete": "Удалить",
   "actionClose": "Закрыть",
@@ -15,7 +13,6 @@
   "actionRetry": "Повторить",
   "actionLoad": "Загрузить",
   "copiedToClipboard": "Скопировано в буфер обмена",
-
   "chatEmptyTitle": "Начните диалог",
   "chatEmptyBody": "Всё работает локально на этом устройстве — без облака, данные не покидают телефон.",
   "chatNoModelTitle": "Модель не загружена",
@@ -39,16 +36,15 @@
   "chatSessionTokens": "{prompt} промпт · {completion} ответ токенов",
   "chatModelPickerTitle": "Модель",
   "chatModelLoading": "Загрузка модели…",
+  "engineLoadFailed": "Не удалось загрузить модель: {error}",
   "chatDemoBadge": "демо-движок",
   "chatDemoBanner": "Нативный рантайм cortiq не включён в эту сборку — ответы симулируются. См. native/README.md.",
   "chatGenerationError": "Ошибка генерации",
   "chatSuggestion1": "Объясни, как работают маски задач CMF",
   "chatSuggestion2": "Сделай краткое содержание прикреплённого документа",
   "chatSuggestion3": "Напиши SQL-запрос месячной выручки",
-
   "statsTokensPerSecond": "{tps} ток/с",
   "statsFinishLength": "обрезано по лимиту токенов",
-
   "modelsTitle": "Модели",
   "modelsEmptyTitle": "Моделей пока нет",
   "modelsEmptyBody": "Скачайте модель с Hugging Face или импортируйте файл .cmf с устройства.",
@@ -67,11 +63,9 @@
   "modelsMetaTasks": "{n} задач",
   "modelsAttachmentsOk": "документы",
   "modelsMetaRam": "~{size} RAM",
-
   "memoryWarnTitle": "Может не хватить памяти",
   "memoryWarnBody": "Для запуска модели нужно около {need} оперативной памяти. В устройстве {total} RAM, приложению доступна лишь часть — загрузка может завершиться ошибкой или работать очень медленно.",
   "memoryWarnLoadAnyway": "Всё равно загрузить",
-
   "importTitle": "Hugging Face",
   "importSubtitle": "Найдите модель на Hugging Face, сконвертируйте в локальный .cmf и запускайте на этом телефоне.",
   "importSearchPlaceholder": "Поиск моделей (например, qwen3, llama)…",
@@ -88,7 +82,7 @@
   "importNoJobs": "Конвертаций пока не было.",
   "importDeleteConfirm": "Удалить эту конвертацию и её файл .cmf с диска?",
   "importShowLog": "Показать лог",
-  "importOnDeviceNote": "На устройстве доступны Q8_ROW, Q1 и F16. Репозитории с готовыми .cmf скачиваются напрямую — в любой квантизации.",
+  "importOnDeviceNote": "На устройстве доступны Q8_ROW, Q8_2F, Q1 и F16 (многопоточно). Репозитории с готовыми .cmf скачиваются напрямую — в любой квантизации.",
   "importStateRunning": "выполняется",
   "importStateDone": "готово",
   "importStateError": "ошибка",
@@ -98,14 +92,12 @@
   "importPhaseConverting": "конвертация",
   "importPhaseQuantizing": "квантизация",
   "importPhaseFinalizing": "завершение",
-
-  "quantQ8_2fDesc": "8 бит, два поля (𝒲×θ) — лучшее качество/размер. Нужен .cmf-репозиторий или десктопный тулчейн.",
+  "quantQ8_2fDesc": "8 бит, два поля (𝒲×θ) — лучшее качество/размер. Конвертируется на устройстве.",
   "quantQ8RowDesc": "8 бит на строку — просто и надёжно. Конвертируется на устройстве.",
   "quantQ4Desc": "4 бита блочно — минимальный размер, ниже качество. Нужен .cmf-репозиторий или десктопный тулчейн.",
   "quantVbitDesc": "Переменные 3–8 бит — бюджеты по экспертам. Нужен .cmf-репозиторий или десктопный тулчейн.",
   "quantQ1Desc": "1,5 бита — для 1-битно обученных моделей (Bonsai, BitNet). Модель 27B помещается в ~5 ГБ. Конвертируется на устройстве.",
   "quantF16Desc": "16 бит — без квантизации, большой файл. Конвертируется на устройстве.",
-
   "serverTitle": "Сервер",
   "serverSubtitle": "Раздавайте загруженную модель в сеть по протоколу CMF (OpenAI-совместимый API).",
   "serverStart": "Запустить сервер",
@@ -128,7 +120,6 @@
   "serverNoRequestsYet": "Запросов ещё не было. Направьте сюда любой OpenAI-совместимый клиент.",
   "serverKeepAwakeNote": "Пока сервер работает, экран не гаснет.",
   "serverEndpointsTitle": "Эндпоинты",
-
   "settingsTitle": "Настройки",
   "settingsAppearance": "Внешний вид",
   "settingsTheme": "Тема",

@@ -1,12 +1,10 @@
 {
   "@@locale": "de",
   "appTitle": "CMF Mobile",
-
   "navChat": "Chat",
   "navModels": "Modelle",
   "navServer": "Server",
   "navSettings": "Einstellungen",
-
   "actionCancel": "Abbrechen",
   "actionDelete": "Löschen",
   "actionClose": "Schließen",
@@ -15,7 +13,6 @@
   "actionRetry": "Wiederholen",
   "actionLoad": "Laden",
   "copiedToClipboard": "In die Zwischenablage kopiert",
-
   "chatEmptyTitle": "Starte eine Unterhaltung",
   "chatEmptyBody": "Alles läuft lokal auf diesem Gerät — keine Cloud, keine Daten verlassen dein Telefon.",
   "chatNoModelTitle": "Kein Modell geladen",
@@ -39,16 +36,15 @@
   "chatSessionTokens": "{prompt} Prompt- · {completion} Antwort-Token",
   "chatModelPickerTitle": "Modell",
   "chatModelLoading": "Modell wird geladen…",
+  "engineLoadFailed": "Modell konnte nicht geladen werden: {error}",
   "chatDemoBadge": "Demo-Engine",
   "chatDemoBanner": "Die native cortiq-Runtime ist in diesem Build nicht enthalten — Antworten werden simuliert. Siehe native/README.md.",
   "chatGenerationError": "Generierung fehlgeschlagen",
   "chatSuggestion1": "Erkläre, wie CMF-Task-Masken funktionieren",
   "chatSuggestion2": "Fasse das angehängte Dokument zusammen",
   "chatSuggestion3": "Schreibe eine SQL-Abfrage für den Monatsumsatz",
-
   "statsTokensPerSecond": "{tps} Tok/s",
   "statsFinishLength": "bei max. Token abgeschnitten",
-
   "modelsTitle": "Modelle",
   "modelsEmptyTitle": "Noch keine Modelle",
   "modelsEmptyBody": "Lade ein Modell von Hugging Face herunter oder importiere eine .cmf-Datei von diesem Gerät.",
@@ -67,11 +63,9 @@
   "modelsMetaTasks": "{n} Tasks",
   "modelsAttachmentsOk": "Dokumente",
   "modelsMetaRam": "~{size} RAM",
-
   "memoryWarnTitle": "Passt möglicherweise nicht in den Speicher",
   "memoryWarnBody": "Dieses Modell benötigt etwa {need} RAM. Dieses Gerät hat {total} RAM, wovon Apps realistisch nur einen Teil nutzen können — das Laden kann fehlschlagen oder sehr langsam sein.",
   "memoryWarnLoadAnyway": "Trotzdem laden",
-
   "importTitle": "Hugging Face",
   "importSubtitle": "Durchsuche Hugging Face, konvertiere in eine lokale .cmf-Datei und führe sie auf diesem Telefon aus.",
   "importSearchPlaceholder": "Modelle suchen (z. B. qwen3, llama)…",
@@ -88,7 +82,7 @@
   "importNoJobs": "Noch keine Konvertierungen.",
   "importDeleteConfirm": "Diese Konvertierung und ihre .cmf-Datei vom Speicher löschen?",
   "importShowLog": "Log anzeigen",
-  "importOnDeviceNote": "Die Konvertierung auf dem Gerät unterstützt Q8_ROW, Q1 und F16. Repos, die bereits .cmf-Dateien enthalten, werden direkt heruntergeladen — in jeder Quantisierung.",
+  "importOnDeviceNote": "Auf dem Gerät werden Q8_ROW, Q8_2F, Q1 und F16 unterstützt (mehrthreadig). Repos mit fertigen .cmf-Dateien werden direkt geladen — in jeder Quantisierung.",
   "importStateRunning": "läuft",
   "importStateDone": "fertig",
   "importStateError": "Fehler",
@@ -98,14 +92,12 @@
   "importPhaseConverting": "Wird konvertiert",
   "importPhaseQuantizing": "Wird quantisiert",
   "importPhaseFinalizing": "Wird abgeschlossen",
-
-  "quantQ8_2fDesc": "8 Bit, zwei Felder (𝒲×θ) — bestes Verhältnis von Qualität zu Größe. Benötigt ein .cmf-Repo oder die Desktop-Toolchain.",
+  "quantQ8_2fDesc": "8-Bit, zwei Felder (𝒲×θ) — bestes Qualität/Größe-Verhältnis. Konvertiert auf dem Gerät.",
   "quantQ8RowDesc": "8 Bit pro Zeile — einfach und robust. Konvertiert auf dem Gerät.",
   "quantQ4Desc": "4-Bit-Blöcke — am kleinsten, geringere Qualität. Benötigt ein .cmf-Repo oder die Desktop-Toolchain.",
   "quantVbitDesc": "Variabel 3–8 Bit — Budgets pro Experte. Benötigt ein .cmf-Repo oder die Desktop-Toolchain.",
   "quantQ1Desc": "1,5 Bit — für 1-Bit-trainierte Modelle (Bonsai, BitNet). Ein 27B-Modell passt in ~5 GB. Konvertiert auf dem Gerät.",
   "quantF16Desc": "16 Bit — keine Quantisierung, große Datei. Konvertiert auf dem Gerät.",
-
   "serverTitle": "Server",
   "serverSubtitle": "Stelle das geladene Modell über das CMF-Protokoll im Netzwerk bereit (OpenAI-kompatible API).",
   "serverStart": "Server starten",
@@ -128,7 +120,6 @@
   "serverNoRequestsYet": "Noch keine Anfragen. Verbinde einen beliebigen OpenAI-kompatiblen Client mit diesem Telefon.",
   "serverKeepAwakeNote": "Der Bildschirm bleibt an, solange der Server läuft.",
   "serverEndpointsTitle": "Endpunkte",
-
   "settingsTitle": "Einstellungen",
   "settingsAppearance": "Darstellung",
   "settingsTheme": "Design",

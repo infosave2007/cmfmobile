@@ -90,12 +90,13 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
         model: model,
         onStart: (quant, name) async {
           Navigator.pop(sheetContext);
-          final token = ref.read(settingsProvider).value?.hfToken;
+          final settings = ref.read(settingsProvider).value;
           await ref.read(converterProvider).start(
                 repo: model.id,
                 quant: quant,
                 name: name,
-                hfToken: token,
+                hfToken: settings?.hfToken,
+                threads: settings?.threads ?? 4,
               );
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(

@@ -124,6 +124,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatModelLoading => 'Loading model…';
 
   @override
+  String engineLoadFailed(String error) {
+    return 'Failed to load model: $error';
+  }
+
+  @override
   String get chatDemoBadge => 'demo engine';
 
   @override
@@ -281,7 +286,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get importOnDeviceNote =>
-      'On-device conversion supports Q8_ROW, Q1 and F16. Repos that already ship .cmf files are downloaded directly — any quantization.';
+      'On-device conversion supports Q8_ROW, Q8_2F, Q1 and F16 (multi-threaded). Repos that already ship .cmf files are downloaded directly — any quantization.';
 
   @override
   String get importStateRunning => 'running';
@@ -312,7 +317,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quantQ8_2fDesc =>
-      '8-bit two-field (𝒲×θ) — best quality/size. Needs a .cmf repo or the desktop toolchain.';
+      '8-bit two-field (𝒲×θ) — best quality/size. Converts on device.';
 
   @override
   String get quantQ8RowDesc =>

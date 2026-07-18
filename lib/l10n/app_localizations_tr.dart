@@ -124,6 +124,11 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatModelLoading => 'Model yükleniyor…';
 
   @override
+  String engineLoadFailed(String error) {
+    return 'Model yüklenemedi: $error';
+  }
+
+  @override
   String get chatDemoBadge => 'demo motor';
 
   @override
@@ -282,7 +287,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get importOnDeviceNote =>
-      'Cihaz üzerinde dönüştürme Q8_ROW, Q1 ve F16\'yı destekler. Hazır .cmf dosyaları içeren depolar doğrudan indirilir — kuantizasyon fark etmez.';
+      'Cihaz üzerinde dönüştürme Q8_ROW, Q8_2F, Q1 ve F16 destekler (çok iş parçacıklı). Hazır .cmf içeren depolar doğrudan indirilir — her nicemlemede.';
 
   @override
   String get importStateRunning => 'çalışıyor';
@@ -313,7 +318,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get quantQ8_2fDesc =>
-      '8 bit, iki alanlı (𝒲×θ) — en iyi kalite/boyut oranı. Bir .cmf deposu veya masaüstü araç zinciri gerektirir.';
+      '8 bit, iki alan (𝒲×θ) — en iyi kalite/boyut. Cihazda dönüştürülür.';
 
   @override
   String get quantQ8RowDesc =>

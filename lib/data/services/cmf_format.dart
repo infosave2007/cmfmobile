@@ -305,6 +305,9 @@ class CmfWriter {
 
   static int _align(int v, int a) => (v + a - 1) ~/ a * a;
 
+  /// Absolute file offset of the data blob (valid after [begin]).
+  int get dataOffset => _dataOff;
+
   Future<void> begin() async {
     // Plan layout.
     final namePool = BytesBuilder(copy: false);
@@ -405,7 +408,12 @@ class CmfWriter {
     }
     env.setUint32(0x04, Cmf.version, Endian.little);
     env.setUint32(0x08, 0, Endian.little);
-    env.setUint32(0x0C, Cmf.featureTensorDir, Endian.little);
+    // QUANT_2F (bit 2) is required when q8_2f/vbit tensors are present —
+    // matches the reference writer in cortiq-core/src/format.rs.
+    final hasQuant2f = tensors
+        .any((t) => t.dtype == Cmf.dtQ8_2f || t.dtype == Cmf.dtVbit);
+    env.setUint32(0x0C,
+        Cmf.featureTensorDir | (hasQuant2f ? 4 : 0), Endian.little);
     env.setUint64(0x10, Cmf.envelopeLen, Endian.little);
     env.setUint64(0x18, _headerBytes.length, Endian.little);
     env.setUint64(0x20, _dirOff, Endian.little);

@@ -324,6 +324,12 @@ abstract class AppLocalizations {
   /// **'Loading model…'**
   String get chatModelLoading;
 
+  /// No description provided for @engineLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load model: {error}'**
+  String engineLoadFailed(String error);
+
   /// No description provided for @chatDemoBadge.
   ///
   /// In en, this message translates to:
@@ -597,7 +603,7 @@ abstract class AppLocalizations {
   /// No description provided for @importOnDeviceNote.
   ///
   /// In en, this message translates to:
-  /// **'On-device conversion supports Q8_ROW, Q1 and F16. Repos that already ship .cmf files are downloaded directly — any quantization.'**
+  /// **'On-device conversion supports Q8_ROW, Q8_2F, Q1 and F16 (multi-threaded). Repos that already ship .cmf files are downloaded directly — any quantization.'**
   String get importOnDeviceNote;
 
   /// No description provided for @importStateRunning.
@@ -657,7 +663,7 @@ abstract class AppLocalizations {
   /// No description provided for @quantQ8_2fDesc.
   ///
   /// In en, this message translates to:
-  /// **'8-bit two-field (𝒲×θ) — best quality/size. Needs a .cmf repo or the desktop toolchain.'**
+  /// **'8-bit two-field (𝒲×θ) — best quality/size. Converts on device.'**
   String get quantQ8_2fDesc;
 
   /// No description provided for @quantQ8RowDesc.

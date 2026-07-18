@@ -126,6 +126,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chatModelLoading => 'Chargement du modèle…';
 
   @override
+  String engineLoadFailed(String error) {
+    return 'Échec du chargement du modèle : $error';
+  }
+
+  @override
   String get chatDemoBadge => 'moteur démo';
 
   @override
@@ -286,7 +291,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get importOnDeviceNote =>
-      'La conversion sur l\'appareil prend en charge Q8_ROW, Q1 et F16. Les dépôts qui fournissent déjà des fichiers .cmf sont téléchargés directement — quelle que soit la quantification.';
+      'La conversion sur l’appareil prend en charge Q8_ROW, Q8_2F, Q1 et F16 (multithread). Les dépôts fournissant des .cmf sont téléchargés directement — quelle que soit la quantification.';
 
   @override
   String get importStateRunning => 'en cours';
@@ -317,7 +322,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get quantQ8_2fDesc =>
-      '8 bits à deux champs (𝒲×θ) — meilleur rapport qualité/taille. Nécessite un dépôt .cmf ou la toolchain de bureau.';
+      '8 bits, deux champs (𝒲×θ) — meilleur rapport qualité/taille. Conversion sur l’appareil.';
 
   @override
   String get quantQ8RowDesc =>
