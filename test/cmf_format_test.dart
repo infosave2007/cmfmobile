@@ -109,6 +109,55 @@ void main() {
       expect(() => CmfReader.readMetadata(path), throwsFormatException);
       await dir.delete(recursive: true);
     });
+
+    test('validator accepts v0.3.12 ShortConv tensor layout', () async {
+      final dir = await Directory.systemTemp.createTemp('cmf_short_conv');
+      final path = '${dir.path}/short-conv.cmf';
+      addTearDown(() => dir.delete(recursive: true));
+
+      final tensors =
+          [
+                'model.embed_tokens.weight',
+                'model.layers.0.short_conv.in_proj.weight',
+                'model.layers.0.short_conv.conv.weight',
+                'model.layers.0.short_conv.out_proj.weight',
+              ]
+              .map(
+                (name) => CmfTensorSpec(
+                  name: name,
+                  dtype: Cmf.dtF16,
+                  shape: [1],
+                  nbytes: 2,
+                ),
+              )
+              .toList();
+      final writer = CmfWriter(
+        outputPath: path,
+        headerJson: {
+          'format': 'cmf',
+          'version': 2,
+          'arch': {
+            'arch_name': 'lfm2_moe',
+            'hidden_size': 1,
+            'num_layers': 1,
+            'vocab_size': 1,
+            'layer_types': ['ShortConv'],
+            'linear_conv_kernel_dim': 3,
+            'tie_word_embeddings': true,
+          },
+          'quant_type': 'F16',
+        },
+        tensors: tensors,
+      );
+      await writer.begin();
+      for (var i = 0; i < tensors.length; i++) {
+        await writer.nextTensor();
+        await writer.writeTensorChunk(Uint8List(2));
+      }
+      await writer.finish();
+
+      expect(await CmfValidator.validate(path), isEmpty);
+    });
   });
 
   group('safetensors', () {
@@ -119,9 +168,11 @@ void main() {
           '{"w":{"dtype":"F32","shape":[2,2],"data_offsets":[0,16]}}';
       final header = headerJson.codeUnits;
       final bytes = BytesBuilder()
-        ..add((ByteData(8)..setUint64(0, header.length, Endian.little))
-            .buffer
-            .asUint8List())
+        ..add(
+          (ByteData(
+            8,
+          )..setUint64(0, header.length, Endian.little)).buffer.asUint8List(),
+        )
         ..add(header)
         ..add(List.filled(16, 0));
       await File(path).writeAsBytes(bytes.takeBytes());

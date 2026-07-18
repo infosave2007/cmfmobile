@@ -4,6 +4,23 @@ All notable changes to CMF Mobile are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
+## [1.0.6] - 2026-07-18
+
+### Changed
+- Bundled cortiq runtime updated to **v0.3.12** for arm64-v8a,
+  armeabi-v7a, x86_64, and iOS. The update adds LFM2-MoE inference with
+  ShortConv mixers and sigmoid-routed experts, uses every core on all-A55
+  devices, and includes Vulkan support in the 64-bit Android libraries.
+
+### Fixed
+- The mobile CMF structural validator now recognizes `ShortConv` layers and
+  verifies their three canonical tensors instead of treating them as Qwen
+  GatedDeltaNet layers and rejecting valid v0.3.12 models.
+
+### Verified
+- All downloaded runtime archives match the SHA-256 digests published in the
+  cmf v0.3.12 GitHub Release and export the C ABI used by the app.
+
 ## [1.0.5] - 2026-07-18
 
 ### Added

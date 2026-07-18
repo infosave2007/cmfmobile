@@ -34,18 +34,18 @@ abstract final class Cmf {
   static const int dtQ1 = 12;
 
   static String dtypeName(int id) => switch (id) {
-        dtF32 => 'f32',
-        dtF16 => 'f16',
-        dtBf16 => 'bf16',
-        dtQ8Row => 'q8_row',
-        dtQ4Block => 'q4_block',
-        dtVbit => 'vbit',
-        dtQ8_2f => 'q8_2f',
-        dtVbitRo => 'vbit_ro',
-        dtQ4Tiled => 'q4_tiled',
-        dtQ1 => 'q1',
-        _ => 'dtype#$id',
-      };
+    dtF32 => 'f32',
+    dtF16 => 'f16',
+    dtBf16 => 'bf16',
+    dtQ8Row => 'q8_row',
+    dtQ4Block => 'q4_block',
+    dtVbit => 'vbit',
+    dtQ8_2f => 'q8_2f',
+    dtVbitRo => 'vbit_ro',
+    dtQ4Tiled => 'q4_tiled',
+    dtQ1 => 'q1',
+    _ => 'dtype#$id',
+  };
 }
 
 /// Streaming murmur3-fmix64 hash over 64-bit LE words with positional salt:
@@ -203,7 +203,8 @@ class CmfReader {
       if (env.dirLen >= 16) {
         await raf.setPosition(env.dirOff);
         final dir = Uint8List.fromList(
-            await raf.read(env.dirLen.clamp(16, 8 * 1024 * 1024)));
+          await raf.read(env.dirLen.clamp(16, 8 * 1024 * 1024)),
+        );
         final d = ByteData.sublistView(dir);
         tensorCount = d.getUint64(0, Endian.little);
         final bytesPerDtype = <int, int>{};
@@ -217,8 +218,9 @@ class CmfReader {
         // Quantized dtypes take priority over the f16/f32 remainder
         // (norms and embeddings are often f16 even in quantized files).
         final quantized = Map.of(bytesPerDtype)
-          ..removeWhere((k, _) =>
-              k == Cmf.dtF32 || k == Cmf.dtF16 || k == Cmf.dtBf16);
+          ..removeWhere(
+            (k, _) => k == Cmf.dtF32 || k == Cmf.dtF16 || k == Cmf.dtBf16,
+          );
         final pool = quantized.isNotEmpty ? quantized : bytesPerDtype;
         if (pool.isNotEmpty) {
           final top = pool.entries
@@ -233,8 +235,7 @@ class CmfReader {
       if (env.masksOff != 0 && env.masksLen > 8) {
         await raf.setPosition(env.masksOff);
         final head = Uint8List.fromList(await raf.read(8));
-        final metaLen =
-            ByteData.sublistView(head).getUint32(4, Endian.little);
+        final metaLen = ByteData.sublistView(head).getUint32(4, Endian.little);
         if (metaLen > 0 && metaLen < 4 * 1024 * 1024) {
           final metaBytes = await raf.read(metaLen);
           try {
@@ -257,14 +258,13 @@ class CmfReader {
       final eos = eosRaw is List
           ? eosRaw.whereType<int>().toList()
           : eosRaw is int
-              ? [eosRaw]
-              : <int>[];
+          ? [eosRaw]
+          : <int>[];
 
       return CmfMetadata(
         version: env.version,
         archName: arch['arch_name'] as String? ?? '?',
-        quantType:
-            dominantQuant ?? header['quant_type'] as String? ?? '?',
+        quantType: dominantQuant ?? header['quant_type'] as String? ?? '?',
         numLayers: arch['num_layers'] as int? ?? 0,
         hiddenSize: arch['hidden_size'] as int? ?? 0,
         numKvHeads: arch['num_kv_heads'] as int? ?? 0,
@@ -293,11 +293,13 @@ abstract final class CmfValidator {
     final raf = await File(path).open();
     try {
       final env = CmfEnvelope.parse(
-          Uint8List.fromList(await raf.read(Cmf.envelopeLen)));
+        Uint8List.fromList(await raf.read(Cmf.envelopeLen)),
+      );
 
       await raf.setPosition(env.headerOff);
-      final header = jsonDecode(utf8.decode(await raf.read(env.headerLen)))
-          as Map<String, dynamic>;
+      final header =
+          jsonDecode(utf8.decode(await raf.read(env.headerLen)))
+              as Map<String, dynamic>;
       final arch = header['arch'] as Map<String, dynamic>? ?? const {};
       final layerTypes =
           (arch['layer_types'] as List?)?.cast<String>() ?? const [];
@@ -320,8 +322,12 @@ abstract final class CmfValidator {
         final nameLen = d.getUint16(rec + 4, Endian.little);
         final start = poolOff + nameOff;
         if (start + nameLen <= dir.length) {
-          names.add(utf8.decode(dir.sublist(start, start + nameLen),
-              allowMalformed: true));
+          names.add(
+            utf8.decode(
+              dir.sublist(start, start + nameLen),
+              allowMalformed: true,
+            ),
+          );
         }
       }
 
@@ -330,20 +336,24 @@ abstract final class CmfValidator {
       }
       if (!tied && !names.contains('lm_head.weight')) {
         problems.add(
-            'missing lm_head.weight (and tie_word_embeddings is false)');
+          'missing lm_head.weight (and tie_word_embeddings is false)',
+        );
       }
       for (var i = 0; i < layerTypes.length; i++) {
         if (layerTypes[i] == 'FullAttention') {
           final missing = ['q_proj', 'k_proj', 'v_proj', 'o_proj']
-              .where((n) => !names
-                  .contains('model.layers.$i.self_attn.$n.weight'))
+              .where(
+                (n) => !names.contains('model.layers.$i.self_attn.$n.weight'),
+              )
               .toList();
           if (missing.isNotEmpty) {
-            problems.add('layer $i is FullAttention but is missing '
-                'self_attn.${missing.join('/')} weights');
+            problems.add(
+              'layer $i is FullAttention but is missing '
+              'self_attn.${missing.join('/')} weights',
+            );
             break; // one clear message beats sixty
           }
-        } else {
+        } else if (layerTypes[i] == 'LinearAttention') {
           final prefix = 'model.layers.$i.linear_attn.';
           final required = [
             'in_proj_qkv.weight',
@@ -360,10 +370,28 @@ abstract final class CmfValidator {
               .where((n) => !names.contains('$prefix$n'))
               .toList();
           if (missing.isNotEmpty) {
-            problems.add('layer $i is ${layerTypes[i]} but is missing '
-                'linear_attn.${missing.join(', linear_attn.')}');
+            problems.add(
+              'layer $i is ${layerTypes[i]} but is missing '
+              'linear_attn.${missing.join(', linear_attn.')}',
+            );
             break;
           }
+        } else if (layerTypes[i] == 'ShortConv') {
+          final prefix = 'model.layers.$i.short_conv.';
+          final required = ['in_proj.weight', 'conv.weight', 'out_proj.weight'];
+          final missing = required
+              .where((n) => !names.contains('$prefix$n'))
+              .toList();
+          if (missing.isNotEmpty) {
+            problems.add(
+              'layer $i is ShortConv but is missing '
+              'short_conv.${missing.join(', short_conv.')}',
+            );
+            break;
+          }
+        } else {
+          problems.add('layer $i has unsupported type ${layerTypes[i]}');
+          break;
         }
       }
     } catch (e) {
@@ -504,7 +532,10 @@ class CmfWriter {
       dir.setUint8(rec + 7, t.shape.length);
       for (var i = 0; i < 6; i++) {
         dir.setUint32(
-            rec + 8 + i * 4, i < t.shape.length ? t.shape[i] : 0, Endian.little);
+          rec + 8 + i * 4,
+          i < t.shape.length ? t.shape[i] : 0,
+          Endian.little,
+        );
       }
       dir.setUint64(rec + 32, t.offset, Endian.little);
       dir.setUint64(rec + 40, t.nbytes, Endian.little);
@@ -528,10 +559,14 @@ class CmfWriter {
     env.setUint32(0x08, 0, Endian.little);
     // QUANT_2F (bit 2) is required when q8_2f/vbit tensors are present —
     // matches the reference writer in cortiq-core/src/format.rs.
-    final hasQuant2f = tensors
-        .any((t) => t.dtype == Cmf.dtQ8_2f || t.dtype == Cmf.dtVbit);
-    env.setUint32(0x0C,
-        Cmf.featureTensorDir | (hasQuant2f ? 4 : 0), Endian.little);
+    final hasQuant2f = tensors.any(
+      (t) => t.dtype == Cmf.dtQ8_2f || t.dtype == Cmf.dtVbit,
+    );
+    env.setUint32(
+      0x0C,
+      Cmf.featureTensorDir | (hasQuant2f ? 4 : 0),
+      Endian.little,
+    );
     env.setUint64(0x10, Cmf.envelopeLen, Endian.little);
     env.setUint64(0x18, _headerBytes.length, Endian.little);
     env.setUint64(0x20, _dirOff, Endian.little);
@@ -545,7 +580,10 @@ class CmfWriter {
     env.setUint64(0x60, 0, Endian.little); // sparse index
     env.setUint64(0x68, 0, Endian.little);
     env.setUint64(
-        0x70, CmfHash64.ofBytes(Uint8List.fromList(_headerBytes)), Endian.little);
+      0x70,
+      CmfHash64.ofBytes(Uint8List.fromList(_headerBytes)),
+      Endian.little,
+    );
     env.setUint64(0x78, CmfHash64.ofBytes(dirAll), Endian.little);
     await _raf.setPosition(0);
     await _raf.writeFrom(env.buffer.asUint8List());
@@ -578,7 +616,8 @@ int f32ToF16Bits(double value) {
     final shift = 14 - e;
     final half = mant >>> shift;
     final rem = mant & ((1 << shift) - 1);
-    final round = (rem > (1 << (shift - 1))) ||
+    final round =
+        (rem > (1 << (shift - 1))) ||
         (rem == (1 << (shift - 1)) && (half & 1) == 1);
     return sign | (half + (round ? 1 : 0));
   }

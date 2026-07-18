@@ -31,7 +31,7 @@ When the library is missing the app falls back to a clearly-labeled
 
 All three ABIs are checked into `android/app/src/main/jniLibs/`
 (arm64-v8a, armeabi-v7a, x86_64), taken from the cmf release
-[v0.3.11](https://github.com/infosave2007/cmf/releases/tag/v0.3.11)
+[v0.3.12](https://github.com/infosave2007/cmf/releases/tag/v0.3.12)
 (`libcortiq-ffi-<target>.tar.gz`). To update:
 
 ```bash
