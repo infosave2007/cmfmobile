@@ -18,6 +18,12 @@ abstract final class Cmf {
   static const int dirRecordLen = 56;
   static const int dataAlignment = 4096;
   static const int tensorAlignment = 64;
+  // Tensors this large are page-aligned instead of 64B, so a cold skill /
+  // MoE-expert / mask weight sits on its own page(s) — "unused weights cost
+  // 0 RSS" then holds at page granularity (matches the reference writer).
+  // 4096 % 64 == 0, so existing readers accept the files unchanged.
+  static const int largeTensorMin = 16 * 1024;
+  static const int largeTensorAlign = 4096;
 
   static const int featureTensorDir = 1;
 
@@ -498,7 +504,10 @@ class CmfWriter {
 
     var cursor = 0;
     for (final t in tensors) {
-      cursor = _align(cursor, Cmf.tensorAlignment);
+      // Large tensors get page-aligned (residency); small ones stay 64B.
+      final align =
+          t.nbytes >= Cmf.largeTensorMin ? Cmf.largeTensorAlign : Cmf.tensorAlignment;
+      cursor = _align(cursor, align);
       t.offset = cursor;
       cursor += t.nbytes;
     }
