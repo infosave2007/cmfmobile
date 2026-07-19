@@ -49,6 +49,11 @@ converter, and an OpenAI-compatible server speaking the CMF protocol.
 - Repos that ship ready `.cmf` files download directly — any quantization
 - On-device conversion supports canonical Qwen MoE and LFM2-MoE/ShortConv
   checkpoints, including sidecar chat templates
+- **Resilient downloads** — parallel byte-range fetches survive minutes-long
+  mobile network / DNS drops (`Failed host lookup`, resets, TLS, timeouts):
+  retry within a 5-minute no-progress window with capped backoff, **resume from
+  the last written byte**, and break a silently-stalled socket via a 30 s idle
+  timeout instead of aborting a multi-gigabyte download after a brief blip
 - Job queue with phases, logs, cancel — same flow as the gateway's Import view
 
 ### 📡 Server
@@ -80,7 +85,7 @@ flutter run
 ```
 
 **The app ships with the real cortiq runtime** —
-`libcortiq_ffi` v0.3.12 (arm64-v8a, armeabi-v7a, x86_64 + iOS static lib) from the [cmf releases](https://github.com/infosave2007/cmf/releases)
+`libcortiq_ffi` v0.4.1 (arm64-v8a, armeabi-v7a, x86_64 + iOS static lib) from the [cmf releases](https://github.com/infosave2007/cmf/releases)
 is bundled in `android/app/src/main/jniLibs/`, so chat and the server run
 actual on-device inference out of the box (verified end-to-end: qwen3-5-4b
 Q8_2F streams through the same binding — see `tool/ffi_smoke.dart`).
