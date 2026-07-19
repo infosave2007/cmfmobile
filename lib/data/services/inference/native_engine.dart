@@ -174,10 +174,11 @@ class NativeCortiqEngine implements InferenceEngine {
     final json = jsonEncode({
       'temperature': request.temperature,
       'top_p': request.topP,
-      // Sticky per handle. `false` disables the <think> block on reasoning
-      // templates; `null` restores the template default. Ignored by
-      // pre-0.4.1 libraries (unknown key).
-      'enable_thinking': request.disableThinking ? false : null,
+      // Sticky per handle, so send it explicitly every time: false hides the
+      // <think> block on reasoning templates, true re-enables it (toggling the
+      // setting back on must actually stick). Ignored by pre-0.4.1 libraries
+      // (unknown key), and by non-reasoning chat templates.
+      'enable_thinking': !request.disableThinking,
     });
     final ptr = json.toNativeUtf8();
     try {
