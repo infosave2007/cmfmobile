@@ -12,6 +12,7 @@ class SettingsRepository {
   static const _kTopP = 'topP';
   static const _kMaxTokens = 'maxTokens';
   static const _kThreads = 'threads';
+  static const _kDisableThinking = 'disableThinking';
   static const _kServerPort = 'serverPort';
   static const _kServerAuth = 'serverAuthEnabled';
   static const _kServerToken = 'serverToken';
@@ -32,6 +33,7 @@ class SettingsRepository {
       topP: p.getDouble(_kTopP) ?? 0.95,
       maxTokens: p.getInt(_kMaxTokens) ?? 1024,
       threads: p.getInt(_kThreads) ?? 4,
+      disableThinking: p.getBool(_kDisableThinking) ?? false,
       serverPort: p.getInt(_kServerPort) ?? 8080,
       serverAuthEnabled: p.getBool(_kServerAuth) ?? false,
       serverToken: token,
@@ -51,6 +53,7 @@ class SettingsRepository {
     await p.setDouble(_kTopP, s.topP);
     await p.setInt(_kMaxTokens, s.maxTokens);
     await p.setInt(_kThreads, s.threads);
+    await p.setBool(_kDisableThinking, s.disableThinking);
     await p.setInt(_kServerPort, s.serverPort);
     await p.setBool(_kServerAuth, s.serverAuthEnabled);
     await p.setString(_kServerToken, s.serverToken);

@@ -320,6 +320,7 @@ class ChatController extends Notifier<ChatState> {
         temperature: settings.temperature,
         topP: settings.topP,
         maxTokens: settings.maxTokens,
+        disableThinking: settings.disableThinking,
       ));
       final done = Completer<void>();
       _sub = stream.listen(

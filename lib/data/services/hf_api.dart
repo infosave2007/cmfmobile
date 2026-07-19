@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:http/http.dart' as http;
 
@@ -16,6 +18,45 @@ class HfApi {
     'User-Agent': 'cmf-mobile',
     if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
   };
+
+  // Mobile networks drop constantly (Wi-Fi↔cellular handoff, tunnels, sleep).
+  // A multi-GB download must survive minutes of DNS/socket failure and a dead
+  // socket that never closes — so every transfer retries transient errors
+  // within an outage window, resuming from the last byte, and bails out of a
+  // silent stall via an idle timeout rather than hanging forever.
+
+  /// No bytes for this long on a live stream ⇒ the socket is dead; retry.
+  static const _idleTimeout = Duration(seconds: 30);
+
+  /// Establishing the connection (DNS + TLS + response headers) may hang.
+  static const _connectTimeout = Duration(seconds: 30);
+
+  /// Keep retrying transient failures until this much time has passed with
+  /// *no* forward progress. Any received byte resets the clock, so a slow but
+  /// alive link never trips it; a genuine outage longer than this gives up.
+  static const _outageWindow = Duration(minutes: 5);
+
+  /// Permanent failures — retrying cannot help, so surface them immediately.
+  /// Everything else (host lookup, connection reset, TLS, timeout, early EOF,
+  /// 5xx, 429) is treated as transient and retried.
+  static bool _isFatal(Object e) {
+    if (e is! HttpException) return false;
+    final m = e.message;
+    for (final code in const ['401', '403', '404', '410', '451']) {
+      if (m.contains('HTTP $code') || m.contains('got $code')) return true;
+    }
+    return false;
+  }
+
+  /// Exponential backoff capped at 20 s: 0.5, 1, 2, 4, 8, 16, 20, 20 …
+  static Duration _backoff(int attempt) => Duration(
+    milliseconds: (500 * math.pow(2, attempt.clamp(0, 6)))
+        .clamp(500, 20000)
+        .toInt(),
+  );
+
+  Future<http.StreamedResponse> _send(http.Request req) =>
+      _client.send(req).timeout(_connectTimeout);
 
   /// GET /api/models?search=...&sort=trendingScore|downloads&direction=-1
   Future<List<HfModel>> search(
@@ -90,28 +131,56 @@ class HfApi {
     bool Function()? isCancelled,
   }) async {
     final uri = Uri.parse('$_base/$repo/resolve/main/$path');
-    final req = http.Request('GET', uri)..headers.addAll(_headers(token));
-    final res = await _client.send(req);
-    if (res.statusCode != 200) {
-      throw HttpException('download $path: HTTP ${res.statusCode}');
-    }
-    final total = res.contentLength ?? 0;
     final file = File(destPath);
     await file.parent.create(recursive: true);
-    final sink = file.openWrite();
+    final out = await file.open(mode: FileMode.write);
     var received = 0;
+    var total = 0;
+    var lastProgress = DateTime.now();
+    var attempt = 0;
     try {
-      await for (final chunk in res.stream) {
-        if (isCancelled?.call() == true) {
-          throw const CancelledException();
+      while (true) {
+        if (isCancelled?.call() == true) throw const CancelledException();
+        try {
+          final req = http.Request('GET', uri)
+            ..headers.addAll(_headers(token));
+          // Resume where we stopped; a fresh start needs no Range.
+          if (received > 0) req.headers['Range'] = 'bytes=$received-';
+          final res = await _send(req);
+          if (received > 0 && res.statusCode == 200) {
+            // Server ignored the Range — restart from the top.
+            received = 0;
+            await out.setPosition(0);
+            await out.truncate(0);
+          } else if (received > 0 && res.statusCode != 206) {
+            throw HttpException('download $path: HTTP ${res.statusCode}');
+          } else if (received == 0 && res.statusCode != 200) {
+            throw HttpException('download $path: HTTP ${res.statusCode}');
+          }
+          final body = res.contentLength ?? 0;
+          total =
+              math.max(total, res.statusCode == 206 ? received + body : body);
+          await out.setPosition(received);
+          await for (final chunk in res.stream.timeout(_idleTimeout)) {
+            if (isCancelled?.call() == true) throw const CancelledException();
+            await out.writeFrom(chunk);
+            received += chunk.length;
+            lastProgress = DateTime.now();
+            onBytes?.call(received, total);
+          }
+          await out.flush();
+          return;
+        } catch (e) {
+          if (e is CancelledException) rethrow;
+          if (_isFatal(e) ||
+              DateTime.now().difference(lastProgress) > _outageWindow) {
+            throw HttpException('download $path failed: $e');
+          }
+          await Future<void>.delayed(_backoff(attempt++));
         }
-        sink.add(chunk);
-        received += chunk.length;
-        onBytes?.call(received, total);
       }
-      await sink.flush();
     } finally {
-      await sink.close();
+      await out.close();
       if (isCancelled?.call() == true) {
         try {
           await file.delete();
@@ -163,19 +232,19 @@ class HfApi {
       var writeOffset = start;
       try {
         Object? lastError;
-        var stalledFailures = 0;
+        var lastProgress = DateTime.now();
+        var attempt = 0;
         while (received[index] < expected) {
           if (aborted || isCancelled?.call() == true) {
             throw const CancelledException();
           }
           final rangeStart = start + received[index];
           if (rangeStart > end) break;
-          final beforeRequest = received[index];
           final req = http.Request('GET', uri)
             ..headers.addAll(_headers(token))
             ..headers['Range'] = 'bytes=$rangeStart-$end';
           try {
-            final res = await _client.send(req);
+            final res = await _send(req);
             if (res.statusCode != 206) {
               throw HttpException(
                 'parallel download $path: expected HTTP 206, got '
@@ -203,7 +272,7 @@ class HfApi {
                 );
               }
             }
-            await for (final chunk in res.stream) {
+            await for (final chunk in res.stream.timeout(_idleTimeout)) {
               if (aborted || isCancelled?.call() == true) {
                 throw const CancelledException();
               }
@@ -222,6 +291,10 @@ class HfApi {
               });
               await writeTail;
               received[index] += bytes.length;
+              // Any received byte proves the link is alive: reset the outage
+              // clock and the backoff so recovery is instant.
+              lastProgress = DateTime.now();
+              attempt = 0;
               onBytes?.call(received.fold(0, (a, b) => a + b), totalSize);
               if (received[index] == expected) break;
             }
@@ -230,18 +303,14 @@ class HfApi {
           } catch (e) {
             if (e is CancelledException) rethrow;
             lastError = e;
-            if (received[index] > beforeRequest) {
-              // A multi-GB range may need many connections. Any useful
-              // progress resets the retry budget; resume at the next byte.
-              stalledFailures = 0;
-            } else {
-              stalledFailures++;
+            // A multi-GB range may need many connections across minutes of
+            // flaky signal. Keep resuming from the next byte until an outage
+            // outlasts the window, or the error is permanent.
+            if (_isFatal(e) ||
+                DateTime.now().difference(lastProgress) > _outageWindow) {
+              break;
             }
-            if (stalledFailures >= 8) break;
-            final backoffStep = stalledFailures.clamp(1, 5);
-            await Future<void>.delayed(
-              Duration(milliseconds: 500 * backoffStep),
-            );
+            await Future<void>.delayed(_backoff(attempt++));
             if (aborted || isCancelled?.call() == true) {
               throw const CancelledException();
             }
@@ -276,19 +345,24 @@ class HfApi {
     String? token,
   }) async {
     final uri = Uri.parse('$_base/$repo/resolve/main/$path');
-    final req = http.Request('GET', uri)
-      ..headers.addAll(_headers(token))
-      ..headers['Range'] = 'bytes=0-0';
-    try {
-      final res = await _client.send(req);
-      // Do not drain a server that ignored Range: for a multi-GB CMF that
-      // would accidentally perform the entire download as the capability
-      // probe. Cancelling here also frees the probe connection immediately.
-      final subscription = res.stream.listen(null);
-      await subscription.cancel();
-      return res.statusCode == 206;
-    } catch (_) {
-      return false;
+    // A transient DNS/socket blip during the probe must not silently demote
+    // the transfer to a single connection — retry the probe a few times.
+    for (var attempt = 0; ; attempt++) {
+      final req = http.Request('GET', uri)
+        ..headers.addAll(_headers(token))
+        ..headers['Range'] = 'bytes=0-0';
+      try {
+        final res = await _send(req);
+        // Do not drain a server that ignored Range: for a multi-GB CMF that
+        // would accidentally perform the entire download as the capability
+        // probe. Cancelling here also frees the probe connection immediately.
+        final subscription = res.stream.listen(null);
+        await subscription.cancel();
+        return res.statusCode == 206;
+      } catch (_) {
+        if (attempt >= 3) return false;
+        await Future<void>.delayed(_backoff(attempt));
+      }
     }
   }
 

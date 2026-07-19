@@ -3,6 +3,7 @@
 enum QuantType {
   q8_2f('Q8_2F', 'q8_2f'),
   q8Row('Q8_ROW', 'q8'),
+  q1t('Q1T', 'q1t'),
   q4Block('Q4_BLOCK', 'q4'),
   vbit('VBIT', 'vbit'),
   q1('Q1', 'q1'),
@@ -13,10 +14,12 @@ enum QuantType {
   final String flag;
 
   /// Quantizations the on-device Dart converter can produce itself.
-  /// The rest require the native cortiq toolchain.
+  /// The rest require the native cortiq toolchain (or a repo that already
+  /// ships .cmf files, which is downloaded directly regardless of this).
   bool get supportedOnDevice => switch (this) {
         QuantType.q8Row ||
         QuantType.q8_2f ||
+        QuantType.q1t ||
         QuantType.q1 ||
         QuantType.f16 =>
           true,

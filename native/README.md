@@ -31,8 +31,9 @@ When the library is missing the app falls back to a clearly-labeled
 
 All three ABIs are checked into `android/app/src/main/jniLibs/`
 (arm64-v8a, armeabi-v7a, x86_64), taken from the cmf release
-[v0.3.12](https://github.com/infosave2007/cmf/releases/tag/v0.3.12)
-(`libcortiq-ffi-<target>.tar.gz`). To update:
+[v0.4.1](https://github.com/infosave2007/cmf/releases/tag/v0.4.1)
+(`libcortiq-ffi-<target>.tar.gz`) — adds q1t decode and the
+`enable_thinking` sampler option. To update:
 
 ```bash
 for t in aarch64-linux-android:arm64-v8a \

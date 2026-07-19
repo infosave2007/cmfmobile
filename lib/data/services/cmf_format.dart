@@ -32,6 +32,8 @@ abstract final class Cmf {
   static const int dtVbitRo = 10;
   static const int dtQ4Tiled = 11;
   static const int dtQ1 = 12;
+  static const int dtQ1S = 13;
+  static const int dtQ1T = 14;
 
   static String dtypeName(int id) => switch (id) {
     dtF32 => 'f32',
@@ -44,6 +46,8 @@ abstract final class Cmf {
     dtVbitRo => 'vbit_ro',
     dtQ4Tiled => 'q4_tiled',
     dtQ1 => 'q1',
+    dtQ1S => 'q1s',
+    dtQ1T => 'q1t',
     _ => 'dtype#$id',
   };
 }

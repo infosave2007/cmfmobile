@@ -615,8 +615,14 @@ abstract class AppLocalizations {
   /// No description provided for @importOnDeviceNote.
   ///
   /// In en, this message translates to:
-  /// **'On-device conversion supports Q8_ROW, Q8_2F, Q1 and F16 (multi-threaded). Repos that already ship .cmf files are downloaded directly — any quantization.'**
+  /// **'On-device conversion supports Q8_ROW, Q8_2F, Q1T, Q1 and F16 (multi-threaded). Repos that already ship .cmf files are downloaded directly — any quantization.'**
   String get importOnDeviceNote;
+
+  /// No description provided for @quantDesktopOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'desktop / .cmf only'**
+  String get quantDesktopOnly;
 
   /// No description provided for @importStateRunning.
   ///
@@ -683,6 +689,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'8-bit per-row — simple, robust. Converts on device.'**
   String get quantQ8RowDesc;
+
+  /// No description provided for @quantQ1tDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Ternary ~2.25–3 bit with an f16 outlier overlay — below q4, training-free. Smallest usable file, largest quality drop. Converts on device.'**
+  String get quantQ1tDesc;
 
   /// No description provided for @quantQ4Desc.
   ///
@@ -917,6 +929,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'CPU threads'**
   String get settingsThreads;
+
+  /// No description provided for @settingsDisableThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable thinking'**
+  String get settingsDisableThinking;
+
+  /// No description provided for @settingsDisableThinkingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reasoning models (Qwen3/3.5) answer directly, with no <think> step'**
+  String get settingsDisableThinkingHint;
 
   /// No description provided for @settingsServerSection.
   ///

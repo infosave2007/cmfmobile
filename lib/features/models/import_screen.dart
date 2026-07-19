@@ -475,6 +475,7 @@ class _ConfigureSheetState extends State<_ConfigureSheet> {
   String _quantDescription(AppLocalizations l, QuantType q) => switch (q) {
         QuantType.q8_2f => l.quantQ8_2fDesc,
         QuantType.q8Row => l.quantQ8RowDesc,
+        QuantType.q1t => l.quantQ1tDesc,
         QuantType.q4Block => l.quantQ4Desc,
         QuantType.vbit => l.quantVbitDesc,
         QuantType.q1 => l.quantQ1Desc,
@@ -523,15 +524,34 @@ class _ConfigureSheetState extends State<_ConfigureSheet> {
               Text(l.importQuantization,
                   style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: 4),
+              // On-device-only quants that would fail for a safetensors repo
+              // are disabled — a repo that ships .cmf downloads directly with
+              // any of the enabled ones (the quant is ignored there).
               for (final q in QuantType.values)
                 RadioListTile<QuantType>(
                   value: q,
                   // ignore: deprecated_member_use
                   groupValue: _quant,
                   // ignore: deprecated_member_use
-                  onChanged: (v) => setState(() => _quant = v!),
+                  onChanged: q.supportedOnDevice
+                      ? (v) => setState(() => _quant = v!)
+                      : null,
                   dense: true,
-                  title: Text(q.label),
+                  title: Row(
+                    children: [
+                      Text(q.label),
+                      if (!q.supportedOnDevice) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          l.quantDesktopOnly,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                   subtitle: Text(_quantDescription(l, q),
                       style: const TextStyle(fontSize: 11)),
                 ),

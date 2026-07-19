@@ -285,7 +285,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get importOnDeviceNote =>
-      '设备端转换支持 Q8_ROW、Q8_2F、Q1 和 F16（多线程）。已包含 .cmf 文件的仓库将直接下载——任何量化格式均可。';
+      '设备端转换支持 Q8_ROW、Q8_2F、Q1T、Q1 和 F16（多线程）。已包含 .cmf 文件的仓库将直接下载——任何量化格式均可。';
+
+  @override
+  String get quantDesktopOnly => '仅桌面 / .cmf';
 
   @override
   String get importStateRunning => '进行中';
@@ -319,6 +322,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get quantQ8RowDesc => '8 位按行量化——简单可靠。可在设备上转换。';
+
+  @override
+  String get quantQ1tDesc =>
+      '三值 ~2.25–3 位，带 f16 离群值叠加层——低于 q4，免训练。可用文件最小，质量损失最大。可在设备上转换。';
 
   @override
   String get quantQ4Desc => '4 位分块——体积最小,质量较低。需要 .cmf 仓库或桌面工具链。';
@@ -437,6 +444,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsThreads => 'CPU 线程数';
+
+  @override
+  String get settingsDisableThinking => '禁用思考';
+
+  @override
+  String get settingsDisableThinkingHint =>
+      '推理模型（Qwen3/3.5）直接作答，不输出 <think> 步骤';
 
   @override
   String get settingsServerSection => '服务器';

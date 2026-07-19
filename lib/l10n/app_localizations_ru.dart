@@ -294,7 +294,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get importOnDeviceNote =>
-      'На устройстве доступны Q8_ROW, Q8_2F, Q1 и F16 (многопоточно). Репозитории с готовыми .cmf скачиваются напрямую — в любой квантизации.';
+      'На устройстве доступны Q8_ROW, Q8_2F, Q1T, Q1 и F16 (многопоточно). Репозитории с готовыми .cmf скачиваются напрямую — в любой квантизации.';
+
+  @override
+  String get quantDesktopOnly => 'только десктоп / .cmf';
 
   @override
   String get importStateRunning => 'выполняется';
@@ -330,6 +333,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get quantQ8RowDesc =>
       '8 бит на строку — просто и надёжно. Конвертируется на устройстве.';
+
+  @override
+  String get quantQ1tDesc =>
+      'Тернарный ~2,25–3 бит с оверлеем выбросов (f16) — ниже q4, без обучения. Самый компактный рабочий файл, наибольшая потеря качества. Конвертируется на устройстве.';
 
   @override
   String get quantQ4Desc =>
@@ -456,6 +463,13 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsThreads => 'Потоки CPU';
+
+  @override
+  String get settingsDisableThinking => 'Отключить размышления';
+
+  @override
+  String get settingsDisableThinkingHint =>
+      'Модели с рассуждением (Qwen3/3.5) отвечают сразу, без блока <think>';
 
   @override
   String get settingsServerSection => 'Сервер';

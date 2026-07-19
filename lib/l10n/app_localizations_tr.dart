@@ -293,7 +293,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get importOnDeviceNote =>
-      'Cihaz üzerinde dönüştürme Q8_ROW, Q8_2F, Q1 ve F16 destekler (çok iş parçacıklı). Hazır .cmf içeren depolar doğrudan indirilir — her nicemlemede.';
+      'Cihaz üzerinde dönüştürme Q8_ROW, Q8_2F, Q1T, Q1 ve F16 destekler (çok iş parçacıklı). Hazır .cmf içeren depolar doğrudan indirilir — her nicemlemede.';
+
+  @override
+  String get quantDesktopOnly => 'yalnızca masaüstü / .cmf';
 
   @override
   String get importStateRunning => 'çalışıyor';
@@ -329,6 +332,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get quantQ8RowDesc =>
       'Satır başına 8 bit — basit ve sağlam. Cihazda dönüştürülür.';
+
+  @override
+  String get quantQ1tDesc =>
+      'Üçlü ~2,25–3 bit, f16 aykırı değer katmanıyla — q4 altında, eğitimsiz. En küçük kullanılabilir dosya, en büyük kalite kaybı. Cihazda dönüştürülür.';
 
   @override
   String get quantQ4Desc =>
@@ -455,6 +462,13 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsThreads => 'CPU iş parçacığı';
+
+  @override
+  String get settingsDisableThinking => 'Düşünmeyi kapat';
+
+  @override
+  String get settingsDisableThinkingHint =>
+      'Akıl yürüten modeller (Qwen3/3.5) <think> adımı olmadan doğrudan yanıt verir';
 
   @override
   String get settingsServerSection => 'Sunucu';

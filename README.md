@@ -23,6 +23,7 @@ converter, and an OpenAI-compatible server speaking the CMF protocol.
 - **Persistent chat topics** — every conversation keeps its own context, like GPT-style apps
 - **Document attachments** (txt/md/code/json/…) inlined into the prompt when the model supports them
 - Markdown rendering, copy, regenerate, stop
+- **Disable thinking** — reasoning models (Qwen3/3.5) answer directly with no `<think>` step
 
 ### 📦 Models
 - Local `.cmf` library with parsed metadata: architecture, quantization, layers, context, task masks
@@ -37,6 +38,8 @@ converter, and an OpenAI-compatible server speaking the CMF protocol.
   - Dense Qwen3.5 GatedDeltaNet and Gemma 1/3/4 architecture descriptors
   - `Q8_2F` — 8-bit two-field (𝒲×θ), the recommended quality/size point
   - `Q8_ROW` — 8-bit per-row
+  - `Q1T` — **training-free ternary** ({−s, 0, +s}, ~2.25–3 bit, below q4) with a
+    per-row f16 outlier overlay; the smallest usable on-device conversion
   - `Q1` — **1.5-bit for 1-bit-trained models** (Bonsai/BitNet: a 27B model fits in ~5 GB)
   - `F16` — no quantization
 - **Featured models** pinned on top — ready `.cmf` repos download in one tap

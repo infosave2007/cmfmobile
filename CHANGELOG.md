@@ -4,6 +4,43 @@ All notable changes to CMF Mobile are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
+## [1.1.0] - 2026-07-19
+
+### Added
+- **On-device q1t conversion** — training-free ternary quantization
+  (`{−s, 0, +s}` packed base-3, ~2.25–3 bit/param, below q4) with a per-row
+  sparse f16 outlier overlay. Outliers are the top-|w| per row (the two-field
+  mask without an activation Hessian) and a per-row α rescale folds into the
+  group scales; the embedding, LM head and down-projection stay q8_2f. The
+  output is byte-identical to the cortiq q1t reader.
+- **Disable thinking** setting — reasoning models (Qwen3/3.5) answer directly
+  instead of emitting a `<think>` block. Applied to every generation through the
+  new `enable_thinking` option of the cortiq FFI.
+
+### Changed
+- Bundled cortiq runtime updated to **0.4.1** (Android arm64-v8a / armeabi-v7a /
+  x86_64 and iOS arm64) — adds q1t decode and the `enable_thinking` sampler
+  option.
+- The conversion picker disables on-device-unsupported quantizations
+  (Q4_BLOCK, VBIT) instead of letting a safetensors conversion start and then
+  fail. Repos that already ship `.cmf` still download directly with any
+  selection.
+
+### Fixed
+- Downloads now survive minutes-long network / DNS outages. Transient failures
+  (`Failed host lookup`, connection reset, TLS, timeouts) retry within a
+  5-minute no-progress window with capped exponential backoff, resuming from the
+  last written byte; a 30-second idle timeout breaks a silently stalled socket
+  instead of hanging forever. The single-connection fallback resumes too, and
+  the range-support probe retries rather than silently dropping to one
+  connection — the common "returned N bytes, expected M (Failed host lookup)"
+  failure no longer aborts a large download after a brief blip.
+
+### Tests
+- Added a q1t round-trip: convert a synthetic model to q1t, decode the tensor
+  through the reference q1t byte format, and verify the outlier overlay and
+  ternary base reconstruct exactly.
+
 ## [1.0.8] - 2026-07-18
 
 ### Fixed

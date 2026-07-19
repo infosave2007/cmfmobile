@@ -122,6 +122,15 @@ class SettingsScreen extends ConsumerWidget {
               onChanged: (v) =>
                   notifier.updateSettings((s) => s.copyWith(threads: v.round())),
             ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l.settingsDisableThinking),
+              subtitle: Text(l.settingsDisableThinkingHint,
+                  style: const TextStyle(fontSize: 11)),
+              value: settings.disableThinking,
+              onChanged: (v) => notifier
+                  .updateSettings((s) => s.copyWith(disableThinking: v)),
+            ),
           ]),
 
           _Section(title: l.settingsServerSection, children: [
@@ -177,7 +186,7 @@ class SettingsScreen extends ConsumerWidget {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.info_outline),
-              title: Text(l.settingsVersionLine('1.0.0')),
+              title: Text(l.settingsVersionLine('1.1.0')),
               subtitle: Text(l.settingsAboutLine(engine.name)),
             ),
           ]),

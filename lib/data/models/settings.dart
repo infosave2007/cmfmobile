@@ -8,6 +8,7 @@ class AppSettings {
     this.topP = 0.95,
     this.maxTokens = 1024,
     this.threads = 4,
+    this.disableThinking = false,
     this.serverPort = 8080,
     this.serverAuthEnabled = false,
     this.serverToken = '',
@@ -22,6 +23,10 @@ class AppSettings {
   final double topP;
   final int maxTokens;
   final int threads;
+
+  /// Disable the model's reasoning/thinking pass (Qwen3/3.5): answer directly
+  /// instead of emitting a `<think>` block. Applied to every generation.
+  final bool disableThinking;
   final int serverPort;
   final bool serverAuthEnabled;
   final String serverToken;
@@ -35,6 +40,7 @@ class AppSettings {
     double? topP,
     int? maxTokens,
     int? threads,
+    bool? disableThinking,
     int? serverPort,
     bool? serverAuthEnabled,
     String? serverToken,
@@ -47,6 +53,7 @@ class AppSettings {
         topP: topP ?? this.topP,
         maxTokens: maxTokens ?? this.maxTokens,
         threads: threads ?? this.threads,
+        disableThinking: disableThinking ?? this.disableThinking,
         serverPort: serverPort ?? this.serverPort,
         serverAuthEnabled: serverAuthEnabled ?? this.serverAuthEnabled,
         serverToken: serverToken ?? this.serverToken,

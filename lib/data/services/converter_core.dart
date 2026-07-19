@@ -112,9 +112,28 @@ String headerQuantLabel(QuantType quant) => switch (quant) {
   QuantType.q8_2f => 'Q8_2F',
   QuantType.q4Block => 'Q4_BLOCK',
   QuantType.vbit => 'VBIT',
+  // The file-level QuantType enum has no Q1/Q1T variant — those files carry
+  // VBIT here and the per-tensor directory holds the real dtype.
   QuantType.q1 => 'VBIT',
+  QuantType.q1t => 'VBIT',
   QuantType.f16 => 'F16',
 };
+
+/// q1t outlier budget: fraction of each row kept exact (f16). The on-device
+/// two-field mask reduces to top-|w| per row (no activation Hessian), so this
+/// is picked per row and the file size stays deterministic.
+const double q1tKeepFrac = 0.02;
+
+/// Outliers kept per row for a q1t tensor of [cols] columns.
+int q1tOutliersPerRow(int cols) => (cols * q1tKeepFrac).round();
+
+/// Tensors kept at q8_2f instead of q1t — the reference skip list. The
+/// embedding, LM head and the sensitive down-projection lose too much at
+/// ternary, so they stay 8-bit even in a q1t file.
+bool _q1tKeepDense(String name) =>
+    name.endsWith('embed_tokens.weight') ||
+    name.endsWith('lm_head.weight') ||
+    name.endsWith('down_proj.weight');
 
 /// Per-tensor target dtype (reference dispatch): 2-D tensors with ≥32
 /// elements quantize; q1 needs in_dim % 32 == 0, otherwise that tensor
@@ -129,6 +148,12 @@ int targetDtype(QuantType quant, String name, List<int> shape, int numel) {
       return Cmf.dtQ8_2f;
     case QuantType.q1:
       return shape[1] % 32 == 0 ? Cmf.dtQ1 : Cmf.dtQ8_2f;
+    case QuantType.q1t:
+      // Ternary needs in_dim % 32 == 0 and a within-row column index that
+      // fits u16 (the overlay). Skip-list tensors and misfits stay q8_2f.
+      return (shape[1] % 32 == 0 && shape[1] <= 65536 && !_q1tKeepDense(name))
+          ? Cmf.dtQ1T
+          : Cmf.dtQ8_2f;
     case QuantType.f16:
       return Cmf.dtF16;
     default:
@@ -140,6 +165,11 @@ int nbytesFor(int dtype, List<int> shape, int numel) => switch (dtype) {
   Cmf.dtQ8Row => shape[0] * shape[1] + shape[0] * 2,
   Cmf.dtQ8_2f => shape[0] * shape[1] + shape[0] * 2 + shape[1] * 2,
   Cmf.dtQ1 => (shape[0] * shape[1]) ~/ 32 * 6,
+  // [9B/32-group base][u32 row_ptr[rows+1]][(u16 col, f16 val) × rows·k]
+  Cmf.dtQ1T =>
+    (shape[0] * shape[1]) ~/ 32 * 9 +
+        (shape[0] + 1) * 4 +
+        shape[0] * q1tOutliersPerRow(shape[1]) * 4,
   _ => numel * 2,
 };
 
@@ -918,6 +948,105 @@ Future<int> _processTensor(
         onBytes(raw.length);
       }
 
+    case Cmf.dtQ1T:
+      // Training-free ternary {−s,0,+s}: per 32-group `[f16 scale][7B base-3
+      // codes]` (0→0, 1→+s, 2→−s), then a per-row sparse f16 outlier overlay
+      // `[u32 row_ptr[rows+1]][(u16 col, f16 val)]`. Outliers are the top-|w|
+      // per row (the two-field mask without activation stats); a per-row α
+      // rescale (докрутка, d=1) folds into the group scales. Byte-identical to
+      // the reference q1t reader; the base and overlay regions are emitted in
+      // file order so the tensor hash matches.
+      const pow3 = [1, 3, 9, 27, 81];
+      final groupsPerRow = cols ~/ 32;
+      final kPerRow = q1tOutliersPerRow(cols);
+      final rowPtr = Uint8List((rows + 1) * 4);
+      final rowPtrData = ByteData.sublistView(rowPtr);
+      final overlay = BytesBuilder(copy: false);
+      var outlierCursor = 0;
+      final rowsPerSlab = math.max(1, 8 * 1024 * 1024 ~/ (cols * bpe));
+      await shard.setPosition(srcStart);
+      for (var r0 = 0; r0 < rows; r0 += rowsPerSlab) {
+        final n = math.min(rowsPerSlab, rows - r0);
+        final raw = Uint8List.fromList(await shard.read(n * cols * bpe));
+        final values = decodeFloats(raw, task.srcDtype);
+        final tiles = Uint8List(n * groupsPerRow * 9);
+        final tileData = ByteData.sublistView(tiles);
+        for (var r = 0; r < n; r++) {
+          final rowBase = r * cols;
+          final isOut = _topKAbsMask(values, rowBase, cols, kPerRow);
+          // Per-group abs-mean scale over the non-outlier weights.
+          final scale = Float32List(groupsPerRow);
+          final codes = Uint8List(groupsPerRow * 7);
+          for (var g = 0; g < groupsPerRow; g++) {
+            final base = rowBase + g * 32;
+            var sum = 0.0;
+            var cnt = 0;
+            for (var k = 0; k < 32; k++) {
+              if (!isOut[g * 32 + k]) {
+                sum += values[base + k].abs();
+                cnt++;
+              }
+            }
+            final s = math.max(
+              f16Round(cnt > 0 ? sum / cnt : 0.0),
+              f16Tiny,
+            );
+            scale[g] = s;
+            for (var k = 0; k < 32; k++) {
+              int code;
+              if (isOut[g * 32 + k]) {
+                code = 0; // KERNEL INVARIANT: base contributes 0 at outliers
+              } else {
+                final rr = values[base + k] / s;
+                code = rr >= 0.5 ? 1 : (rr <= -0.5 ? 2 : 0);
+              }
+              codes[g * 7 + k ~/ 5] += code * pow3[k % 5];
+            }
+          }
+          // Per-row α that minimizes ‖α·Q − W‖² over non-outliers.
+          var num = 0.0, den = 0.0;
+          for (var g = 0; g < groupsPerRow; g++) {
+            final base = rowBase + g * 32;
+            final s = scale[g];
+            for (var k = 0; k < 32; k++) {
+              if (isOut[g * 32 + k]) continue;
+              final code = (codes[g * 7 + k ~/ 5] ~/ pow3[k % 5]) % 3;
+              final q = code == 1 ? s : (code == 2 ? -s : 0.0);
+              if (q == 0.0) continue;
+              num += q * values[base + k];
+              den += q * q;
+            }
+          }
+          final alpha = den > 1e-20 ? (num / den).clamp(0.5, 2.0) : 1.0;
+          for (var g = 0; g < groupsPerRow; g++) {
+            final tile = (r * groupsPerRow + g) * 9;
+            tileData.setUint16(
+              tile,
+              f32ToF16Bits(scale[g] * alpha),
+              Endian.little,
+            );
+            for (var b = 0; b < 7; b++) {
+              tiles[tile + 2 + b] = codes[g * 7 + b];
+            }
+          }
+          // Overlay entries for this row, ascending column order.
+          for (var j = 0; j < cols; j++) {
+            if (isOut[j]) {
+              final pair = ByteData(4);
+              pair.setUint16(0, j, Endian.little);
+              pair.setUint16(2, f32ToF16Bits(values[rowBase + j]), Endian.little);
+              overlay.add(pair.buffer.asUint8List());
+              outlierCursor++;
+            }
+          }
+          rowPtrData.setUint32((r0 + r + 1) * 4, outlierCursor, Endian.little);
+        }
+        await emit(tiles);
+        onBytes(raw.length);
+      }
+      await emit(rowPtr);
+      await emit(overlay.takeBytes());
+
     default: // f16
       final numel = task.shape.isEmpty ? 1 : task.shape.reduce((a, b) => a * b);
       await shard.setPosition(srcStart);
@@ -956,4 +1085,61 @@ Future<int> _processTensor(
     );
   }
   return hash.digest();
+}
+
+/// Boolean mask (length [cols]) marking the [k] largest-magnitude weights in
+/// the row `values[base .. base+cols)`. Exactly `min(k, cols)` entries are
+/// true — the q1t overlay size depends on this count, so it must be exact.
+/// Quickselect with a fixed-seed pivot keeps it O(cols) per row and
+/// deterministic across runs.
+List<bool> _topKAbsMask(List<double> values, int base, int cols, int k) {
+  if (k <= 0) return List<bool>.filled(cols, false);
+  if (k >= cols) return List<bool>.filled(cols, true);
+  final idx = Int32List(cols);
+  for (var j = 0; j < cols; j++) {
+    idx[j] = j;
+  }
+  double mag(int t) => values[base + idx[t]].abs();
+  void swap(int a, int b) {
+    final t = idx[a];
+    idx[a] = idx[b];
+    idx[b] = t;
+  }
+
+  // Descending Lomuto partition around a random pivot: strictly-larger
+  // magnitudes move left; returns the pivot's final index.
+  int partition(int lo, int hi, int pivotPos) {
+    final pv = mag(pivotPos);
+    swap(pivotPos, hi);
+    var store = lo;
+    for (var i = lo; i < hi; i++) {
+      if (mag(i) > pv) {
+        swap(i, store);
+        store++;
+      }
+    }
+    swap(store, hi);
+    return store;
+  }
+
+  // Textbook quickselect for rank k-1 (descending): on exit idx[0 .. k) are
+  // the k largest magnitudes, so the mask has exactly k trues.
+  final rng = math.Random(0);
+  final target = k - 1;
+  var lo = 0, hi = cols - 1;
+  while (lo < hi) {
+    final p = partition(lo, hi, lo + rng.nextInt(hi - lo + 1));
+    if (p == target) {
+      break;
+    } else if (p < target) {
+      lo = p + 1;
+    } else {
+      hi = p - 1;
+    }
+  }
+  final mask = List<bool>.filled(cols, false);
+  for (var t = 0; t < k; t++) {
+    mask[idx[t]] = true;
+  }
+  return mask;
 }

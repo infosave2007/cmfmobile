@@ -9,6 +9,7 @@ class GenerationRequest {
     this.topP = 0.95,
     this.maxTokens = 1024,
     this.task,
+    this.disableThinking = false,
   });
 
   final List<ChatMessage> messages;
@@ -18,6 +19,11 @@ class GenerationRequest {
 
   /// CMF task-mask name (routes through the `cortiq.task` extension).
   final String? task;
+
+  /// Turn off reasoning-model thinking (Qwen3/3.5): render the chat template
+  /// with `enable_thinking=false` so the model answers directly with no
+  /// `<think>` block. Honored by the native engine ≥ 0.4.1.
+  final bool disableThinking;
 }
 
 /// A streamed generation event. [delta] carries new text; the last event

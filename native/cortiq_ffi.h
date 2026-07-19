@@ -54,8 +54,9 @@ int32_t cortiq_chat_messages(void *handle, const char *messages_json,
 /* Partial sampler options as JSON — absent keys keep their current
  * values; applies to every later generate on this handle. Keys:
  * temperature, top_p, top_k, repetition_penalty, min_p, seed,
- * greedy (true = argmax). Defaults: 0.7 / 0.9 / 40 / 1.1 / 0.05 /
- * random. Returns 0, or -1. */
+ * greedy (true = argmax), enable_thinking (false = reasoning models
+ * answer directly with no <think> block; null = template default).
+ * Defaults: 0.7 / 0.9 / 40 / 1.1 / 0.05 / random. Returns 0, or -1. */
 int32_t cortiq_set_options(void *handle, const char *options_json);
 
 #ifdef __cplusplus

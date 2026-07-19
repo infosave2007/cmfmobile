@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:cmf_mobile/data/models/conversion.dart';
 import 'package:cmf_mobile/data/services/cmf_format.dart';
 import 'package:cmf_mobile/data/services/converter_core.dart';
+import 'package:cmf_mobile/data/services/safetensors.dart' show f16BitsToDouble;
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -756,6 +757,105 @@ void main() {
       expect(bits, 0xFF);
     });
   });
+
+  group('q1t encoder', () {
+    test('nbytes = base tiles + row_ptr + outlier overlay', () {
+      final k = q1tOutliersPerRow(64); // round(64 * 0.02) = 1
+      // 8 groups × 9B base + (rows+1)×4 row_ptr + rows×k×4 overlay entries.
+      expect(nbytesFor(Cmf.dtQ1T, [4, 64], 256), 8 * 9 + 5 * 4 + 4 * k * 4);
+    });
+
+    test('round-trips ternary base + f16 outlier overlay via the reader format',
+        () async {
+      final dir = await Directory.systemTemp.createTemp('cmf_q1t_test');
+      addTearDown(() => dir.delete(recursive: true));
+      final shard = '${dir.path}/model.safetensors';
+      final vocab = '${dir.path}/tokenizer.json';
+      final output = '${dir.path}/model.cmf';
+
+      const rows = 64, cols = 64;
+      final q = Float32List(rows * cols);
+      for (var r = 0; r < rows; r++) {
+        for (var c = 0; c < cols; c++) {
+          q[r * cols + c] = ((c % 3) - 1) * 0.05; // -0.05 / 0 / +0.05 ternary
+        }
+        q[r * cols + (r % cols)] = 5.0 + r * 0.01; // one large outlier per row
+      }
+      await _writeF32SafetensorsData(shard, {
+        'model.embed_tokens.weight': (const [32, 64], Float32List(32 * 64)),
+        'model.norm.weight': (const [64], Float32List(64)),
+        'model.layers.0.input_layernorm.weight': (const [64], Float32List(64)),
+        'model.layers.0.post_attention_layernorm.weight':
+            (const [64], Float32List(64)),
+        'model.layers.0.self_attn.q_proj.weight': (const [64, 64], q),
+        'model.layers.0.self_attn.k_proj.weight':
+            (const [64, 64], Float32List(64 * 64)),
+        'model.layers.0.self_attn.v_proj.weight':
+            (const [64, 64], Float32List(64 * 64)),
+        'model.layers.0.self_attn.o_proj.weight':
+            (const [64, 64], Float32List(64 * 64)),
+        'model.layers.0.mlp.gate_proj.weight':
+            (const [128, 64], Float32List(128 * 64)),
+        'model.layers.0.mlp.up_proj.weight':
+            (const [128, 64], Float32List(128 * 64)),
+        'model.layers.0.mlp.down_proj.weight':
+            (const [64, 128], Float32List(64 * 128)),
+      });
+      await File(vocab).writeAsString('{}');
+      final config = <String, dynamic>{
+        'model_type': 'qwen3',
+        'hidden_size': 64,
+        'intermediate_size': 128,
+        'num_hidden_layers': 1,
+        'num_attention_heads': 1,
+        'num_key_value_heads': 1,
+        'vocab_size': 32,
+        'tie_word_embeddings': true,
+      };
+
+      await convertSafetensorsToCmf(ConvertInput(
+        shardPaths: [shard],
+        config: config,
+        vocabPath: vocab,
+        outputPath: output,
+        quant: QuantType.q1t,
+        sourceRepo: 'test/q1t',
+        threads: 1,
+      ));
+
+      // Every tensor hash and section length is internally consistent.
+      expect(await CmfValidator.validate(output), isEmpty);
+
+      final (dtype, shape, bytes) = await _readCmfTensorBytes(
+        output,
+        'model.layers.0.self_attn.q_proj.weight',
+      );
+      expect(dtype, Cmf.dtQ1T, reason: 'q_proj should be ternary');
+      expect(shape, [rows, cols]);
+      expect(bytes.length, nbytesFor(Cmf.dtQ1T, [rows, cols], rows * cols));
+
+      final decoded = _dequantQ1t(bytes, rows, cols);
+      // The row outlier reconstructs (f16) at exactly its (row, col) — this is
+      // the whole overlay layout: row_ptr region, entry region, col/val order.
+      for (var r = 0; r < rows; r++) {
+        expect(decoded[r * cols + (r % cols)], closeTo(5.0 + r * 0.01, 0.05),
+            reason: 'row $r outlier');
+      }
+      // Non-outlier weights are ternary: |value| ∈ {0, s} per 32-group.
+      for (var r = 0; r < rows; r++) {
+        for (var g = 0; g < cols ~/ 32; g++) {
+          final mags = <double>{};
+          for (var k = 0; k < 32; k++) {
+            final c = g * 32 + k;
+            if (c == r % cols) continue; // skip the outlier column
+            mags.add(decoded[r * cols + c].abs());
+          }
+          expect(mags.length, lessThanOrEqualTo(2),
+              reason: 'row $r group $g is not ternary: $mags');
+        }
+      }
+    });
+  });
 }
 
 Future<void> _writeF32Safetensors(
@@ -783,4 +883,113 @@ Future<void> _writeF32Safetensors(
     ..add(headerBytes)
     ..add(Uint8List(offset));
   await File(path).writeAsBytes(bytes.takeBytes());
+}
+
+/// Like [_writeF32Safetensors] but writes real tensor data (not zeros), so
+/// value-level round-trip tests can exercise the encoders.
+Future<void> _writeF32SafetensorsData(
+  String path,
+  Map<String, (List<int>, Float32List)> tensors,
+) async {
+  var offset = 0;
+  final header = <String, dynamic>{};
+  final blobs = <Float32List>[];
+  for (final entry in tensors.entries) {
+    final (shape, data) = entry.value;
+    final count = shape.fold<int>(1, (a, b) => a * b);
+    header[entry.key] = {
+      'dtype': 'F32',
+      'shape': shape,
+      'data_offsets': [offset, offset + count * 4],
+    };
+    offset += count * 4;
+    blobs.add(data);
+  }
+  final headerBytes = utf8.encode(jsonEncode(header));
+  final bb = BytesBuilder(copy: false)
+    ..add(
+      (ByteData(8)..setUint64(0, headerBytes.length, Endian.little))
+          .buffer
+          .asUint8List(),
+    )
+    ..add(headerBytes);
+  for (final b in blobs) {
+    bb.add(b.buffer.asUint8List(b.offsetInBytes, b.lengthInBytes));
+  }
+  await File(path).writeAsBytes(bb.takeBytes());
+}
+
+/// Reads one tensor's (dtype, shape, raw bytes) from a finished .cmf file by
+/// walking the envelope + directory — independent of the writer internals.
+Future<(int, List<int>, Uint8List)> _readCmfTensorBytes(
+  String path,
+  String name,
+) async {
+  final raf = await File(path).open();
+  try {
+    final env = ByteData.sublistView(Uint8List.fromList(await raf.read(128)));
+    final dirOff = env.getUint64(0x20, Endian.little);
+    final dirLen = env.getUint64(0x28, Endian.little);
+    final dataOff = env.getUint64(0x30, Endian.little);
+    await raf.setPosition(dirOff);
+    final dir = Uint8List.fromList(await raf.read(dirLen));
+    final d = ByteData.sublistView(dir);
+    final count = d.getUint64(0, Endian.little);
+    final poolOff = d.getUint64(8, Endian.little);
+    for (var i = 0; i < count; i++) {
+      final rec = 16 + i * 56;
+      final nameOff = d.getUint32(rec, Endian.little);
+      final nameLen = d.getUint16(rec + 4, Endian.little);
+      final tname = utf8.decode(
+        dir.sublist(poolOff + nameOff, poolOff + nameOff + nameLen),
+      );
+      if (tname != name) continue;
+      final dtype = d.getUint8(rec + 6);
+      final ndim = d.getUint8(rec + 7);
+      final shape = [
+        for (var s = 0; s < ndim; s++)
+          d.getUint32(rec + 8 + s * 4, Endian.little),
+      ];
+      final off = d.getUint64(rec + 32, Endian.little);
+      final nbytes = d.getUint64(rec + 40, Endian.little);
+      await raf.setPosition(dataOff + off);
+      return (dtype, shape, Uint8List.fromList(await raf.read(nbytes)));
+    }
+    throw StateError('tensor $name not found');
+  } finally {
+    await raf.close();
+  }
+}
+
+/// Dart port of the reference `dequant_q1t` — the byte contract the runtime
+/// reads. If the on-device encoder drifts from it, this decode disagrees.
+Float64List _dequantQ1t(Uint8List bytes, int rows, int cols) {
+  const groupSize = 32, tile = 9;
+  const pow3 = [1, 3, 9, 27, 81];
+  final n = rows * cols;
+  final dst = Float64List(n);
+  final bd = ByteData.sublistView(bytes);
+  final nGroups = (n + groupSize - 1) ~/ groupSize;
+  final baseLen = nGroups * tile;
+  for (var g = 0; g < nGroups; g++) {
+    final off = g * tile;
+    final s = f16BitsToDouble(bd.getUint16(off, Endian.little));
+    for (var k = 0; k < groupSize; k++) {
+      final i = g * groupSize + k;
+      if (i >= n) break;
+      final code = (bytes[off + 2 + k ~/ 5] ~/ pow3[k % 5]) % 3;
+      dst[i] = code == 1 ? s : (code == 2 ? -s : 0.0);
+    }
+  }
+  final entries = baseLen + (rows + 1) * 4;
+  int rp(int r) => bd.getUint32(baseLen + r * 4, Endian.little);
+  for (var r = 0; r < rows; r++) {
+    for (var p = rp(r); p < rp(r + 1); p++) {
+      final e = entries + p * 4;
+      final col = bd.getUint16(e, Endian.little);
+      final val = f16BitsToDouble(bd.getUint16(e + 2, Endian.little));
+      dst[r * cols + col] = val;
+    }
+  }
+  return dst;
 }

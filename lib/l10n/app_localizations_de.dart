@@ -294,7 +294,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get importOnDeviceNote =>
-      'Auf dem Gerät werden Q8_ROW, Q8_2F, Q1 und F16 unterstützt (mehrthreadig). Repos mit fertigen .cmf-Dateien werden direkt geladen — in jeder Quantisierung.';
+      'Auf dem Gerät werden Q8_ROW, Q8_2F, Q1T, Q1 und F16 unterstützt (mehrthreadig). Repos mit fertigen .cmf-Dateien werden direkt geladen — in jeder Quantisierung.';
+
+  @override
+  String get quantDesktopOnly => 'nur Desktop / .cmf';
 
   @override
   String get importStateRunning => 'läuft';
@@ -330,6 +333,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get quantQ8RowDesc =>
       '8 Bit pro Zeile — einfach und robust. Konvertiert auf dem Gerät.';
+
+  @override
+  String get quantQ1tDesc =>
+      'Ternär ~2,25–3 Bit mit f16-Ausreißer-Overlay — unter q4, ohne Training. Kleinste nutzbare Datei, größter Qualitätsverlust. Konvertiert auf dem Gerät.';
 
   @override
   String get quantQ4Desc =>
@@ -457,6 +464,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsThreads => 'CPU-Threads';
+
+  @override
+  String get settingsDisableThinking => 'Denken deaktivieren';
+
+  @override
+  String get settingsDisableThinkingHint =>
+      'Reasoning-Modelle (Qwen3/3.5) antworten direkt, ohne <think>-Schritt';
 
   @override
   String get settingsServerSection => 'Server';
