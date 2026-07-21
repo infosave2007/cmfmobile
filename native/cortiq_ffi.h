@@ -25,6 +25,9 @@ const char *cortiq_last_error(void);
 /* Open a .cmf file (memory-mapped — keep it on storage). NULL on error. */
 void *cortiq_load(const char *path);
 
+/* Globally enable or disable the discrete GPU graph. Must be called before load. */
+void cortiq_set_gpu(bool enable);
+
 /* Release a handle. NULL is a no-op. */
 void cortiq_free(void *handle);
 
@@ -54,9 +57,8 @@ int32_t cortiq_chat_messages(void *handle, const char *messages_json,
 /* Partial sampler options as JSON — absent keys keep their current
  * values; applies to every later generate on this handle. Keys:
  * temperature, top_p, top_k, repetition_penalty, min_p, seed,
- * greedy (true = argmax), enable_thinking (false = reasoning models
- * answer directly with no <think> block; null = template default).
- * Defaults: 0.7 / 0.9 / 40 / 1.1 / 0.05 / random. Returns 0, or -1. */
+ * greedy (true = argmax). Defaults: 0.7 / 0.9 / 40 / 1.1 / 0.05 /
+ * random. Returns 0, or -1. */
 int32_t cortiq_set_options(void *handle, const char *options_json);
 
 #ifdef __cplusplus
