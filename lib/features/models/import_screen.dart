@@ -13,8 +13,8 @@ import '../../l10n/app_localizations.dart';
 /// download, no conversion needed.
 const featuredRepos = [
   'infosave/Bonsai-1.7Bcmf',
-  'infosave/Bonsai-27Bcmf',
   'infosave/Bonsai-8B_2bit_cmf',
+  'infosave/Bonsai-27Bcmf',
 ];
 
 class _FeaturedEntry {

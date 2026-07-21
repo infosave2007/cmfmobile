@@ -5,6 +5,7 @@ void main() {
   test('ready Bonsai models stay pinned in mobile-first order', () {
     expect(featuredRepos, [
       'infosave/Bonsai-1.7Bcmf',
+      'infosave/Bonsai-8B_2bit_cmf',
       'infosave/Bonsai-27Bcmf',
     ]);
   });
