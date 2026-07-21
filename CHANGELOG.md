@@ -4,6 +4,13 @@ All notable changes to CMF Mobile are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
+## [1.1.5] - 2026-07-21
+
+### Changed
+- **Massive Performance Boost on Mobile**: Integrated `cortiq-engine` v0.5.5 optimizations.
+  - Eliminated severe memory allocation bottlenecks (`Vec` churn) on CPU inference paths, resolving the 0.2 tok/s degradation on big.LITTLE Android devices like Snapdragon 778G.
+  - Dramatically accelerated cross-platform GPU inference (WGPU) by replacing expensive integer divisions with a branchless lookup table (LUT).
+
 ## [1.1.4] - 2026-07-21
 
 ### Fixed
