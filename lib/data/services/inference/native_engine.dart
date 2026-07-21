@@ -50,6 +50,8 @@ typedef _SetOptionsNative = ffi.Int32 Function(
     ffi.Pointer<ffi.Void>, ffi.Pointer<Utf8>);
 typedef _SetOptionsDart = int Function(
     ffi.Pointer<ffi.Void>, ffi.Pointer<Utf8>);
+typedef _SetGpuNative = ffi.Void Function(ffi.Bool);
+typedef _SetGpuDart = void Function(bool);
 
 ffi.DynamicLibrary _openLibrary() {
   if (Platform.isAndroid) return ffi.DynamicLibrary.open('libcortiq_ffi.so');
@@ -75,8 +77,11 @@ class NativeCortiqEngine implements InferenceEngine {
       try {
         _setOptions = lib.lookupFunction<_SetOptionsNative, _SetOptionsDart>(
             'cortiq_set_options');
+        _setGpu = lib.lookupFunction<_SetGpuNative, _SetGpuDart>(
+            'cortiq_set_gpu');
       } catch (_) {
         _setOptions = null; // pre-0.3.10 library
+        _setGpu = null;
       }
     } catch (_) {
       _lib = null;
@@ -86,6 +91,7 @@ class NativeCortiqEngine implements InferenceEngine {
   ffi.DynamicLibrary? _lib;
   _FreeDart? _free;
   _SetOptionsDart? _setOptions;
+  _SetGpuDart? _setGpu;
   String _version = '';
 
   ffi.Pointer<ffi.Void> _handle = ffi.nullptr;
@@ -96,6 +102,12 @@ class NativeCortiqEngine implements InferenceEngine {
 
   @override
   bool get isAvailable => _lib != null;
+
+  void setGpu(bool enable) {
+    if (_setGpu != null) {
+      _setGpu!(enable);
+    }
+  }
 
   @override
   String get name =>

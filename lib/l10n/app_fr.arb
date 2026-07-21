@@ -137,6 +137,8 @@
   "settingsTopP": "Top-p",
   "settingsMaxTokens": "Tokens max",
   "settingsThreads": "Threads CPU",
+  "settingsUseGpu": "Utiliser le GPU (Vulkan/Metal)",
+  "settingsUseGpuHint": "Active le graphe d'exécution GPU discret (appliqué au prochain chargement de modèle).",
   "settingsDisableThinking": "Désactiver la réflexion",
   "settingsDisableThinkingHint": "Les modèles de raisonnement (Qwen3/3.5) répondent directement, sans étape <think>",
   "settingsServerSection": "Serveur",

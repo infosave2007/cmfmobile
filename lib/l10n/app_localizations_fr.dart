@@ -469,6 +469,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsThreads => 'Threads CPU';
 
   @override
+  String get settingsUseGpu => 'Utiliser le GPU (Vulkan/Metal)';
+
+  @override
+  String get settingsUseGpuHint =>
+      'Active le graphe d\'exécution GPU discret (appliqué au prochain chargement de modèle).';
+
+  @override
   String get settingsDisableThinking => 'Désactiver la réflexion';
 
   @override

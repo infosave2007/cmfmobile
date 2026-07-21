@@ -466,6 +466,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsThreads => 'CPU-Threads';
 
   @override
+  String get settingsUseGpu => 'GPU verwenden (Vulkan/Metal)';
+
+  @override
+  String get settingsUseGpuHint =>
+      'Aktiviert den dedizierten GPU-Ausführungsgraph (wird beim nächsten Laden des Modells angewendet).';
+
+  @override
   String get settingsDisableThinking => 'Denken deaktivieren';
 
   @override

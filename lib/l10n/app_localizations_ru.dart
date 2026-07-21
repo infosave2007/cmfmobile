@@ -465,7 +465,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsThreads => 'Потоки CPU';
 
   @override
-  String get settingsDisableThinking => 'Отключить размышления';
+  String get settingsUseGpu => 'Использовать GPU (Vulkan/Metal)';
+
+  @override
+  String get settingsUseGpuHint =>
+      'Включить дискретный GPU (применится при следующей загрузке модели).';
+
+  @override
+  String get settingsDisableThinking => 'Отключить рассуждения';
 
   @override
   String get settingsDisableThinkingHint =>

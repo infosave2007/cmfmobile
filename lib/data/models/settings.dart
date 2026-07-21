@@ -13,6 +13,7 @@ class AppSettings {
     this.serverAuthEnabled = false,
     this.serverToken = '',
     this.hfToken = '',
+    this.useGpu = false,
   });
 
   final ThemeMode themeMode;
@@ -31,6 +32,7 @@ class AppSettings {
   final bool serverAuthEnabled;
   final String serverToken;
   final String hfToken;
+  final bool useGpu;
 
   AppSettings copyWith({
     ThemeMode? themeMode,
@@ -45,6 +47,7 @@ class AppSettings {
     bool? serverAuthEnabled,
     String? serverToken,
     String? hfToken,
+    bool? useGpu,
   }) =>
       AppSettings(
         themeMode: themeMode ?? this.themeMode,
@@ -58,5 +61,6 @@ class AppSettings {
         serverAuthEnabled: serverAuthEnabled ?? this.serverAuthEnabled,
         serverToken: serverToken ?? this.serverToken,
         hfToken: hfToken ?? this.hfToken,
+        useGpu: useGpu ?? this.useGpu,
       );
 }

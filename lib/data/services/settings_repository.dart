@@ -17,6 +17,7 @@ class SettingsRepository {
   static const _kServerAuth = 'serverAuthEnabled';
   static const _kServerToken = 'serverToken';
   static const _kHfToken = 'hfToken';
+  static const _kUseGpu = 'useGpu';
 
   Future<AppSettings> load() async {
     final p = await SharedPreferences.getInstance();
@@ -38,6 +39,7 @@ class SettingsRepository {
       serverAuthEnabled: p.getBool(_kServerAuth) ?? false,
       serverToken: token,
       hfToken: p.getString(_kHfToken) ?? '',
+      useGpu: p.getBool(_kUseGpu) ?? false,
     );
   }
 
@@ -58,6 +60,7 @@ class SettingsRepository {
     await p.setBool(_kServerAuth, s.serverAuthEnabled);
     await p.setString(_kServerToken, s.serverToken);
     await p.setString(_kHfToken, s.hfToken);
+    await p.setBool(_kUseGpu, s.useGpu);
   }
 
   static String _generateToken() {

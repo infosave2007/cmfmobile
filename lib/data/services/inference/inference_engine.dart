@@ -50,6 +50,8 @@ abstract class InferenceEngine {
 
   LocalModel? get loadedModel;
 
+  void setGpu(bool enable) {}
+
   Future<void> loadModel(LocalModel model, {int threads = 4});
 
   Future<void> unload();

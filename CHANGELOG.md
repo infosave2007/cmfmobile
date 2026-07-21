@@ -4,6 +4,12 @@ All notable changes to CMF Mobile are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
+## [1.1.2] - 2026-07-21
+
+### Added
+- **GPU Toggle**: Added a UI setting under Generation to explicitly use the Vulkan/Metal GPU execution graph (applies on the next model load).
+- **Localization**: Added full translation support for the GPU toggle setting across 7 languages.
+
 ## [1.1.1] - 2026-07-21
 
 ### Changed

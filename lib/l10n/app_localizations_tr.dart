@@ -464,7 +464,14 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsThreads => 'CPU iş parçacığı';
 
   @override
-  String get settingsDisableThinking => 'Düşünmeyi kapat';
+  String get settingsUseGpu => 'GPU kullan (Vulkan/Metal)';
+
+  @override
+  String get settingsUseGpuHint =>
+      'Ayrık GPU yürütme grafiğini etkinleştirir (bir sonraki model yüklendiğinde uygulanır).';
+
+  @override
+  String get settingsDisableThinking => 'Düşünmeyi devre dışı bırak';
 
   @override
   String get settingsDisableThinkingHint =>

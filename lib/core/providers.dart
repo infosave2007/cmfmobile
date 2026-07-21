@@ -143,9 +143,11 @@ class EngineController extends Notifier<EngineState> {
     state = EngineState(
         isLoading: true, loadedModelId: model.id, loadedModel: model);
     try {
-      final threads =
-          ref.read(settingsProvider).value?.threads ?? 4;
-      await ref.read(engineProvider).loadModel(model, threads: threads);
+      final settings = ref.read(settingsProvider).value;
+      final threads = settings?.threads ?? 4;
+      final engine = ref.read(engineProvider);
+      engine.setGpu(settings?.useGpu ?? false);
+      await engine.loadModel(model, threads: threads);
       state = EngineState(loadedModelId: model.id, loadedModel: model);
     } catch (e) {
       state = EngineState(error: e.toString());

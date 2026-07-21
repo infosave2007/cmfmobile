@@ -124,6 +124,19 @@ class SettingsScreen extends ConsumerWidget {
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
+              title: Text(l.settingsUseGpu),
+              subtitle: Text(l.settingsUseGpuHint,
+                  style: const TextStyle(fontSize: 11)),
+              value: settings.useGpu,
+              onChanged: (v) {
+                notifier.updateSettings((s) => s.copyWith(useGpu: v));
+                if (engine is NativeCortiqEngine) {
+                  engine.setGpu(v);
+                }
+              },
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
               title: Text(l.settingsDisableThinking),
               subtitle: Text(l.settingsDisableThinkingHint,
                   style: const TextStyle(fontSize: 11)),

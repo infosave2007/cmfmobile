@@ -460,7 +460,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsMaxTokens => 'Max tokens';
 
   @override
-  String get settingsThreads => 'CPU threads';
+  String get settingsThreads => 'Threads';
+
+  @override
+  String get settingsUseGpu => 'Use GPU (Vulkan/Metal)';
+
+  @override
+  String get settingsUseGpuHint =>
+      'Enable discrete GPU execution graph (applies on next model load).';
 
   @override
   String get settingsDisableThinking => 'Disable thinking';

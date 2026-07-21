@@ -467,7 +467,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsThreads => 'Hilos de CPU';
 
   @override
-  String get settingsDisableThinking => 'Desactivar el pensamiento';
+  String get settingsUseGpu => 'Usar GPU (Vulkan/Metal)';
+
+  @override
+  String get settingsUseGpuHint =>
+      'Habilita el gráfico de ejecución discreta de GPU (se aplica al cargar el siguiente modelo).';
+
+  @override
+  String get settingsDisableThinking => 'Desactivar pensamiento';
 
   @override
   String get settingsDisableThinkingHint =>

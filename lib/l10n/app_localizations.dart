@@ -927,8 +927,20 @@ abstract class AppLocalizations {
   /// No description provided for @settingsThreads.
   ///
   /// In en, this message translates to:
-  /// **'CPU threads'**
+  /// **'Threads'**
   String get settingsThreads;
+
+  /// No description provided for @settingsUseGpu.
+  ///
+  /// In en, this message translates to:
+  /// **'Use GPU (Vulkan/Metal)'**
+  String get settingsUseGpu;
+
+  /// No description provided for @settingsUseGpuHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable discrete GPU execution graph (applies on next model load).'**
+  String get settingsUseGpuHint;
 
   /// No description provided for @settingsDisableThinking.
   ///

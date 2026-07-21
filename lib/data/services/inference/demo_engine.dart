@@ -23,6 +23,9 @@ class DemoEngine implements InferenceEngine {
   LocalModel? get loadedModel => _loaded;
 
   @override
+  void setGpu(bool enable) {}
+
+  @override
   Future<void> loadModel(LocalModel model, {int threads = 4}) async {
     // Simulate mmap + warmup proportional to file size, capped.
     final ms = min(1200, 200 + model.sizeBytes ~/ (50 * 1024 * 1024));

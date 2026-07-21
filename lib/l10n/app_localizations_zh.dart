@@ -446,6 +446,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsThreads => 'CPU 线程数';
 
   @override
+  String get settingsUseGpu => '使用 GPU (Vulkan/Metal)';
+
+  @override
+  String get settingsUseGpuHint => '启用离散 GPU 执行图（在下次加载模型时生效）。';
+
+  @override
   String get settingsDisableThinking => '禁用思考';
 
   @override
