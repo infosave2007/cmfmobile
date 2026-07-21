@@ -4,6 +4,11 @@ All notable changes to CMF Mobile are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
+## [1.1.1] - 2026-07-21
+
+### Changed
+- **Engine update**: Upgraded `libcortiq_ffi` to v0.5.1, incorporating Metal `TokenGraph` Q8 support and CPU `add_rmsnorm` fusion optimizations.
+
 ## [1.1.0] - 2026-07-19
 
 ### Added
