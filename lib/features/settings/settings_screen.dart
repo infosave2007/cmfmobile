@@ -130,9 +130,7 @@ class SettingsScreen extends ConsumerWidget {
               value: settings.useGpu,
               onChanged: (v) {
                 notifier.updateSettings((s) => s.copyWith(useGpu: v));
-                if (engine is NativeCortiqEngine) {
-                  engine.setGpu(v);
-                }
+                engine.setGpu(v);
               },
             ),
             SwitchListTile(

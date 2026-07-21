@@ -103,6 +103,7 @@ class NativeCortiqEngine implements InferenceEngine {
   @override
   bool get isAvailable => _lib != null;
 
+  @override
   void setGpu(bool enable) {
     if (_setGpu != null) {
       _setGpu!(enable);

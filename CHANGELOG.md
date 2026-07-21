@@ -4,6 +4,11 @@ All notable changes to CMF Mobile are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
+## [1.1.3] - 2026-07-21
+
+### Fixed
+- Fixed a Dart compilation error in `NativeCortiqEngine` casting and interface implementation.
+
 ## [1.1.2] - 2026-07-21
 
 ### Added

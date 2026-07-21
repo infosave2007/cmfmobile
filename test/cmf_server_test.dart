@@ -149,6 +149,9 @@ class _FakeEngine implements InferenceEngine {
   int calls = 0;
 
   @override
+  void setGpu(bool enable) {}
+
+  @override
   bool get isAvailable => true;
 
   @override
