@@ -14,6 +14,7 @@ import '../../l10n/app_localizations.dart';
 const featuredRepos = [
   'infosave/Bonsai-1.7Bcmf',
   'infosave/Bonsai-27Bcmf',
+  'infosave/Bonsai-8B_2bit_cmf',
 ];
 
 class _FeaturedEntry {
