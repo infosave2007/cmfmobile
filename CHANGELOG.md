@@ -4,6 +4,11 @@ All notable changes to CMF Mobile are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
+## [1.1.4] - 2026-07-21
+
+### Fixed
+- Upgraded `cmfpublic` to 0.5.3 to fix the GPU toggle. The backend now correctly switches to Vulkan/Metal instead of silently falling back to CPU when the toggle is activated.
+
 ## [1.1.3] - 2026-07-21
 
 ### Fixed
