@@ -156,8 +156,10 @@ int targetDtype(QuantType quant, String name, List<int> shape, int numel) {
           : Cmf.dtQ8_2f;
     case QuantType.f16:
       return Cmf.dtF16;
+    case QuantType.q4Block:
+      return shape[1] % 32 == 0 ? Cmf.dtQ4Block : Cmf.dtQ8_2f;
     default:
-      return Cmf.dtF16; // q4/vbit need the desktop toolchain
+      return Cmf.dtF16; // vbit needs the desktop toolchain
   }
 }
 
@@ -165,6 +167,7 @@ int nbytesFor(int dtype, List<int> shape, int numel) => switch (dtype) {
   Cmf.dtQ8Row => shape[0] * shape[1] + shape[0] * 2,
   Cmf.dtQ8_2f => shape[0] * shape[1] + shape[0] * 2 + shape[1] * 2,
   Cmf.dtQ1 => (shape[0] * shape[1]) ~/ 32 * 6,
+  Cmf.dtQ4Block => (shape[0] * shape[1]) ~/ 32 * 18,
   // [9B/32-group base][u32 row_ptr[rows+1]][(u16 col, f16 val) × rows·k]
   Cmf.dtQ1T =>
     (shape[0] * shape[1]) ~/ 32 * 9 +
@@ -947,6 +950,50 @@ Future<int> _processTensor(
         await emit(tiles);
         onBytes(raw.length);
       }
+
+    case Cmf.dtQ4Block:
+      // Q4Block: per 32-group [packed nibbles: 16B][f16 scale: 2B].
+      // Each byte stores 2 nibbles: low = even index, high = odd index.
+      // Value = (nibble - 8) * scale, range [-8, 7].
+      final groupsPerRow = cols ~/ 32;
+      final rowsPerSlab = math.max(1, 8 * 1024 * 1024 ~/ (cols * bpe));
+      final allPacked = BytesBuilder(copy: false);
+      final allScales = BytesBuilder(copy: false);
+      await shard.setPosition(srcStart);
+      for (var r0 = 0; r0 < rows; r0 += rowsPerSlab) {
+        final n = math.min(rowsPerSlab, rows - r0);
+        final raw = Uint8List.fromList(await shard.read(n * cols * bpe));
+        final values = decodeFloats(raw, task.srcDtype);
+        final packed = Uint8List(n * groupsPerRow * 16);
+        final scales = Uint8List(n * groupsPerRow * 2);
+        final scaleData = ByteData.sublistView(scales);
+        for (var r = 0; r < n; r++) {
+          for (var g = 0; g < groupsPerRow; g++) {
+            final base = r * cols + g * 32;
+            var absMax = 0.0;
+            for (var i = 0; i < 32; i++) {
+              final a = values[base + i].abs();
+              if (a > absMax) absMax = a;
+            }
+            final scale = f16ScaleOf(absMax / 7.0);
+            final tileBase = (r * groupsPerRow + g) * 16;
+            for (var k = 0; k < 16; k++) {
+              final q0 = roundTiesEven(values[base + k * 2] / scale)
+                  .clamp(-8.0, 7.0).toInt() + 8;
+              final q1 = roundTiesEven(values[base + k * 2 + 1] / scale)
+                  .clamp(-8.0, 7.0).toInt() + 8;
+              packed[tileBase + k] = (q0 & 0x0F) | (q1 << 4);
+            }
+            scaleData.setUint16(
+                (r * groupsPerRow + g) * 2, f32ToF16Bits(scale), Endian.little);
+          }
+        }
+        allPacked.add(packed);
+        allScales.add(scales);
+        onBytes(raw.length);
+      }
+      await emit(allPacked.toBytes());
+      await emit(allScales.toBytes());
 
     case Cmf.dtQ1T:
       // Training-free ternary {−s,0,+s}: per 32-group `[f16 scale][7B base-3

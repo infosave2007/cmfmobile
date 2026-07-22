@@ -20,6 +20,7 @@ enum QuantType {
         QuantType.q8Row ||
         QuantType.q8_2f ||
         QuantType.q1t ||
+        QuantType.q4Block ||
         QuantType.q1 ||
         QuantType.f16 =>
           true,
