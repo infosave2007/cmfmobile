@@ -5,6 +5,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
 
+## [1.1.10] - 2026-07-22
+
+### Fixed
+- **Engine hotfix**: Upgraded `cortiq-engine` to v0.5.10 — fixes Q4Block Metal
+  GPU nibble order bug (garbage output on whole-token graph path, broken since
+  v0.5.7 ILP refactor).
+
 ## [1.1.9] - 2026-07-22
 
 ### Changed
