@@ -4,6 +4,15 @@ All notable changes to CMF Mobile are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
+
+## [1.1.9] - 2026-07-22
+
+### Changed
+- **Engine update**: Upgraded `cortiq-engine` to v0.5.9 — Looped Transformer
+  support (Nanbeige 4.2: 22 layers × 2 loops = 44 virtual layers, 4.17B
+  effective params from 2.1B weights), Metal GPU whole-token graph for looped
+  models, O(1) Nyström attention benchmarks (×3.7 speedup at ctx=2048).
+
 ## [1.1.5] - 2026-07-21
 
 ### Changed
