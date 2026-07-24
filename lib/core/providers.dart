@@ -201,6 +201,23 @@ class ChatState {
       );
 }
 
+/// Text of the assistant reply currently being generated, updated on every
+/// token. Kept outside [ChatState] so streaming repaints only the active
+/// bubble instead of rebuilding the whole chat screen per delta.
+class StreamingReplyController
+    extends Notifier<({String sessionId, String text})?> {
+  @override
+  ({String sessionId, String text})? build() => null;
+
+  void update(String sessionId, String text) =>
+      state = (sessionId: sessionId, text: text);
+
+  void clear() => state = null;
+}
+
+final streamingReplyProvider = NotifierProvider<StreamingReplyController,
+    ({String sessionId, String text})?>(StreamingReplyController.new);
+
 class ChatController extends Notifier<ChatState> {
   StreamSubscription<GenerationEvent>? _sub;
 
@@ -272,6 +289,9 @@ class ChatController extends Notifier<ChatState> {
     ));
     session.messages.add(const ChatMessage(role: ChatRole.assistant, content: ''));
     state = state.copyWith(sessions: [...state.sessions], generating: true);
+    // Persist the user turn right away so it survives a crash or an app
+    // kill during the (potentially long) generation that follows.
+    unawaited(ref.read(chatStoreProvider).save(session));
     await _generate(session);
   }
 
@@ -311,12 +331,14 @@ class ChatController extends Notifier<ChatState> {
     ];
 
     var buffer = '';
+    final streaming = ref.read(streamingReplyProvider.notifier);
     void updateLast(ChatMessage msg) {
       session.messages[session.messages.length - 1] = msg;
       state = state.copyWith(sessions: [...state.sessions]);
     }
 
     try {
+      await _sub?.cancel();
       final stream = engine.generate(GenerationRequest(
         messages: history,
         temperature: settings.temperature,
@@ -334,8 +356,10 @@ class ChatController extends Notifier<ChatState> {
               stats: event.stats,
             ));
           } else {
+            // Per-token updates go to the streaming provider only; the
+            // session (and the full message list) updates once, on done.
             buffer += event.delta;
-            updateLast(ChatMessage(role: ChatRole.assistant, content: buffer));
+            streaming.update(session.id, buffer);
           }
         },
         onError: (Object e) {
@@ -359,6 +383,7 @@ class ChatController extends Notifier<ChatState> {
       ));
     } finally {
       _sub = null;
+      streaming.clear();
       state = state.copyWith(generating: false, sessions: [...state.sessions]);
       await ref.read(chatStoreProvider).save(session);
     }

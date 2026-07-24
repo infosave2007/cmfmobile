@@ -37,10 +37,19 @@ class ChatStore {
     return sessions;
   }
 
-  Future<void> save(ChatSession session) async {
-    final dir = await _chatsDir();
-    final file = File('${dir.path}/${session.id}.json');
-    await file.writeAsString(jsonEncode(session.toJson()));
+  final Map<String, Future<void>> _saving = {};
+
+  Future<void> save(ChatSession session) {
+    // Serialize writes per session so overlapping saves (user turn +
+    // finished generation) cannot interleave on the same file.
+    final prev = _saving[session.id] ?? Future.value();
+    final next = prev.then((_) async {
+      final dir = await _chatsDir();
+      final file = File('${dir.path}/${session.id}.json');
+      await file.writeAsString(jsonEncode(session.toJson()));
+    });
+    _saving[session.id] = next.catchError((_) {});
+    return next;
   }
 
   Future<void> delete(String sessionId) async {
