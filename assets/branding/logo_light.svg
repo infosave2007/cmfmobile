@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Cortiq logo for light backgrounds: hexagon-C mark + monoline wordmark. -->
+<svg width="1160" height="320" viewBox="-20 -240 1160 320" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="line" gradientUnits="userSpaceOnUse"
+                    x1="286" y1="0" x2="460" y2="0">
+      <stop offset="0%" stop-color="#1652FF"/>
+      <stop offset="100%" stop-color="#3D7BFF"/>
+    </linearGradient>
+  </defs>
+
+  <!-- mark -->
+  <g transform="translate(-20,-228.7) scale(0.62)">
+    <path d="M 326.5 118.25
+             L 270.6 86
+             Q 236 66 201.4 86
+             L 106.1 141
+             Q 71.5 161 71.5 201
+             L 71.5 311
+             Q 71.5 351 106.1 371
+             L 201.4 426
+             Q 236 446 270.6 426
+             L 326.5 393.75"
+          fill="none" stroke="#0F1B33" stroke-width="44"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="298" y1="214" x2="386" y2="214" stroke="#00D4CB"
+          stroke-width="34" stroke-linecap="round"/>
+    <circle cx="442" cy="214" r="17" fill="url(#line)"/>
+    <line x1="286" y1="280" x2="430" y2="280" stroke="url(#line)"
+          stroke-width="34" stroke-linecap="round"/>
+  </g>
+
+  <!-- wordmark: C o r t i q (monoline, round caps) -->
+  <g transform="translate(310,0)" fill="none" stroke="#0F1B33"
+     stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
+    <!-- C -->
+    <path d="M 152.2 -143.5 A 77 77 0 1 0 152.2 -40.5"/>
+    <!-- o -->
+    <circle cx="250" cy="-65" r="50"/>
+    <!-- r -->
+    <path d="M 345 -115 L 345 -15"/>
+    <path d="M 345 -70 Q 345 -115 395 -115"/>
+    <!-- t -->
+    <path d="M 460 -165 L 460 -45 Q 460 -15 492 -15"/>
+    <path d="M 428 -122 L 496 -122"/>
+    <!-- i -->
+    <path d="M 555 -115 L 555 -15"/>
+    <circle cx="555" cy="-172" r="16" fill="#00D4CB" stroke="none"/>
+    <!-- q -->
+    <circle cx="665" cy="-65" r="50"/>
+    <path d="M 715 -115 L 715 10 Q 715 45 750 45"/>
+  </g>
+</svg>

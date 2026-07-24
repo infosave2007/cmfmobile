@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Cortiq brand deep navy — adaptive icon background layer. -->
+    <color name="ic_launcher_background">#0F1B33</color>
+</resources>

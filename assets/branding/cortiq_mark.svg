@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Cortiq mark (symbol only), tight viewBox, for dark backgrounds. -->
+<svg width="440" height="440" viewBox="30 36 440 440" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="line" gradientUnits="userSpaceOnUse"
+                    x1="286" y1="0" x2="460" y2="0">
+      <stop offset="0%" stop-color="#1652FF"/>
+      <stop offset="100%" stop-color="#3D7BFF"/>
+    </linearGradient>
+  </defs>
+  <path d="M 326.5 118.25
+           L 270.6 86
+           Q 236 66 201.4 86
+           L 106.1 141
+           Q 71.5 161 71.5 201
+           L 71.5 311
+           Q 71.5 351 106.1 371
+           L 201.4 426
+           Q 236 446 270.6 426
+           L 326.5 393.75"
+        fill="none" stroke="#F2F4F7" stroke-width="44"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="298" y1="214" x2="386" y2="214" stroke="#00D4CB"
+        stroke-width="34" stroke-linecap="round"/>
+  <circle cx="442" cy="214" r="17" fill="url(#line)"/>
+  <line x1="286" y1="280" x2="430" y2="280" stroke="url(#line)"
+        stroke-width="34" stroke-linecap="round"/>
+</svg>

@@ -1,3 +1,8 @@
+<p align="center">
+  <img src="assets/branding/logo_dark.svg#gh-dark-mode-only" alt="Cortiq" width="420"/>
+  <img src="assets/branding/logo_light.svg#gh-light-mode-only" alt="Cortiq" width="420"/>
+</p>
+
 # CMF Mobile
 
 **Запускайте локальные AI-модели на телефоне. Раздавайте их в сеть. Конвертируйте прямо с Hugging Face.**
