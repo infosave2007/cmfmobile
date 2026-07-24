@@ -117,6 +117,68 @@ void main() {
     expect(res.headers.value('access-control-allow-methods'), contains('POST'));
   });
 
+  test('stop sequence trims output, cancels engine, finish_reason=stop',
+      () async {
+    engine.script = [
+      'Hello ',
+      'wor',
+      'ld EN',
+      'D tail that must not appear',
+    ];
+    final res = await request(
+      'POST',
+      '/v1/chat/completions',
+      body: jsonEncode({
+        'messages': [
+          {'role': 'user', 'content': 'hi'},
+        ],
+        'stop': ['END'],
+      }),
+    );
+
+    expect(res.status, 200);
+    final json = jsonDecode(res.body) as Map<String, dynamic>;
+    expect(json['choices'][0]['message']['content'], 'Hello world ');
+    expect(json['choices'][0]['finish_reason'], 'stop');
+    expect(engine.cancels, 1);
+  });
+
+  test('without a stop match the held-back tail is flushed', () async {
+    engine.script = ['Hello ', 'world'];
+    final res = await request(
+      'POST',
+      '/v1/chat/completions',
+      body: jsonEncode({
+        'messages': [
+          {'role': 'user', 'content': 'hi'},
+        ],
+        'stop': 'NEVERMATCHES',
+      }),
+    );
+
+    expect(res.status, 200);
+    final json = jsonDecode(res.body) as Map<String, dynamic>;
+    expect(json['choices'][0]['message']['content'], 'Hello world');
+  });
+
+  test('invalid stop parameter is a safe 400', () async {
+    final res = await request(
+      'POST',
+      '/v1/chat/completions',
+      body: jsonEncode({
+        'messages': [
+          {'role': 'user', 'content': 'hi'},
+        ],
+        'stop': 123,
+      }),
+    );
+
+    expect(res.status, 400);
+    final error = (jsonDecode(res.body) as Map)['error'] as Map;
+    expect(error['param'], 'stop');
+    expect(engine.calls, 0);
+  });
+
   test(
     'internal generation errors do not leak implementation details',
     () async {
@@ -147,6 +209,10 @@ class _Response {
 class _FakeEngine implements InferenceEngine {
   bool fail = false;
   int calls = 0;
+  int cancels = 0;
+
+  /// Deltas emitted per generation (tests override for multi-token output).
+  List<String> script = const ['OK'];
 
   @override
   void setGpu(bool enable) {}
@@ -184,7 +250,9 @@ class _FakeEngine implements InferenceEngine {
   Stream<GenerationEvent> generate(GenerationRequest request) async* {
     calls++;
     if (fail) throw StateError('native secret');
-    yield const GenerationEvent(delta: 'OK');
+    for (final delta in script) {
+      yield GenerationEvent(delta: delta);
+    }
     yield const GenerationEvent(
       done: true,
       stats: GenerationStats(
@@ -205,5 +273,5 @@ class _FakeEngine implements InferenceEngine {
   Future<void> unload() async {}
 
   @override
-  void cancel() {}
+  void cancel() => cancels++;
 }

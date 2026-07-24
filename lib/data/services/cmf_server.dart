@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data' show BytesBuilder;
 
 import 'package:network_info_plus/network_info_plus.dart';
 
@@ -34,6 +35,19 @@ class CmfServer {
 
   // Decodes are serialized, like `cortiq serve --slots 1`.
   Future<void> _decodeQueue = Future.value();
+  int _queuedDecodes = 0;
+
+  /// Cap on requests waiting for the single decode slot; beyond it clients
+  /// get 429 instead of an unbounded queue on a phone.
+  static const int _maxQueuedDecodes = 8;
+
+  /// Request bodies larger than this are rejected with 413 — a LAN-exposed
+  /// server must not buffer arbitrary payloads into RAM.
+  static const int _maxBodyBytes = 8 * 1024 * 1024;
+
+  /// A generation that emits nothing for this long is considered stalled:
+  /// it gets cancelled and the response finishes with what was produced.
+  static const Duration _generationStallTimeout = Duration(minutes: 5);
 
   final ServerStats stats = ServerStats();
   final List<ServerRequestRecord> requestLog = [];
@@ -56,9 +70,18 @@ class CmfServer {
   }
 
   Future<void> stop() async {
-    await _http?.close(force: true);
+    final server = _http;
+    if (server == null) return;
     _http = null;
     _startedAt = null;
+    // Let an in-flight decode wind down instead of cutting its socket:
+    // ask the engine to stop, give the queue a moment to drain, then close
+    // (force, to also drop idle keep-alive connections).
+    engine.cancel();
+    try {
+      await _decodeQueue.timeout(const Duration(seconds: 5));
+    } catch (_) {}
+    await server.close(force: true);
   }
 
   /// LAN URLs clients can use (Wi-Fi IP first, then any other interface).
@@ -104,7 +127,7 @@ class CmfServer {
       final path = req.uri.path;
       if (authToken != null && path != '/healthz') {
         final auth = req.headers.value(HttpHeaders.authorizationHeader);
-        if (auth != 'Bearer $authToken') {
+        if (!_constantTimeEquals(auth ?? '', 'Bearer $authToken')) {
           status = HttpStatus.unauthorized;
           await _json(req, status, {
             'error': {'message': 'invalid or missing bearer token'},
@@ -202,9 +225,38 @@ class CmfServer {
     });
   }
 
+  /// Compares the auth header against the expected value in constant time,
+  /// so response latency leaks nothing about a partial token match.
+  static bool _constantTimeEquals(String a, String b) {
+    if (a.length != b.length) return false;
+    var diff = 0;
+    for (var i = 0; i < a.length; i++) {
+      diff |= a.codeUnitAt(i) ^ b.codeUnitAt(i);
+    }
+    return diff == 0;
+  }
+
   Future<Map<String, dynamic>> _readJsonObject(HttpRequest req) async {
+    if (req.contentLength > _maxBodyBytes) {
+      throw const _ApiException(
+        413,
+        'Request body too large',
+        code: 'payload_too_large',
+      );
+    }
+    final builder = BytesBuilder(copy: false);
+    await for (final part in req) {
+      builder.add(part);
+      if (builder.length > _maxBodyBytes) {
+        throw const _ApiException(
+          413,
+          'Request body too large',
+          code: 'payload_too_large',
+        );
+      }
+    }
     try {
-      final decoded = jsonDecode(await utf8.decodeStream(req));
+      final decoded = jsonDecode(utf8.decode(builder.takeBytes()));
       if (decoded is! Map<String, dynamic>) {
         throw const _ApiException(
           400,
@@ -327,10 +379,11 @@ class CmfServer {
   }) async {
     final model = engine.loadedModel;
     if (model == null) {
-      await _json(req, 503, {
-        'error': {'message': 'no model loaded on device'},
-      });
-      return (0, 0);
+      throw const _ApiException(
+        503,
+        'no model loaded on device',
+        code: 'model_not_loaded',
+      );
     }
     final body = await _readJsonObject(req);
 
@@ -448,6 +501,25 @@ class CmfServer {
         code: 'invalid_value',
       );
     }
+    final stopRaw = body['stop'];
+    final stops = <String>[];
+    if (stopRaw != null) {
+      if (stopRaw is String) {
+        if (stopRaw.isNotEmpty) stops.add(stopRaw);
+      } else if (stopRaw is List &&
+          stopRaw.isNotEmpty &&
+          stopRaw.length <= 4 &&
+          stopRaw.every((s) => s is String && s.isNotEmpty)) {
+        stops.addAll(stopRaw.cast<String>());
+      } else {
+        throw const _ApiException(
+          400,
+          '"stop" must be a string or an array of up to 4 non-empty strings',
+          param: 'stop',
+          code: 'invalid_type',
+        );
+      }
+    }
     final streamValue = body['stream'];
     if (streamValue != null && streamValue is! bool) {
       throw const _ApiException(
@@ -497,42 +569,153 @@ class CmfServer {
     final created = DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
     // Serialize decodes: chain onto the queue and await our own turn.
+    if (_queuedDecodes >= _maxQueuedDecodes) {
+      throw const _ApiException(
+        429,
+        'Server is busy, try again later',
+        code: 'server_busy',
+      );
+    }
+    _queuedDecodes++;
     final completer = Completer<(int, int)>();
     _decodeQueue = _decodeQueue.then((_) async {
       try {
         completer.complete(
           stream
-              ? await _streamResponse(req, request, id, created, chatMode)
-              : await _fullResponse(req, request, id, created, chatMode),
+              ? await _streamResponse(req, request, stops, id, created,
+                  chatMode)
+              : await _fullResponse(req, request, stops, id, created,
+                  chatMode),
         );
       } catch (e) {
         completer.completeError(e);
+      } finally {
+        _queuedDecodes--;
       }
     });
     return completer.future;
   }
 
-  Future<(int, int)> _fullResponse(
+  /// Runs a generation, forwarding deltas to [onDelta]; cancels the engine
+  /// when the client disconnects, the stream stalls, or a [stops] sequence
+  /// appears in the output (which is then trimmed, OpenAI-style). Returns
+  /// final stats.
+  Future<GenerationStats> _consumeGeneration(
     HttpRequest req,
     GenerationRequest request,
-    String id,
-    int created,
-    bool chatMode,
+    List<String> stops,
+    Future<void> Function(String delta) onDelta,
   ) async {
-    final buffer = StringBuffer();
-    GenerationStats? stats0;
-    await for (final ev in engine.generate(request)) {
-      buffer.write(ev.delta);
-      if (ev.done) stats0 = ev.stats;
+    // response.done fires early (usually with an error) when the client
+    // drops the connection; generating tokens nobody reads wastes battery.
+    var clientGone = false;
+    unawaited(
+      req.response.done
+          .then((_) {}, onError: (_) {})
+          .whenComplete(() => clientGone = true),
+    );
+
+    // Stop-sequence matching holds back the last maxStop-1 chars so a
+    // sequence split across tokens is never partially emitted.
+    var maxStop = 0;
+    for (final s in stops) {
+      if (s.length > maxStop) maxStop = s.length;
     }
-    final s =
-        stats0 ??
+    var acc = '';
+    var emitted = 0;
+    var stoppedBySequence = false;
+
+    Future<bool> forward(String delta) async {
+      try {
+        await onDelta(delta);
+        return true;
+      } catch (_) {
+        engine.cancel(); // the socket died mid-write
+        return false;
+      }
+    }
+
+    GenerationStats? stats0;
+    final events = engine.generate(request).timeout(
+      _generationStallTimeout,
+      onTimeout: (sink) {
+        engine.cancel();
+        sink.close();
+      },
+    );
+    await for (final ev in events) {
+      if (ev.done) {
+        stats0 = ev.stats;
+        break;
+      }
+      if (clientGone) {
+        engine.cancel();
+        break;
+      }
+      // After a stop match we still drain to the done event for its stats —
+      // the cancel flag ends the generation within a token.
+      if (stoppedBySequence || ev.delta.isEmpty) continue;
+      if (stops.isEmpty) {
+        if (!await forward(ev.delta)) break;
+        continue;
+      }
+      acc += ev.delta;
+      var stopPos = -1;
+      for (final s in stops) {
+        final p = acc.indexOf(s, emitted);
+        if (p >= 0 && (stopPos < 0 || p < stopPos)) stopPos = p;
+      }
+      if (stopPos >= 0) {
+        if (stopPos > emitted) {
+          await forward(acc.substring(emitted, stopPos));
+          emitted = stopPos;
+        }
+        stoppedBySequence = true;
+        engine.cancel();
+        continue;
+      }
+      final safe = acc.length - (maxStop - 1);
+      if (safe > emitted) {
+        final chunk = acc.substring(emitted, safe);
+        emitted = safe;
+        if (!await forward(chunk)) break;
+      }
+    }
+    if (stops.isNotEmpty && !stoppedBySequence && emitted < acc.length) {
+      // Flush the held-back tail: generation ended without a stop match.
+      await forward(acc.substring(emitted));
+    }
+    final s = stats0 ??
         const GenerationStats(
           promptTokens: 0,
           completionTokens: 0,
           tokensPerSecond: 0,
           latencyMs: 0,
         );
+    if (!stoppedBySequence) return s;
+    // The engine saw a cancel; to the client this is a clean stop.
+    return GenerationStats(
+      promptTokens: s.promptTokens,
+      completionTokens: s.completionTokens,
+      tokensPerSecond: s.tokensPerSecond,
+      latencyMs: s.latencyMs,
+      finishReason: 'stop',
+      taskUsed: s.taskUsed,
+    );
+  }
+
+  Future<(int, int)> _fullResponse(
+    HttpRequest req,
+    GenerationRequest request,
+    List<String> stops,
+    String id,
+    int created,
+    bool chatMode,
+  ) async {
+    final buffer = StringBuffer();
+    final s = await _consumeGeneration(req, request, stops, (delta) async {
+      buffer.write(delta);
+    });
     _recordUsage(s);
     await _json(req, 200, {
       'id': id,
@@ -566,6 +749,7 @@ class CmfServer {
   Future<(int, int)> _streamResponse(
     HttpRequest req,
     GenerationRequest request,
+    List<String> stops,
     String id,
     int created,
     bool chatMode,
@@ -597,25 +781,10 @@ class CmfServer {
     };
 
     if (chatMode) sse(chunk({'role': 'assistant'}, null));
-    GenerationStats? stats0;
-    await for (final ev in engine.generate(request)) {
-      if (ev.done) {
-        stats0 = ev.stats;
-        break;
-      }
-      if (ev.delta.isNotEmpty) {
-        sse(chunk({'content': ev.delta}, null));
-        await req.response.flush();
-      }
-    }
-    final s =
-        stats0 ??
-        const GenerationStats(
-          promptTokens: 0,
-          completionTokens: 0,
-          tokensPerSecond: 0,
-          latencyMs: 0,
-        );
+    final s = await _consumeGeneration(req, request, stops, (delta) async {
+      sse(chunk({'content': delta}, null));
+      await req.response.flush();
+    });
     _recordUsage(s);
     final finalChunk = chunk({}, _finishReason(s, request));
     finalChunk['usage'] = {
@@ -623,9 +792,13 @@ class CmfServer {
       'completion_tokens': s.completionTokens,
       'total_tokens': s.totalTokens,
     };
-    sse(finalChunk);
-    req.response.write('data: [DONE]\n\n');
-    await req.response.close();
+    try {
+      sse(finalChunk);
+      req.response.write('data: [DONE]\n\n');
+      await req.response.close();
+    } catch (_) {
+      // Client dropped mid-stream; there is nobody left to notify.
+    }
     return (s.promptTokens, s.completionTokens);
   }
 
