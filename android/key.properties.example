@@ -1,0 +1,11 @@
+# Release signing. Copy to android/key.properties (git-ignored) and fill in,
+# or provide KEYSTORE_PATH / KEYSTORE_PASSWORD / KEY_ALIAS / KEY_PASSWORD
+# as environment variables in CI.
+#
+# Create a keystore with:
+#   keytool -genkey -v -keystore ~/cmf-release.jks -keyalg RSA \
+#           -keysize 2048 -validity 10000 -alias cmf
+storeFile=/absolute/path/to/cmf-release.jks
+storePassword=CHANGE_ME
+keyAlias=cmf
+keyPassword=CHANGE_ME
