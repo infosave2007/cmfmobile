@@ -5,6 +5,50 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
 
+## [1.1.14] - 2026-07-24
+
+### Added
+- **Cortiq branding**: new app icon and logo (hexagon-C mark), full iOS icon
+  set, Android adaptive icons with a monochrome layer for themed icons.
+- **OpenAI `stop` parameter** on `/v1/chat/completions` and
+  `/v1/completions` — a string or up to 4 sequences; output is trimmed
+  OpenAI-style with a hold-back buffer so SSE never leaks a partial match.
+- **Local crash log**: uncaught Flutter/platform errors append to
+  `documents/crash.log` (size-capped, fully offline — no third-party SDK).
+- **Release signing**: `android/key.properties` (or `KEYSTORE_*` env vars in
+  CI) with a debug-key fallback so local `flutter run --release` still works.
+
+### Fixed
+- **Engine concurrency**: chat and the embedded server share one native
+  handle — generations are now serialized inside `NativeCortiqEngine`
+  (previously simultaneous chat + HTTP requests could issue concurrent FFI
+  calls on one handle). `unload()` waits for the in-flight generation,
+  fixing a potential use-after-free when switching models mid-generation;
+  per-generation cancel flags no longer leak.
+- **Atomic model files**: conversion streams into `<name>.cmf.tmp` and
+  direct downloads into `<name>.cmf.part`, renamed only on success — a
+  crash or an OOM kill mid-job can no longer leave a truncated model in
+  the library. Failed/cancelled jobs clean up their staging files.
+- **Download integrity**: safetensors shards are validated (offsets vs file
+  size, shape×dtype vs byte count) before quantization, and downloaded
+  sizes are checked against the repo listing — truncated downloads fail
+  fast instead of producing corrupt models.
+- **Server hardening**: 8 MB request-body limit (413), decode-queue cap
+  (429), generation is cancelled when a streaming client disconnects,
+  5-minute stall timeout, constant-time bearer-token comparison, graceful
+  stop that lets an in-flight decode finish.
+
+### Changed
+- **Chat streaming performance**: per-token updates repaint only the active
+  bubble (plain text while streaming; markdown is parsed once, on
+  completion) instead of rebuilding the whole screen and re-parsing every
+  message on each token. The message list uses stable keys, the user turn
+  is persisted immediately, and session saves are serialized per file.
+- **Converter performance**: removed a redundant full-buffer copy per slab
+  in every quantization path and hoisted per-row allocations out of the
+  Q1T hot loop (reused quickselect/mask/codes scratch, slab-level overlay
+  buffer).
+
 ## [1.1.10] - 2026-07-22
 
 ### Fixed
