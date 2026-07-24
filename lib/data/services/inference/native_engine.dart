@@ -97,8 +97,14 @@ class NativeCortiqEngine implements InferenceEngine {
   ffi.Pointer<ffi.Void> _handle = ffi.nullptr;
   LocalModel? _loaded;
 
-  /// Cancel flag shared with the worker isolate (1 = stop).
-  final ffi.Pointer<ffi.Uint8> _cancelFlag = calloc<ffi.Uint8>();
+  /// The native runtime allows one generate call per handle at a time
+  /// (cortiq_ffi.h), and both the chat and the embedded server share this
+  /// engine — so generations are serialized through this chain.
+  Future<void> _generations = Future.value();
+
+  /// Cancel flag of the generation currently running (1 = stop). Allocated
+  /// per generation and freed when its worker isolate reports completion.
+  ffi.Pointer<ffi.Uint8>? _activeCancel;
 
   @override
   bool get isAvailable => _lib != null;
@@ -154,6 +160,11 @@ class NativeCortiqEngine implements InferenceEngine {
 
   @override
   Future<void> unload() async {
+    if (_handle == ffi.nullptr) return;
+    // A worker isolate dereferences the handle until its blocking call
+    // returns, so freeing it mid-generation would be use-after-free.
+    cancel();
+    await _generations;
     if (_handle != ffi.nullptr) {
       _free!(_handle);
       _handle = ffi.nullptr;
@@ -206,10 +217,28 @@ class NativeCortiqEngine implements InferenceEngine {
     if (_handle == ffi.nullptr) {
       return Stream.error(StateError('no model loaded'));
     }
-    _cancelFlag.value = 0;
+    final controller = StreamController<GenerationEvent>();
+    _generations =
+        _generations.then((_) => _runGeneration(request, controller));
+    return controller.stream;
+  }
+
+  Future<void> _runGeneration(
+    GenerationRequest request,
+    StreamController<GenerationEvent> controller,
+  ) async {
+    // The model may have been unloaded while this generation waited its turn.
+    if (_handle == ffi.nullptr) {
+      controller.addError(StateError('no model loaded'));
+      await controller.close();
+      return;
+    }
+    final cancelFlag = calloc<ffi.Uint8>();
+    _activeCancel = cancelFlag;
+    // Options are sticky per handle — apply only once the previous
+    // generation has finished, right before ours starts.
     _applyOptions(request);
 
-    final controller = StreamController<GenerationEvent>();
     final started = DateTime.now();
     final messagesJson = jsonEncode([
       for (final m in request.messages)
@@ -219,6 +248,7 @@ class NativeCortiqEngine implements InferenceEngine {
         .map((m) => DemoEngine.estimateTokens(m.content))
         .fold<int>(0, (a, b) => a + b);
 
+    final done = Completer<void>();
     final receivePort = ReceivePort();
     var completionTokens = 0;
     receivePort.listen((message) {
@@ -238,41 +268,53 @@ class NativeCortiqEngine implements InferenceEngine {
                   ? tokens * 1000 / elapsed.inMilliseconds
                   : 0,
               latencyMs: elapsed.inMilliseconds,
-              finishReason: _cancelFlag.value != 0 ? 'cancelled' : 'stop',
+              finishReason: cancelFlag.value != 0 ? 'cancelled' : 'stop',
               taskUsed: request.task,
             ),
           ));
           controller.close();
           receivePort.close();
+          if (!done.isCompleted) done.complete();
         case ('error', final String error):
           controller.addError(StateError(error));
           controller.close();
           receivePort.close();
+          if (!done.isCompleted) done.complete();
         case final List<dynamic> isolateError: // from Isolate.spawn onError
           controller.addError(StateError('${isolateError.firstOrNull}'));
           controller.close();
           receivePort.close();
+          if (!done.isCompleted) done.complete();
       }
     });
 
-    Isolate.spawn(
-      _generateWorker,
-      _GenArgs(
-        sendPort: receivePort.sendPort,
-        handleAddress: _handle.address,
-        cancelFlagAddress: _cancelFlag.address,
-        messagesJson: messagesJson,
-        fallbackPrompt: renderPrompt(request.messages),
-        maxTokens: request.maxTokens,
-      ),
-      onError: receivePort.sendPort,
-      errorsAreFatal: false,
-    );
-    return controller.stream;
+    try {
+      await Isolate.spawn(
+        _generateWorker,
+        _GenArgs(
+          sendPort: receivePort.sendPort,
+          handleAddress: _handle.address,
+          cancelFlagAddress: cancelFlag.address,
+          messagesJson: messagesJson,
+          fallbackPrompt: renderPrompt(request.messages),
+          maxTokens: request.maxTokens,
+        ),
+        onError: receivePort.sendPort,
+        errorsAreFatal: false,
+      );
+    } catch (e) {
+      controller.addError(StateError('failed to start generation: $e'));
+      await controller.close();
+      receivePort.close();
+      if (!done.isCompleted) done.complete();
+    }
+    await done.future;
+    if (identical(_activeCancel, cancelFlag)) _activeCancel = null;
+    calloc.free(cancelFlag);
   }
 
   @override
-  void cancel() => _cancelFlag.value = 1;
+  void cancel() => _activeCancel?.value = 1;
 }
 
 class _GenArgs {
