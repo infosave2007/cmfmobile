@@ -475,6 +475,11 @@ class CmfWriter {
   final Uint8List? vocabBytes;
   final Uint8List _headerBytes;
 
+  /// Data streams into a sidecar; [finish] renames it over [outputPath], so
+  /// a crash mid-conversion never leaves a truncated .cmf in the library.
+  /// Parallel quantize workers write tensor data here at absolute offsets.
+  String get stagingPath => '$outputPath.tmp';
+
   late RandomAccessFile _raf;
   late int _dirOff;
   late int _dirLen;
@@ -513,7 +518,7 @@ class CmfWriter {
     }
     _dataLen = cursor;
 
-    final file = File(outputPath);
+    final file = File(stagingPath);
     await file.parent.create(recursive: true);
     _raf = await file.open(mode: FileMode.write);
     await _raf.truncate(0);
@@ -627,6 +632,7 @@ class CmfWriter {
     await _raf.setPosition(0);
     await _raf.writeFrom(env.buffer.asUint8List());
     await _raf.close();
+    await File(stagingPath).rename(outputPath);
   }
 
   Future<void> abort() async {
@@ -634,7 +640,7 @@ class CmfWriter {
       await _raf.close();
     } catch (_) {}
     try {
-      await File(outputPath).delete();
+      await File(stagingPath).delete();
     } catch (_) {}
   }
 }

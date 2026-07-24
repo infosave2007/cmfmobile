@@ -680,7 +680,7 @@ Future<void> convertSafetensorsToCmf(
           quantizeWorker,
           WorkerArgs(
             tasks: partition,
-            outputPath: input.outputPath,
+            outputPath: writer.stagingPath,
             sendPort: port.sendPort,
           ),
           onError: port.sendPort,
@@ -840,7 +840,7 @@ Future<int> _processTensor(
       await shard.setPosition(srcStart);
       for (var r0 = 0; r0 < rows; r0 += rowsPerSlab) {
         final n = math.min(rowsPerSlab, rows - r0);
-        final raw = Uint8List.fromList(await shard.read(n * cols * bpe));
+        final raw = await shard.read(n * cols * bpe);
         final values = decodeFloats(raw, task.srcDtype);
         final q = Uint8List(n * cols);
         for (var r = 0; r < n; r++) {
@@ -869,7 +869,7 @@ Future<int> _processTensor(
       await shard.setPosition(srcStart);
       for (var r0 = 0; r0 < rows; r0 += rowsPerSlab) {
         final n = math.min(rowsPerSlab, rows - r0);
-        final raw = Uint8List.fromList(await shard.read(n * cols * bpe));
+        final raw = await shard.read(n * cols * bpe);
         final values = decodeFloats(raw, task.srcDtype);
         for (var r = 0; r < n; r++) {
           for (var c = 0; c < cols; c++) {
@@ -892,7 +892,7 @@ Future<int> _processTensor(
       await shard.setPosition(srcStart);
       for (var r0 = 0; r0 < rows; r0 += rowsPerSlab) {
         final n = math.min(rowsPerSlab, rows - r0);
-        final raw = Uint8List.fromList(await shard.read(n * cols * bpe));
+        final raw = await shard.read(n * cols * bpe);
         final values = decodeFloats(raw, task.srcDtype);
         final q = Uint8List(n * cols);
         for (var r = 0; r < n; r++) {
@@ -924,7 +924,7 @@ Future<int> _processTensor(
       final groupsPerRow = cols ~/ 32;
       for (var r0 = 0; r0 < rows; r0 += rowsPerSlab) {
         final n = math.min(rowsPerSlab, rows - r0);
-        final raw = Uint8List.fromList(await shard.read(n * cols * bpe));
+        final raw = await shard.read(n * cols * bpe);
         final values = decodeFloats(raw, task.srcDtype);
         final tiles = Uint8List(n * groupsPerRow * 6);
         final tileData = ByteData.sublistView(tiles);
@@ -962,7 +962,7 @@ Future<int> _processTensor(
       await shard.setPosition(srcStart);
       for (var r0 = 0; r0 < rows; r0 += rowsPerSlab) {
         final n = math.min(rowsPerSlab, rows - r0);
-        final raw = Uint8List.fromList(await shard.read(n * cols * bpe));
+        final raw = await shard.read(n * cols * bpe);
         final values = decodeFloats(raw, task.srcDtype);
         final packed = Uint8List(n * groupsPerRow * 16);
         final scales = Uint8List(n * groupsPerRow * 2);
@@ -1006,30 +1006,39 @@ Future<int> _processTensor(
       const pow3 = [1, 3, 9, 27, 81];
       final groupsPerRow = cols ~/ 32;
       final kPerRow = q1tOutliersPerRow(cols);
+      final outPerRow = kPerRow.clamp(0, cols);
       final rowPtr = Uint8List((rows + 1) * 4);
       final rowPtrData = ByteData.sublistView(rowPtr);
       final overlay = BytesBuilder(copy: false);
       var outlierCursor = 0;
+      // Scratch reused across rows — the hot loop must not allocate.
+      final idxScratch = Int32List(cols);
+      final isOut = Uint8List(cols);
+      final scale = Float32List(groupsPerRow);
+      final codes = Uint8List(groupsPerRow * 7);
       final rowsPerSlab = math.max(1, 8 * 1024 * 1024 ~/ (cols * bpe));
       await shard.setPosition(srcStart);
       for (var r0 = 0; r0 < rows; r0 += rowsPerSlab) {
         final n = math.min(rowsPerSlab, rows - r0);
-        final raw = Uint8List.fromList(await shard.read(n * cols * bpe));
+        final raw = await shard.read(n * cols * bpe);
         final values = decodeFloats(raw, task.srcDtype);
         final tiles = Uint8List(n * groupsPerRow * 9);
         final tileData = ByteData.sublistView(tiles);
+        // (u16 col, f16 val) pairs for the whole slab in one buffer.
+        final slabOverlay = Uint8List(n * outPerRow * 4);
+        final slabOverlayData = ByteData.sublistView(slabOverlay);
+        var op = 0;
         for (var r = 0; r < n; r++) {
           final rowBase = r * cols;
-          final isOut = _topKAbsMask(values, rowBase, cols, kPerRow);
+          _topKAbsMaskInto(values, rowBase, cols, kPerRow, idxScratch, isOut);
+          codes.fillRange(0, codes.length, 0);
           // Per-group abs-mean scale over the non-outlier weights.
-          final scale = Float32List(groupsPerRow);
-          final codes = Uint8List(groupsPerRow * 7);
           for (var g = 0; g < groupsPerRow; g++) {
             final base = rowBase + g * 32;
             var sum = 0.0;
             var cnt = 0;
             for (var k = 0; k < 32; k++) {
-              if (!isOut[g * 32 + k]) {
+              if (isOut[g * 32 + k] == 0) {
                 sum += values[base + k].abs();
                 cnt++;
               }
@@ -1041,7 +1050,7 @@ Future<int> _processTensor(
             scale[g] = s;
             for (var k = 0; k < 32; k++) {
               int code;
-              if (isOut[g * 32 + k]) {
+              if (isOut[g * 32 + k] != 0) {
                 code = 0; // KERNEL INVARIANT: base contributes 0 at outliers
               } else {
                 final rr = values[base + k] / s;
@@ -1056,7 +1065,7 @@ Future<int> _processTensor(
             final base = rowBase + g * 32;
             final s = scale[g];
             for (var k = 0; k < 32; k++) {
-              if (isOut[g * 32 + k]) continue;
+              if (isOut[g * 32 + k] != 0) continue;
               final code = (codes[g * 7 + k ~/ 5] ~/ pow3[k % 5]) % 3;
               final q = code == 1 ? s : (code == 2 ? -s : 0.0);
               if (q == 0.0) continue;
@@ -1078,16 +1087,24 @@ Future<int> _processTensor(
           }
           // Overlay entries for this row, ascending column order.
           for (var j = 0; j < cols; j++) {
-            if (isOut[j]) {
-              final pair = ByteData(4);
-              pair.setUint16(0, j, Endian.little);
-              pair.setUint16(2, f32ToF16Bits(values[rowBase + j]), Endian.little);
-              overlay.add(pair.buffer.asUint8List());
+            if (isOut[j] != 0) {
+              slabOverlayData.setUint16(op, j, Endian.little);
+              slabOverlayData.setUint16(
+                op + 2,
+                f32ToF16Bits(values[rowBase + j]),
+                Endian.little,
+              );
+              op += 4;
               outlierCursor++;
             }
           }
           rowPtrData.setUint32((r0 + r + 1) * 4, outlierCursor, Endian.little);
         }
+        overlay.add(
+          op == slabOverlay.length
+              ? slabOverlay
+              : Uint8List.sublistView(slabOverlay, 0, op),
+        );
         await emit(tiles);
         onBytes(raw.length);
       }
@@ -1101,7 +1118,7 @@ Future<int> _processTensor(
         var remaining = numel * 2;
         while (remaining > 0) {
           final take = math.min(remaining, 8 * 1024 * 1024);
-          final chunk = Uint8List.fromList(await shard.read(take));
+          final chunk = await shard.read(take);
           await emit(chunk);
           onBytes(chunk.length);
           remaining -= chunk.length;
@@ -1111,7 +1128,7 @@ Future<int> _processTensor(
         var remaining = numel;
         while (remaining > 0) {
           final n = math.min(remaining, elemsPerSlab);
-          final raw = Uint8List.fromList(await shard.read(n * bpe));
+          final raw = await shard.read(n * bpe);
           final values = decodeFloats(raw, task.srcDtype);
           final outBytes = Uint8List(n * 2);
           final outData = ByteData.sublistView(outBytes);
@@ -1134,15 +1151,26 @@ Future<int> _processTensor(
   return hash.digest();
 }
 
-/// Boolean mask (length [cols]) marking the [k] largest-magnitude weights in
-/// the row `values[base .. base+cols)`. Exactly `min(k, cols)` entries are
-/// true — the q1t overlay size depends on this count, so it must be exact.
-/// Quickselect with a fixed-seed pivot keeps it O(cols) per row and
-/// deterministic across runs.
-List<bool> _topKAbsMask(List<double> values, int base, int cols, int k) {
-  if (k <= 0) return List<bool>.filled(cols, false);
-  if (k >= cols) return List<bool>.filled(cols, true);
-  final idx = Int32List(cols);
+/// Fills [mask] (0/1 per column) marking the [k] largest-magnitude weights
+/// in the row `values[base .. base+cols)`. Exactly `min(k, cols)` entries
+/// are set — the q1t overlay size depends on this count, so it must be
+/// exact. Quickselect with a fixed-seed pivot keeps it O(cols) per row and
+/// deterministic across runs. [idx] and [mask] are caller-owned scratch
+/// (length >= cols), reused across rows so the hot loop does not allocate.
+void _topKAbsMaskInto(
+  List<double> values,
+  int base,
+  int cols,
+  int k,
+  Int32List idx,
+  Uint8List mask,
+) {
+  mask.fillRange(0, cols, 0);
+  if (k <= 0) return;
+  if (k >= cols) {
+    mask.fillRange(0, cols, 1);
+    return;
+  }
   for (var j = 0; j < cols; j++) {
     idx[j] = j;
   }
@@ -1184,9 +1212,7 @@ List<bool> _topKAbsMask(List<double> values, int base, int cols, int k) {
       hi = p - 1;
     }
   }
-  final mask = List<bool>.filled(cols, false);
   for (var t = 0; t < k; t++) {
-    mask[idx[t]] = true;
+    mask[idx[t]] = 1;
   }
-  return mask;
 }

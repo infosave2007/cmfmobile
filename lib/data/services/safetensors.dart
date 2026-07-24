@@ -36,6 +36,29 @@ class SafetensorsFile {
         ));
       });
       tensors.sort((a, b) => a.begin.compareTo(b.begin));
+
+      // Integrity: a resumed/interrupted download can produce a file whose
+      // header parses fine but whose data section is short. Catch it here,
+      // before hours of quantization run on garbage.
+      final dataLen = await raf.length() - (8 + headerLen);
+      var maxEnd = 0;
+      for (final t in tensors) {
+        if (t.begin < 0 || t.end < t.begin) {
+          throw FormatException(
+              'tensor ${t.name}: invalid data_offsets [${t.begin}, ${t.end}]');
+        }
+        if (t.isFloat && t.nbytes != t.numel * t.bytesPerElement) {
+          throw FormatException(
+              'tensor ${t.name}: ${t.nbytes} bytes does not match '
+              'shape ${t.shape} × ${t.bytesPerElement}B (${t.dtype})');
+        }
+        if (t.end > maxEnd) maxEnd = t.end;
+      }
+      if (maxEnd > dataLen) {
+        throw FormatException(
+            'truncated safetensors: tensors need $maxEnd data bytes, '
+            'file has $dataLen — re-download the shard');
+      }
       return SafetensorsFile._(path, tensors, 8 + headerLen);
     } finally {
       await raf.close();

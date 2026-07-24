@@ -153,9 +153,7 @@ class ConverterService {
       job.error = e.toString();
       job.finished = DateTime.now();
       job.addLog('✗ error: $e');
-      try {
-        await File(job.outputPath).delete();
-      } catch (_) {}
+      await _cleanupOutputs(job);
     } finally {
       _cancelRequested.remove(job.id);
       if (tempDir != null) {
@@ -171,9 +169,21 @@ class ConverterService {
     job.state = JobState.cancelled;
     job.finished = DateTime.now();
     job.addLog('✗ cancelled');
-    try {
-      await File(job.outputPath).delete();
-    } catch (_) {}
+    await _cleanupOutputs(job);
+  }
+
+  /// Removes the output and any staging sidecars (.part download,
+  /// .tmp conversion) a failed or cancelled job may have left behind.
+  Future<void> _cleanupOutputs(ConversionJob job) async {
+    for (final path in [
+      job.outputPath,
+      '${job.outputPath}.part',
+      '${job.outputPath}.tmp',
+    ]) {
+      try {
+        await File(path).delete();
+      } catch (_) {}
+    }
   }
 
   Future<void> _downloadCmfDirectly(
@@ -189,10 +199,13 @@ class ConverterService {
       'repo ships ${src.path} — downloading directly '
       '($parallelism connections)',
     );
+    // Download into a sidecar and rename at the end, so an interrupted
+    // download never leaves a partial .cmf in the model library.
+    final partPath = '${job.outputPath}.part';
     await hf.downloadParallel(
       job.repo,
       src.path,
-      job.outputPath,
+      partPath,
       totalSize: src.size,
       parallelism: parallelism,
       token: hfToken,
@@ -202,6 +215,16 @@ class ConverterService {
         _progress(job, t > 0 ? received / t : 0, 'downloading');
       },
     );
+    if (src.size > 0) {
+      final actual = await File(partPath).length();
+      if (actual != src.size) {
+        throw StateError(
+          '${src.path} downloaded incompletely '
+          '($actual of ${src.size} bytes) — retry the job',
+        );
+      }
+    }
+    await File(partPath).rename(job.outputPath);
   }
 
   Future<void> _convertSafetensors(
@@ -320,6 +343,15 @@ class ConverterService {
           }
         },
       );
+      if (shardSize > 0) {
+        final actual = await File(dest).length();
+        if (actual != shardSize) {
+          throw StateError(
+            '$shard downloaded incompletely '
+            '($actual of $shardSize bytes) — retry the job',
+          );
+        }
+      }
       downloaded += shardSize;
       shardPaths.add(dest);
     }
