@@ -90,7 +90,7 @@ flutter run
 ```
 
 **The app ships with the real cortiq runtime** —
-`libcortiq_ffi` v0.5.19 (arm64-v8a, armeabi-v7a, x86_64 + iOS static lib) from the [cmf releases](https://github.com/infosave2007/cmf/releases)
+`libcortiq_ffi` v0.5.20 (arm64-v8a, armeabi-v7a, x86_64 + iOS static lib) from the [cmf releases](https://github.com/infosave2007/cmf/releases)
 is bundled in `android/app/src/main/jniLibs/`, so chat and the server run
 actual on-device inference out of the box (verified end-to-end: qwen3-5-4b
 Q8_2F streams through the same binding — see `tool/ffi_smoke.dart`).

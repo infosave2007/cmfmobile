@@ -5,6 +5,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
 
+## [1.1.17] - 2026-07-25
+
+### Changed
+- **Engine update**: bundled `libcortiq_ffi` upgraded to **v0.5.20** on all
+  platforms (Android arm64-v8a / armeabi-v7a / x86_64 and the iOS static
+  library), checksums verified against the cmf release assets.
+
 ## [1.1.16] - 2026-07-25
 
 ### Changed
