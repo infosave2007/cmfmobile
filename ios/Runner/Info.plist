@@ -74,5 +74,13 @@
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Cortiq lets you attach images and files from your library to chat messages and import model files.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Cortiq can attach a photo taken with the camera to a chat message.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>The microphone is only accessed if you record a video to attach to a chat.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Location access is only used by the system to read the Wi-Fi network name shown on the server screen.</string>
 </dict>
 </plist>

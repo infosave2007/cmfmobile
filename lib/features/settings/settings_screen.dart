@@ -28,6 +28,7 @@ class SettingsScreen extends ConsumerWidget {
     final notifier = ref.read(settingsProvider.notifier);
     final models = ref.watch(modelsProvider).value ?? const [];
     final engine = ref.watch(engineProvider);
+    final appVersion = ref.watch(appVersionProvider).value ?? '';
     final storageBytes =
         models.fold<int>(0, (sum, m) => sum + m.sizeBytes);
 
@@ -197,7 +198,7 @@ class SettingsScreen extends ConsumerWidget {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.info_outline),
-              title: Text(l.settingsVersionLine('1.1.0')),
+              title: Text(l.settingsVersionLine(appVersion)),
               subtitle: Text(l.settingsAboutLine(engine.name)),
             ),
           ]),

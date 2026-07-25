@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../data/models/chat.dart';
 import '../data/models/local_model.dart';
@@ -27,6 +28,9 @@ final modelRepositoryProvider = Provider((ref) => ModelRepository());
 final chatStoreProvider = Provider((ref) => ChatStore());
 final hfApiProvider = Provider((ref) => HfApi());
 final deviceResourcesProvider = Provider((ref) => DeviceResources());
+
+final appVersionProvider = FutureProvider<String>(
+    (ref) async => (await PackageInfo.fromPlatform()).version);
 
 final engineProvider = Provider<InferenceEngine>((ref) {
   final native = NativeCortiqEngine();
