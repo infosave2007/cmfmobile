@@ -39,55 +39,31 @@ jobs:
           mkdir -p ~/private_keys
           printf '%s' "$ASC_KEY_P8" > ~/private_keys/AuthKey_${ASC_KEY_ID}.p8
 
-      - name: Import signing certificate
-        env:
-          IOS_DIST_P12: ${{ secrets.IOS_DIST_P12 }}
-          IOS_P12_PASSWORD: ${{ secrets.IOS_P12_PASSWORD }}
-        run: |
-          KEYCHAIN_PASS=$(openssl rand -hex 16)
-          security create-keychain -p "$KEYCHAIN_PASS" build.keychain
-          security set-keychain-settings -lut 21600 build.keychain
-          security unlock-keychain -p "$KEYCHAIN_PASS" build.keychain
-          printf '%s' "$IOS_DIST_P12" | openssl base64 -d -A > cert.p12
-          security import cert.p12 -k build.keychain -P "$IOS_P12_PASSWORD" -A -t cert -f pkcs12
-          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASS" build.keychain
-          security list-keychains -d user -s build.keychain login.keychain
-          rm cert.p12
-          security find-identity -v -p codesigning build.keychain
-
-      - name: Install provisioning profile
-        env:
-          IOS_PROFILE: ${{ secrets.IOS_PROVISION_PROFILE }}
-        run: |
-          printf '%s' "$IOS_PROFILE" | openssl base64 -d -A > profile.mobileprovision
-          UUID=$(security cms -D -i profile.mobileprovision | plutil -extract UUID raw -o - -)
-          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles" \
-                   "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
-          cp profile.mobileprovision "$HOME/Library/MobileDevice/Provisioning Profiles/$UUID.mobileprovision"
-          cp profile.mobileprovision "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles/$UUID.mobileprovision"
-          rm profile.mobileprovision
-
       - name: Build Flutter app (no codesign)
         run: |
           flutter pub get
           flutter build ios --release --no-codesign --build-number="${{ inputs.build_number }}"
 
-      - name: Archive with manual signing
+      - name: Archive with cloud signing
         run: |
           xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner \
             -configuration Release -destination 'generic/platform=iOS' \
             -archivePath "$PWD/build/Runner.xcarchive" archive \
-            CODE_SIGN_STYLE=Manual \
-            DEVELOPMENT_TEAM=Z8KN74A8F2 \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE_SPECIFIER="iOS Team Store Provisioning Profile: ai.cortiq.cmfMobile"
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$HOME/private_keys/AuthKey_${ASC_KEY_ID}.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID 69a6de97-8c6a-47e3-e053-5b8c7c11a4d1
 
       - name: Export signed IPA
         run: |
           xcodebuild -exportArchive \
             -archivePath "$PWD/build/Runner.xcarchive" \
             -exportOptionsPlist ios/ExportOptionsCI.plist \
-            -exportPath "$PWD/build/ipa"
+            -exportPath "$PWD/build/ipa" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$HOME/private_keys/AuthKey_${ASC_KEY_ID}.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID 69a6de97-8c6a-47e3-e053-5b8c7c11a4d1
 
       - name: Verify IPA metadata
         run: |
