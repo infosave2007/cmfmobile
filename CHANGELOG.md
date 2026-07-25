@@ -5,6 +5,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
 
+## [1.1.15] - 2026-07-25
+
+### Changed
+- **Engine update**: bundled `libcortiq_ffi` upgraded to **v0.5.18** on all
+  platforms — Android arm64-v8a / armeabi-v7a / x86_64 and the iOS static
+  library — with checksums verified against the cmf release assets.
+
+### Fixed
+- Releases 1.1.10–1.1.13 bumped the engine version in their notes only:
+  the binaries committed to the repo were still v0.5.6. The bundled
+  runtime now actually matches the stated engine version.
+
 ## [1.1.14] - 2026-07-24
 
 ### Added
