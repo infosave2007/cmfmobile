@@ -12,6 +12,8 @@ jobs:
   build-and-upload:
     runs-on: macos-latest
     timeout-minutes: 60
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
     steps:
       - uses: actions/checkout@v4
 
@@ -35,7 +37,7 @@ jobs:
           ASC_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
         run: |
           mkdir -p ~/private_keys
-          printf '%s' "$ASC_KEY_P8" > ~/private_keys/AuthKey_BR9MX65K2P.p8
+          printf '%s' "$ASC_KEY_P8" > ~/private_keys/AuthKey_${ASC_KEY_ID}.p8
 
       - name: Build Flutter app (no codesign)
         run: |
@@ -48,8 +50,8 @@ jobs:
             -configuration Release -destination 'generic/platform=iOS' \
             -archivePath "$PWD/build/Runner.xcarchive" archive \
             -allowProvisioningUpdates \
-            -authenticationKeyPath "$HOME/private_keys/AuthKey_BR9MX65K2P.p8" \
-            -authenticationKeyID BR9MX65K2P \
+            -authenticationKeyPath "$HOME/private_keys/AuthKey_${ASC_KEY_ID}.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" \
             -authenticationKeyIssuerID 69a6de97-8c6a-47e3-e053-5b8c7c11a4d1
 
       - name: Export signed IPA
@@ -59,8 +61,8 @@ jobs:
             -exportOptionsPlist ios/ExportOptionsCI.plist \
             -exportPath "$PWD/build/ipa" \
             -allowProvisioningUpdates \
-            -authenticationKeyPath "$HOME/private_keys/AuthKey_BR9MX65K2P.p8" \
-            -authenticationKeyID BR9MX65K2P \
+            -authenticationKeyPath "$HOME/private_keys/AuthKey_${ASC_KEY_ID}.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" \
             -authenticationKeyIssuerID 69a6de97-8c6a-47e3-e053-5b8c7c11a4d1
 
       - name: Verify IPA metadata
@@ -72,5 +74,5 @@ jobs:
       - name: Upload to App Store Connect
         run: |
           xcrun altool --upload-app --type ios -f build/ipa/*.ipa \
-            --apiKey BR9MX65K2P \
+            --apiKey ${ASC_KEY_ID} \
             --apiIssuer 69a6de97-8c6a-47e3-e053-5b8c7c11a4d1
