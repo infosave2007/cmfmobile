@@ -1,6 +1,8 @@
 name: iOS App Store Release
 
 on:
+  push:
+    tags: ['v*']
   workflow_dispatch:
     inputs:
       build_number:
@@ -14,6 +16,8 @@ jobs:
     timeout-minutes: 60
     env:
       ASC_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+      # По тегу vX.Y.Z номер сборки берётся из тега; вручную — из инпута.
+      BUILD_NUMBER: ${{ inputs.build_number || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
 
@@ -42,7 +46,7 @@ jobs:
       - name: Build Flutter app (no codesign)
         run: |
           flutter pub get
-          flutter build ios --release --no-codesign --build-number="${{ inputs.build_number }}"
+          flutter build ios --release --no-codesign --build-number="${BUILD_NUMBER#v}"
 
       - name: Archive with cloud signing
         run: |
