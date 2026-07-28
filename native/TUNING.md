@@ -172,6 +172,13 @@ size counted in `/proc` rather than read off the engine, CPU verified idle:
 | GPU off, threads auto | 4 | 1490 MB | **13.30 tok/s** | 53.3 s |
 | GPU off, repeated | 4 | 901 MB | 13.25 tok/s | — |
 | **GPU on, threads auto** | **4** | 1506 MB | **0.94 tok/s** | 58.1 s |
+| GPU on, `CMF_GPU_WGPU_GRAPH=0` | 4 | 1630 MB | **11.18 tok/s** | 63.9 s |
+
+The last row is the fix verified on the device: keeping the whole-token graph
+out of the race recovers 12× of the 14×. The 16 % still missing against the
+GPU-off baseline is what the per-op probe costs while it alternates arms on a
+model where the GPU cannot win any of them — which is why the app also
+withholds the flag entirely for quantizations with no GPU kernel.
 
 **Turning the GPU on costs 14× on decode and gives prefill nothing.** Three
 decode runs at 0.98 / 0.92 / 0.94 — a 3 % spread, not noise. The pool is four
