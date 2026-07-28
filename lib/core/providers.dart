@@ -13,6 +13,7 @@ import '../data/services/converter_service.dart';
 import '../data/services/device_resources.dart';
 import '../data/services/hf_api.dart';
 import '../data/services/inference/demo_engine.dart';
+import '../data/services/inference/engine_tuning.dart';
 import '../data/services/inference/inference_engine.dart';
 import '../data/services/inference/native_engine.dart';
 import '../data/services/model_repository.dart';
@@ -150,7 +151,12 @@ class EngineController extends Notifier<EngineState> {
     try {
       final settings = ref.read(settingsProvider).value;
       final engine = ref.read(engineProvider);
-      engine.setGpu(settings?.useGpu ?? false);
+      // The switch asks for the GPU; whether it is passed on depends on the
+      // weights. For a quantization the runtime has no GPU kernel for, the
+      // flag is a measured 14× loss on decode and a gain nowhere, so it is
+      // withheld rather than honoured (native/TUNING.md).
+      final gpuUseful = EngineTuning.gpuHelpsQuant(model.meta?.quantType);
+      engine.setGpu((settings?.useGpu ?? false) && gpuUseful);
       await engine.loadModel(
         model,
         threads: settings?.threads ?? 0,

@@ -77,6 +77,24 @@ CMF_BROKEN
     });
   });
 
+  group('gpuHelpsQuant', () {
+    test('withholds the GPU flag for a quantization with no GPU kernel', () {
+      // Measured: same pool, same free memory, idle CPU — 13.30 tok/s with
+      // the flag off against 0.94 with it on (native/TUNING.md).
+      expect(EngineTuning.gpuHelpsQuant('VBIT'), isFalse);
+      expect(EngineTuning.gpuHelpsQuant('vbit'), isFalse);
+      expect(EngineTuning.gpuHelpsQuant('VBIT_RO'), isFalse);
+    });
+
+    test('lets everything else through — the engine is the authority', () {
+      expect(EngineTuning.gpuHelpsQuant('Q8_2F'), isTrue);
+      expect(EngineTuning.gpuHelpsQuant('Q1'), isTrue);
+      expect(EngineTuning.gpuHelpsQuant('SOMETHING_NEW'), isTrue);
+      expect(EngineTuning.gpuHelpsQuant(null), isTrue);
+      expect(EngineTuning.gpuHelpsQuant(''), isTrue);
+    });
+  });
+
   group('resolveThreads', () {
     test('an explicit setting is passed through', () {
       expect(EngineTuning.resolveThreads(3), 3);
