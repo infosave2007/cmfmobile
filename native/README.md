@@ -15,11 +15,14 @@ cortiq_set_options(handle, options_json)               # sampler (0.3.10+)
 cortiq_set_gpu(enable) / cortiq_gpu_available()        # GPU graph (0.5.30+)
 cortiq_set_threads(n)                                  # pool size (0.5.30+)
 cortiq_worker_tids(out, cap)                           # ADPF hints (0.5.30+)
+cortiq_cancel(handle)                                  # stops a prefill too (0.5.32+)
+cortiq_execution_info() -> json                        # simd/threads/gpu (0.5.33+)
 ```
 
-The last three are looked up optionally, so an older runtime still loads:
-without them the app sizes the pool through `CMF_THREADS` instead and skips
-the performance hints.
+Everything from `cortiq_set_gpu` down is looked up optionally, so an older
+runtime still loads — the app then sizes the pool through `CMF_THREADS`,
+skips the performance hints, can only cancel between tokens, and assembles
+the About line itself.
 
 The Dart side prefers `cortiq_chat_messages` (conversation as
 `[{"role","content"},…]` through the file's own chat template) and pushes
@@ -29,15 +32,17 @@ pre-0.3.10 libraries it falls back to a transcript through `cortiq_chat`.
 The token callback fires synchronously on the calling thread, so the Dart
 side (`lib/data/services/inference/native_engine.dart`) runs the blocking
 call in a long-lived worker isolate — the engine pins that thread to the
-big cores on its first call, so it is kept across generations — and cancels
-by returning `false` from the callback via a shared native flag.
+big cores on its first call, so it is kept across generations. Cancelling
+goes through `cortiq_cancel`, which the runtime also checks between prefill
+chunks; the older path (returning `false` from the token callback) only ever
+took effect once tokens were flowing, so Stop did nothing during a long
+prompt's first minute.
 
-The ABI carries no thread count and no tuning knobs; the runtime reads
-those from the process environment, which
-`lib/data/services/inference/engine_tuning.dart` writes before
-`cortiq_load`. See [TUNING.md](TUNING.md) for how the pool sizes itself,
-which `CMF_*` variables the shipped binary understands, and what is left to
-fix in the engine.
+Tuning knobs beyond the thread count still travel in the process
+environment, which `lib/data/services/inference/engine_tuning.dart` writes
+before `cortiq_load`. See [TUNING.md](TUNING.md) for the `CMF_*` variables
+the shipped binary understands, the measurements taken on a real device, and
+what is left open in the engine.
 
 When the library is missing the app falls back to a clearly-labeled
 **demo engine**.
@@ -46,7 +51,7 @@ When the library is missing the app falls back to a clearly-labeled
 
 All three ABIs are checked into `android/app/src/main/jniLibs/`
 (arm64-v8a, armeabi-v7a, x86_64), taken from the cmf release
-[v0.5.31](https://github.com/infosave2007/cmf/releases/tag/v0.5.31)
+[v0.5.34](https://github.com/infosave2007/cmf/releases/tag/v0.5.34)
 (`libcortiq-ffi-<target>.tar.gz`) — Vulkan compute on arm64-v8a and x86_64
 (armeabi-v7a stays CPU-only by choice), the 0.5.30 ABI additions above, and
 KV-cache reuse between turns. To update:

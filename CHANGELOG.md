@@ -5,6 +5,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
 
+## [1.1.22] - 2026-07-28
+
+### Changed
+- Engine updated to **v0.5.34**.
+- The app no longer second-guesses the runtime about the GPU. A guard added
+  in 1.1.20 withheld the flag for `VBIT` weights, on the strength of a 14×
+  slowdown — but that slowdown was the whole-token graph racing on an
+  integrated adapter (fixed engine-side in v0.5.32), and the field it keyed
+  on is informational: this model's tensors are 58 % `q8_2f` and 42 % `q1`,
+  so the guard never applied to it anyway. The runtime times each op class
+  against the CPU and keeps the winner, which is the decision the app was
+  duplicating badly.
+
 ## [1.1.21] - 2026-07-28
 
 ### Fixed
