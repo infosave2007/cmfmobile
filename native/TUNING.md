@@ -169,12 +169,17 @@ Three things fall out of this, and only the first was expected:
    run-to-run spread inside each config is 2 %, so the gap is real. This is
    the whole point of sizing to the big cluster instead of the runtime's
    `min(cores - 1, 8)`.
-2. **The GPU path costs 13× on decode.** Not a wash, not a small loss: 1.04
-   tok/s against 13.22. Raising `CMF_GPU_MIN_ROWS` did change the engine's
-   own mind about the pool size (2 → 4 threads) but did not move decode at
-   all, so whatever that threshold gates, it is not the per-token matvecs.
-   The switch is off by default and should stay off on Adreno until this is
-   understood.
+2. **The GPU path costs 13× on decode** — 1.04 tok/s against 13.22 — and the
+   reason is visible in the engine source. This model is `quant_type: VBIT`,
+   and `QTensor::matvec` returns into the CPU `vbitmatvec` kernel *before*
+   any GPU consideration, so its per-token math has no GPU path to win with.
+   Turning the GPU on then costs twice: the engine halves the CPU pool
+   (4 → 2 threads, observed) and adds graph work on top. Note the fourth row
+   is not "GPU with a sane threshold": `CMF_GPU_MIN_ROWS` defaults to 65536
+   on unified memory precisely so that only lm_head-class matrices offload,
+   and setting it to 64 pushed every attention and FFN projection onto
+   Vulkan instead. The switch is off by default and should stay off for
+   VBIT models.
 3. **Prefill ignores every knob**: 54–59 s across all four configs, i.e. it
    scales with neither the thread count nor the GPU. At 25 tok/s it is only
    twice the decode rate, where a batched prefill should be many times
@@ -199,11 +204,15 @@ measurements above and outrank everything else:
    adapter the engine itself reports as available. Per-token matvecs should
    never reach the GPU; if `CMF_GPU_MIN_ROWS` is meant to prevent that, it
    does not.
-3. **`CMF_GPU_MIN_ROWS` semantics.** Setting it to 64 changed the pool the
-   engine chose for itself (2 → 4 threads) but left decode at ~1 tok/s, so it
-   is not the lever that keeps small matrices off the GPU — or the offload
-   decision does not consult it at all. Worth documenting either way, since
-   it is the only visible dial on the GPU path.
+3. **The GPU flag should know what the model is made of.** For a dtype whose
+   matvec has no GPU kernel — VBIT here — `cortiq_set_gpu(true)` can only
+   lose: it halves the CPU pool and buys nothing back. Either the pool should
+   not shrink when the loaded weights have no GPU path, or
+   `cortiq_gpu_available()` should answer per model rather than per device,
+   so the app can grey the switch out instead of letting a user find this the
+   slow way. The op-level probe (`probe_arm`, on by default, freezes the
+   faster arm after a 3× gap) already does the right thing for the classes it
+   arbitrates — VBIT simply returns before reaching it.
 
 Closed since this document was first written, all in the engine:
 `cortiq_set_threads`, `cortiq_gpu_available` and `cortiq_worker_tids` in the
