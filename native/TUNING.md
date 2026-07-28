@@ -149,38 +149,65 @@ gets packaged. On iOS, build `aarch64-apple-ios` with the same feature —
 the frameworks its Metal backend needs are already in
 `ios/Flutter/Cortiq.xcconfig`.
 
-### What to expect
+### Measured, 2026-07-28
 
-Decode is memory-bandwidth-bound and the GPU shares the same LPDDR as the
-CPU, so token-by-token generation often gains little — sometimes less than
-nothing once the driver round-trips are counted. Prefill and the `lm_head`
-projection are compute-bound and are where a mobile GPU pays off, which is
-exactly what `CMF_GPU_MIN_ROWS` (offload only matrices at least this tall)
-and `CMF_GPU_LMHEAD` are for. Tune both from Settings → Engine → Engine
-flags and read the result off the per-message tok/s.
+Xiaomi 2203129G (Snapdragon 778G+: 4×A78 at capacity ~1003–1024, 4×A55 at
+397), Android 14, engine v0.5.31, `bonsai-1.7b-coding` (Q4T, 591 MB), driven
+through the app's own server. Decode is the median of three 96-token
+generations, prefill the best of two 1349-token prompts with `max_tokens=1`.
 
-Two more things worth budgeting for: WGSL has no int8 dot-product
-extension, so quantized weights may have to be dequantized before they hit
-the GPU — spending bandwidth to save compute, the wrong trade for decode —
-and sustained GPU load throttles a phone faster than the CPU path does.
+| config | pool | decode | prefill |
+|---|---|---|---|
+| CPU, threads auto | 4 | **13.22 tok/s** | 54.0 s |
+| CPU, threads 7 (slider) | 6 | 11.69 tok/s | 59.3 s |
+| GPU on | 2 | 1.04 tok/s | 56.7 s |
+| GPU on, `CMF_GPU_MIN_ROWS=64` | 4 | 0.96 tok/s | 57.3 s |
+
+Three things fall out of this, and only the first was expected:
+
+1. **Auto-sizing the pool is worth ~13 % of decode** (13.22 vs 11.69) — the
+   run-to-run spread inside each config is 2 %, so the gap is real. This is
+   the whole point of sizing to the big cluster instead of the runtime's
+   `min(cores - 1, 8)`.
+2. **The GPU path costs 13× on decode.** Not a wash, not a small loss: 1.04
+   tok/s against 13.22. Raising `CMF_GPU_MIN_ROWS` did change the engine's
+   own mind about the pool size (2 → 4 threads) but did not move decode at
+   all, so whatever that threshold gates, it is not the per-token matvecs.
+   The switch is off by default and should stay off on Adreno until this is
+   understood.
+3. **Prefill ignores every knob**: 54–59 s across all four configs, i.e. it
+   scales with neither the thread count nor the GPU. At 25 tok/s it is only
+   twice the decode rate, where a batched prefill should be many times
+   faster — this, not decode, is what a user feels as "it thinks for a
+   minute" on a long chat. Worth profiling with `CMF_PREFILL_PROF`,
+   `CMF_PREFILL_CHUNK` and `CMF_BATCH_K` before anything else in the engine.
+
+Reproduce with any HTTP client against the app's server; the numbers above
+came from `/v1/chat/completions` plus `/v1/cortiq/status`, which reports the
+pool size the engine actually built.
 
 ## Open items for the engine
 
-Not fixable from this repository:
+Not fixable from this repository. The first two come straight out of the
+measurements above and outrank everything else:
 
-1. **KV cache across turns.** `Pipeline::generate_from_ids` calls
-   `LayerKvCache::clear`, and the app sends the whole conversation on every
-   turn, so each turn appears to re-prefill the full history — linear per
-   turn, quadratic over a session. Confirm against `cortiq-engine`; if it
-   holds, reusing the common prefix is the biggest latency win available.
-   Quick check without touching the source: compare first-token latency on
-   turn 1 and turn 10 of one long chat.
-2. **`cpu_capacity` fallback in `pin_current_thread_to_big_cores`.** On
-   kernels without it the pinning silently does nothing; reading
-   `cpufreq/cpuinfo_max_freq` instead would keep the workers off the little
-   cores there too.
-3. **A thread-count parameter in the C ABI**, so the pool no longer has to be
-   configured through a process-wide environment variable — and
-   `cortiq_gpu_available()` alongside it (see above).
-4. **ADPF (`PerformanceHintManager`, API 31+)** needs the worker thread ids
-   to report work duration to the governor; the ABI exposes none.
+1. **Prefill does not scale.** Same ~55 s for 1349 prompt tokens whether the
+   pool has 2, 4 or 6 threads and whether the GPU is on — so the prefill path
+   is not using the pool, and the GPU graph is not taking it either. At 25
+   tok/s against a 13 tok/s decode, batching is buying almost nothing.
+2. **GPU decode is a 13× regression** on an Adreno 642L with a Vulkan
+   adapter the engine itself reports as available. Per-token matvecs should
+   never reach the GPU; if `CMF_GPU_MIN_ROWS` is meant to prevent that, it
+   does not.
+3. **`CMF_GPU_MIN_ROWS` semantics.** Setting it to 64 changed the pool the
+   engine chose for itself (2 → 4 threads) but left decode at ~1 tok/s, so it
+   is not the lever that keeps small matrices off the GPU — or the offload
+   decision does not consult it at all. Worth documenting either way, since
+   it is the only visible dial on the GPU path.
+
+Closed since this document was first written, all in the engine:
+`cortiq_set_threads`, `cortiq_gpu_available` and `cortiq_worker_tids` in the
+C ABI (0.5.30); the `cpufreq/cpuinfo_max_freq` fallback for big-core
+detection on kernels without `cpu_capacity` (0.5.30); KV-cache reuse between
+turns, so a turn that continues the history prefills only the new message,
+with `CMF_KV_REUSE=0` as the off switch (0.5.31).

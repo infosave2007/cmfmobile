@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:cmf_mobile/data/models/chat.dart';
 import 'package:cmf_mobile/data/models/cmf_metadata.dart';
 import 'package:cmf_mobile/data/models/local_model.dart';
+import 'package:cmf_mobile/data/models/server.dart';
 import 'package:cmf_mobile/data/services/cmf_server.dart';
 import 'package:cmf_mobile/data/services/inference/inference_engine.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -37,6 +38,37 @@ void main() {
     final res = await req.close();
     return _Response(res.statusCode, res.headers, await utf8.decodeStream(res));
   }
+
+  test('generation usage reaches the live counters the server screen reads',
+      () async {
+    expect(server.stats.completionTokens, 0);
+
+    final events = <ServerRequestRecord>[];
+    final sub = server.onRequest.listen(events.add);
+
+    await request(
+      'POST',
+      '/v1/chat/completions',
+      body: jsonEncode({
+        'model': 'test-model',
+        'messages': [
+          {'role': 'user', 'content': 'hello'},
+        ],
+        'max_tokens': 2,
+      }),
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    await sub.cancel();
+
+    // The Server screen rebuilds from onRequest and then reads stats, so the
+    // usage has to be booked before the record is emitted — otherwise the
+    // counters stay at zero until some later request happens to refresh them.
+    expect(events, isNotEmpty, reason: 'no request record was emitted');
+    expect(events.single.completionTokens, 2);
+    expect(server.stats.requests, 1);
+    expect(server.stats.completionTokens, 2);
+    expect(server.stats.tokensPerSecondEma, greaterThan(0));
+  });
 
   test('chat completion validates model and reports length', () async {
     final res = await request(
