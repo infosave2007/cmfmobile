@@ -5,6 +5,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
 
+## [1.1.21] - 2026-07-28
+
+### Fixed
+- **Settings → About told the truth about one thread out of four.** The line
+  was assembled here from a pool size read straight after the model load,
+  where the workers are still registering — usually only the first had
+  arrived. The same wrong list was handed to the Android performance-hint
+  session, so those hints covered a single worker instead of the pool. The
+  app now re-reads the pool before generating, and engine v0.5.33 makes the
+  load wait for every registration.
+
+### Changed
+- Engine updated to **v0.5.32 → v0.5.33**, and About now quotes the runtime
+  instead of assembling the line itself: `cortiq-native 0.5.33 · 4 threads ·
+  neon · gpu`, straight from `cortiq_execution_info()`.
+
 ## [1.1.20] - 2026-07-28
 
 Everything below came out of measuring 1.1.19 on a real phone

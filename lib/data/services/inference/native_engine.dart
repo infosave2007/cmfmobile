@@ -66,6 +66,7 @@ typedef _WorkerTidsNative = ffi.Int32 Function(
 typedef _WorkerTidsDart = int Function(ffi.Pointer<ffi.Int32>, int);
 typedef _CancelNative = ffi.Void Function(ffi.Pointer<ffi.Void>);
 typedef _CancelDart = void Function(ffi.Pointer<ffi.Void>);
+typedef _ExecInfoNative = ffi.Pointer<Utf8> Function();
 
 ffi.DynamicLibrary _openLibrary() {
   if (Platform.isAndroid) return ffi.DynamicLibrary.open('libcortiq_ffi.so');
@@ -123,6 +124,17 @@ class NativeCortiqEngine implements InferenceEngine {
       } catch (_) {
         _cancelNative = null;
       }
+      try {
+        // cortiq-ffi >= 0.5.33: {"simd":"neon","threads":4,"gpu_backend":true}
+        // straight from the runtime. Before it, the app assembled that line
+        // itself from a thread count it had read too early — which is how
+        // About came to claim one thread while four were running.
+        _execInfo = lib
+            .lookupFunction<_ExecInfoNative, _ExecInfoNative>(
+                'cortiq_execution_info');
+      } catch (_) {
+        _execInfo = null;
+      }
     } catch (_) {
       _lib = null;
     }
@@ -136,6 +148,7 @@ class NativeCortiqEngine implements InferenceEngine {
   _SetThreadsDart? _setThreads;
   _WorkerTidsDart? _workerTids;
   _CancelDart? _cancelNative;
+  _ExecInfoNative? _execInfo;
   String _version = '';
 
   ffi.Pointer<ffi.Void> _handle = ffi.nullptr;
@@ -171,8 +184,36 @@ class NativeCortiqEngine implements InferenceEngine {
   String get name {
     final base =
         _version.isEmpty ? 'cortiq-native' : 'cortiq-native $_version';
+    // Prefer what the runtime says about itself; fall back to the pool size
+    // we counted only when it cannot say (pre-0.5.33).
+    final info = _executionInfo();
+    if (info != null) {
+      final parts = <String>[
+        if (info['threads'] case final int n when n > 0) '$n threads',
+        if (info['simd'] case final String s when s.isNotEmpty) s,
+        if (info['gpu_backend'] == true) 'gpu',
+      ];
+      if (parts.isNotEmpty) return '$base · ${parts.join(' · ')}';
+      return base;
+    }
     final pool = _poolThreads;
     return pool == null ? base : '$base · $pool threads';
+  }
+
+  /// The runtime's own account of how it will execute, or null before
+  /// 0.5.33. Read on demand: the thread count is only final once a model is
+  /// loaded, and the string it returns is borrowed, so it is decoded at once.
+  Map<String, dynamic>? _executionInfo() {
+    final execInfo = _execInfo;
+    if (execInfo == null) return null;
+    try {
+      final ptr = execInfo();
+      if (ptr == ffi.nullptr) return null;
+      final decoded = jsonDecode(ptr.toDartString());
+      return decoded is Map<String, dynamic> ? decoded : null;
+    } catch (_) {
+      return null;
+    }
   }
 
   @override
