@@ -185,6 +185,25 @@ consideration. There is no GPU matvec for this quantization to be faster
 at — but the flag still costs. Where those 14× are actually spent is not
 visible from reading the code and needs the engine's own profiling.
 
+Reading the engine (v0.5.28 source; the measurements are 0.5.31, so this
+narrows rather than proves) rules out every op gate for this model — a dense
+qwen3 in VBIT, 2048-row attention projections and 6140-row FFN:
+
+| path | gate | this model |
+|---|---|---|
+| `QTensor::matvec` | VBIT arm | returns into the CPU kernel before any GPU check |
+| matvec ≥ 8M elements | `Q4Block`, `Q1`, `Q1T` only | VBIT is not one of them |
+| dense FFN | `gate_proj.rows() >= min_rows` | 6140 vs 65536 — skipped |
+| attention | `wq.rows() >= min_rows \|\| is_q1` | 2048 vs 65536 — skipped |
+| MoE, GDN | other architectures | not applicable |
+| wgpu whole-layer graph | `discrete_active()` | an Adreno is not discrete |
+| `enabled_here()` itself | thread-local + cached flag | cheap |
+
+So with the flag on, nothing should reach the GPU at all — and decode is
+still 14× slower. **The cost is not in the op routing**, which is the useful
+half of the finding: whoever profiles this next can skip the gates and look
+at what `cortiq_set_gpu(true)` changes at load or per token elsewhere.
+
 Prefill, meanwhile, sits at 53–58 s for 1349 tokens in every configuration
 ever measured across two sessions — 25 tok/s, barely twice the decode rate,
 where a batched prefill should be several times faster. That is the finding
