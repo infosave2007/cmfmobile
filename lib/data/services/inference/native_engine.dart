@@ -403,6 +403,19 @@ class NativeCortiqEngine implements InferenceEngine {
     // A native crash takes the worker isolate down with it; without this the
     // stream would simply never complete.
     _onWorkerLost = fail;
+    // Re-read the pool: the workers register their tids as they come up, and
+    // right after cortiq_load only the first of them may be there. Reading
+    // once at load time left the hint session covering a single thread out of
+    // four — and put that same wrong number in Settings → About. Engine
+    // 0.5.33 makes the load wait for all of them; this keeps both honest on
+    // anything older.
+    if (_workerIds.length < 2) {
+      final refreshed = _readWorkerTids();
+      if (refreshed.length > _workerIds.length) {
+        _workerIds = refreshed;
+        _poolThreads = refreshed.length;
+      }
+    }
     await PerformanceHint.start(_workerIds, _hintCycleTarget);
     cycleStart = DateTime.now();
     try {

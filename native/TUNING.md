@@ -253,15 +253,19 @@ running and the next request measures the queue.
 
 Not fixable from this repository:
 
-1. **`execution_mode` still reports a thread count that is not the pool.**
-   Four live `cmf-pool-*` threads counted in `/proc`, `· 1 threads` in
-   `/v1/cortiq/status`, on v0.5.32 with the fix that was meant to close this —
-   with the app passing `cortiq_set_threads(0)` and `CMF_THREADS` cleared, so
-   the resolution should land on the big-core count. It reads as though
-   `effective_threads()` does not fall through to the topology when the
-   forced value is 0. The string also carries no SIMD name. This number sent
-   the GPU investigation down two wrong paths before it was caught by
-   counting threads, which is the only external ground truth.
+1. ~~`execution_mode` reports a thread count that is not the pool.~~ Not an
+   engine reporting bug at all — the string is composed by *this app*
+   (`'Mobile { engine: ${engine.name} }'` in `cmf_server.dart`), and
+   `engine.name` appends the count read from `cortiq_worker_tids`
+   *immediately* after `cortiq_load`. The workers register their tids as they
+   start, so only the first was there to count. Same wrong list went into the
+   ADPF hint session, which therefore covered one thread instead of four.
+   Engine 0.5.33 makes the load wait for every registration; the app also
+   re-reads the pool before the first generation, so the number is right on
+   older runtimes too. **The lesson stands even though the culprit moved:
+   counting `cmf-pool-*` in `/proc` was the only trustworthy source, and two
+   wrong conclusions in this document came from believing a number instead.**
+
 2. **Prefill does not scale with the pool** — 53–65 s for 1349 prompt tokens
    in every configuration across three sessions, 25 tok/s against a 13 tok/s
    decode. Diagnosed engine-side as GDN recurrence, sequential over positions:
