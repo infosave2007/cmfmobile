@@ -17,6 +17,7 @@ import '../data/services/inference/inference_engine.dart';
 import '../data/services/inference/native_engine.dart';
 import '../data/services/model_repository.dart';
 import '../data/services/settings_repository.dart';
+import 'util/foreground_task.dart';
 import 'util/keep_awake.dart';
 
 // ---------------------------------------------------------------------------
@@ -148,10 +149,13 @@ class EngineController extends Notifier<EngineState> {
         isLoading: true, loadedModelId: model.id, loadedModel: model);
     try {
       final settings = ref.read(settingsProvider).value;
-      final threads = settings?.threads ?? 4;
       final engine = ref.read(engineProvider);
       engine.setGpu(settings?.useGpu ?? false);
-      await engine.loadModel(model, threads: threads);
+      await engine.loadModel(
+        model,
+        threads: settings?.threads ?? 0,
+        engineFlags: settings?.engineFlags ?? '',
+      );
       state = EngineState(loadedModelId: model.id, loadedModel: model);
     } catch (e) {
       state = EngineState(error: e.toString());
@@ -343,6 +347,9 @@ class ChatController extends Notifier<ChatState> {
 
     try {
       await _sub?.cancel();
+      // Started from a user tap, so the foreground-service start is allowed;
+      // it keeps the reply on the big cores if the user switches away.
+      await ForegroundTask.acquire(ForegroundTask.generation);
       final stream = engine.generate(GenerationRequest(
         messages: history,
         temperature: settings.temperature,
@@ -389,6 +396,7 @@ class ChatController extends Notifier<ChatState> {
       _sub = null;
       streaming.clear();
       state = state.copyWith(generating: false, sessions: [...state.sessions]);
+      await ForegroundTask.release(ForegroundTask.generation);
       await ref.read(chatStoreProvider).save(session);
     }
   }
@@ -441,6 +449,7 @@ class ServerController extends Notifier<ServerState> {
     ref.onDispose(() {
       _sub?.cancel();
       KeepAwake.disable();
+      ForegroundTask.release(ForegroundTask.server);
     });
     return const ServerState();
   }
@@ -456,6 +465,10 @@ class ServerController extends Notifier<ServerState> {
         token: settings.serverAuthEnabled ? settings.serverToken : null,
       );
       await KeepAwake.enable(); // generation must survive screen-off
+      // Without this the process drops to the background cpuset (little
+      // cores) as soon as the user leaves the app — for a server that is the
+      // normal case, not the exception.
+      await ForegroundTask.acquire(ForegroundTask.server);
       final urls = await server.serverUrls();
       _sub = server.onRequest.listen((_) => _refreshSnapshot());
       state = ServerState(
@@ -474,6 +487,7 @@ class ServerController extends Notifier<ServerState> {
     _sub = null;
     await ref.read(cmfServerProvider).stop();
     await KeepAwake.disable();
+    await ForegroundTask.release(ForegroundTask.server);
     state = ServerState(port: state.port);
   }
 

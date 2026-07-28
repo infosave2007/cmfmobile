@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Foreground-service notification. Kept in Android resources rather than
+     the app's .arb files so the system notification follows the device
+     language even before Flutter has started. -->
+<resources>
+    <string name="fgs_channel_name">Локальный инференс</string>
+    <string name="fgs_title">CMF Mobile</string>
+    <string name="fgs_text_generation">Генерация ответа</string>
+    <string name="fgs_text_server">Модели раздаются с устройства</string>
+</resources>

@@ -463,6 +463,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsThreads => 'Threads';
 
   @override
+  String settingsThreadsAuto(int count) {
+    return 'Auto ($count)';
+  }
+
+  @override
+  String get settingsThreadsHint =>
+      'Auto sizes the pool to the big-core cluster the engine pins its workers to; more threads than that only add wait time. Applied on next model load.';
+
+  @override
   String get settingsUseGpu => 'Use GPU (Vulkan/Metal)';
 
   @override
@@ -470,11 +479,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enable discrete GPU execution graph (applies on next model load).';
 
   @override
+  String get settingsUseGpuNeedsBackend =>
+      'Needs a runtime built with the Vulkan/Metal backend — see native/TUNING.md.';
+
+  @override
   String get settingsDisableThinking => 'Disable thinking';
 
   @override
   String get settingsDisableThinkingHint =>
       'Reasoning models (Qwen3/3.5) answer directly, with no <think> step';
+
+  @override
+  String get settingsEngineSection => 'Engine';
+
+  @override
+  String get settingsEngineFlags => 'Engine flags (advanced)';
+
+  @override
+  String get settingsEngineFlagsHint =>
+      'One CMF_KEY=value per line, pushed to the runtime on model load. Empty = engine defaults.';
 
   @override
   String get settingsServerSection => 'Server';

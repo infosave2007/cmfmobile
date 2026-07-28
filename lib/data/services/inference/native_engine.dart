@@ -6,10 +6,12 @@ import 'dart:isolate';
 
 import 'package:ffi/ffi.dart';
 
+import '../../../core/util/performance_hint.dart';
 import '../../models/chat.dart';
 import '../../models/local_model.dart';
 import '../cmf_format.dart';
 import 'demo_engine.dart' show DemoEngine;
+import 'engine_tuning.dart';
 import 'inference_engine.dart';
 
 // C ABI of cortiq-ffi >= 0.3.10 (cmf crates/cortiq-ffi, native/cortiq_ffi.h):
@@ -26,6 +28,9 @@ import 'inference_engine.dart';
 // Callbacks fire synchronously on the calling thread and the call blocks,
 // so generation runs in a worker isolate; cancellation is a shared byte in
 // native memory that the callback checks (returning false stops decoding).
+// The worker outlives a single generation: its thread is the one the engine
+// pins to the big cores, so keeping it saves both the isolate spin-up and
+// the re-pin on every reply.
 typedef _VersionNative = ffi.Pointer<Utf8> Function();
 typedef _LastErrorNative = ffi.Pointer<Utf8> Function();
 typedef _LoadNative = ffi.Pointer<ffi.Void> Function(ffi.Pointer<Utf8>);
@@ -52,6 +57,13 @@ typedef _SetOptionsDart = int Function(
     ffi.Pointer<ffi.Void>, ffi.Pointer<Utf8>);
 typedef _SetGpuNative = ffi.Void Function(ffi.Bool);
 typedef _SetGpuDart = void Function(bool);
+typedef _GpuAvailableNative = ffi.Bool Function();
+typedef _GpuAvailableDart = bool Function();
+typedef _SetThreadsNative = ffi.Void Function(ffi.Int32);
+typedef _SetThreadsDart = void Function(int);
+typedef _WorkerTidsNative = ffi.Int32 Function(
+    ffi.Pointer<ffi.Int32>, ffi.Int32);
+typedef _WorkerTidsDart = int Function(ffi.Pointer<ffi.Int32>, int);
 
 ffi.DynamicLibrary _openLibrary() {
   if (Platform.isAndroid) return ffi.DynamicLibrary.open('libcortiq_ffi.so');
@@ -83,6 +95,23 @@ class NativeCortiqEngine implements InferenceEngine {
         _setOptions = null; // pre-0.3.10 library
         _setGpu = null;
       }
+      try {
+        // cortiq-ffi >= 0.5.30. cortiq_set_gpu is accepted even by a runtime
+        // with no Vulkan/Metal backend linked in, so cortiq_gpu_available is
+        // the only way to tell whether the switch does anything;
+        // cortiq_set_threads replaces the process-wide CMF_THREADS; the
+        // worker tids feed Android's performance hints.
+        _gpuAvailable = lib.lookupFunction<_GpuAvailableNative,
+            _GpuAvailableDart>('cortiq_gpu_available');
+        _setThreads = lib.lookupFunction<_SetThreadsNative, _SetThreadsDart>(
+            'cortiq_set_threads');
+        _workerTids = lib.lookupFunction<_WorkerTidsNative, _WorkerTidsDart>(
+            'cortiq_worker_tids');
+      } catch (_) {
+        _gpuAvailable = null;
+        _setThreads = null;
+        _workerTids = null;
+      }
     } catch (_) {
       _lib = null;
     }
@@ -92,10 +121,17 @@ class NativeCortiqEngine implements InferenceEngine {
   _FreeDart? _free;
   _SetOptionsDart? _setOptions;
   _SetGpuDart? _setGpu;
+  _GpuAvailableDart? _gpuAvailable;
+  _SetThreadsDart? _setThreads;
+  _WorkerTidsDart? _workerTids;
   String _version = '';
 
   ffi.Pointer<ffi.Void> _handle = ffi.nullptr;
   LocalModel? _loaded;
+
+  /// Pool size pushed to the engine for the loaded model (null = engine
+  /// default). Surfaced through [name] so About shows what actually runs.
+  int? _poolThreads;
 
   /// The native runtime allows one generate call per handle at a time
   /// (cortiq_ffi.h), and both the chat and the embedded server share this
@@ -117,14 +153,25 @@ class NativeCortiqEngine implements InferenceEngine {
   }
 
   @override
-  String get name =>
-      _version.isEmpty ? 'cortiq-native' : 'cortiq-native $_version';
+  bool? get gpuBackendAvailable => _gpuAvailable?.call();
+
+  @override
+  String get name {
+    final base =
+        _version.isEmpty ? 'cortiq-native' : 'cortiq-native $_version';
+    final pool = _poolThreads;
+    return pool == null ? base : '$base · $pool threads';
+  }
 
   @override
   LocalModel? get loadedModel => _loaded;
 
   @override
-  Future<void> loadModel(LocalModel model, {int threads = 4}) async {
+  Future<void> loadModel(
+    LocalModel model, {
+    int threads = 0,
+    String engineFlags = '',
+  }) async {
     if (!isAvailable) {
       throw StateError('native cortiq runtime is not bundled');
     }
@@ -135,6 +182,23 @@ class NativeCortiqEngine implements InferenceEngine {
       throw StateError(problems.first);
     }
     await unload();
+    // The pool is built inside cortiq_load and lives as long as the handle,
+    // so all of this has to be set before the call, not before the
+    // generation. From 0.5.30 the thread count has a proper entry point —
+    // and the engine's own auto-sizing knows the big cluster better than we
+    // do (it reads cpu_capacity with a max-frequency fallback), so on auto
+    // we hand the decision over rather than second-guessing it.
+    final setThreads = _setThreads;
+    if (setThreads != null) {
+      setThreads(threads);
+      _poolThreads = threads > 0 ? threads : null;
+      // threads: null — sized natively above; this also clears a CMF_THREADS
+      // an older runtime may have been given.
+      EngineTuning.apply(threads: null, flags: engineFlags);
+    } else {
+      _poolThreads =
+          EngineTuning.apply(threads: threads, flags: engineFlags);
+    }
     // mmap + header parse can take a moment on big files — off the UI
     // isolate; the returned pointer is process-wide.
     final address = await Isolate.run(() {
@@ -156,6 +220,33 @@ class NativeCortiqEngine implements InferenceEngine {
     });
     _handle = ffi.Pointer.fromAddress(address);
     _loaded = model;
+    // The pool exists only once a model is loaded, so this is the first
+    // moment its real size is knowable — and on auto it is the only way to
+    // know what the engine picked.
+    _workerIds = _readWorkerTids();
+    if (_workerIds.isNotEmpty) _poolThreads = _workerIds.length;
+  }
+
+  /// Kernel thread ids of the engine's worker pool, empty when the runtime
+  /// predates 0.5.30 or is not on Android/Linux. Used for the platform
+  /// performance hints, which need the threads that actually do the work.
+  List<int> get workerThreadIds => _workerIds;
+  List<int> _workerIds = const [];
+
+  List<int> _readWorkerTids() {
+    final workerTids = _workerTids;
+    if (workerTids == null) return const [];
+    const cap = 32;
+    final buffer = calloc<ffi.Int32>(cap);
+    try {
+      final total = workerTids(buffer, cap);
+      if (total <= 0) return const [];
+      return [
+        for (var i = 0; i < (total < cap ? total : cap); i++) buffer[i],
+      ];
+    } finally {
+      calloc.free(buffer);
+    }
   }
 
   @override
@@ -169,7 +260,10 @@ class NativeCortiqEngine implements InferenceEngine {
       _free!(_handle);
       _handle = ffi.nullptr;
       _loaded = null;
+      _poolThreads = null;
+      _workerIds = const [];
     }
+    _stopWorker();
   }
 
   /// Fallback transcript for pre-0.3.10 libraries without
@@ -251,11 +345,25 @@ class NativeCortiqEngine implements InferenceEngine {
     final done = Completer<void>();
     final receivePort = ReceivePort();
     var completionTokens = 0;
+    var cycleStart = DateTime.now();
+    void fail(String message) {
+      if (done.isCompleted) return;
+      controller.addError(StateError(message));
+      controller.close();
+      receivePort.close();
+      done.complete();
+    }
+
     receivePort.listen((message) {
       switch (message) {
         case final String token:
           completionTokens++;
           controller.add(GenerationEvent(delta: token));
+          if (completionTokens % _hintCycle == 0) {
+            final now = DateTime.now();
+            PerformanceHint.report(now.difference(cycleStart));
+            cycleStart = now;
+          }
         case ('done', final int count):
           final elapsed = DateTime.now().difference(started);
           final tokens = count >= 0 ? count : completionTokens;
@@ -276,45 +384,103 @@ class NativeCortiqEngine implements InferenceEngine {
           receivePort.close();
           if (!done.isCompleted) done.complete();
         case ('error', final String error):
-          controller.addError(StateError(error));
-          controller.close();
-          receivePort.close();
-          if (!done.isCompleted) done.complete();
-        case final List<dynamic> isolateError: // from Isolate.spawn onError
-          controller.addError(StateError('${isolateError.firstOrNull}'));
-          controller.close();
-          receivePort.close();
-          if (!done.isCompleted) done.complete();
+          fail(error);
       }
     });
 
+    // A native crash takes the worker isolate down with it; without this the
+    // stream would simply never complete.
+    _onWorkerLost = fail;
+    await PerformanceHint.start(_workerIds, _hintCycleTarget);
+    cycleStart = DateTime.now();
     try {
-      await Isolate.spawn(
-        _generateWorker,
-        _GenArgs(
-          sendPort: receivePort.sendPort,
-          handleAddress: _handle.address,
-          cancelFlagAddress: cancelFlag.address,
-          messagesJson: messagesJson,
-          fallbackPrompt: renderPrompt(request.messages),
-          maxTokens: request.maxTokens,
-        ),
-        onError: receivePort.sendPort,
-        errorsAreFatal: false,
-      );
+      final commands = await _workerCommands();
+      commands.send(_GenArgs(
+        sendPort: receivePort.sendPort,
+        handleAddress: _handle.address,
+        cancelFlagAddress: cancelFlag.address,
+        messagesJson: messagesJson,
+        fallbackPrompt: renderPrompt(request.messages),
+        maxTokens: request.maxTokens,
+      ));
     } catch (e) {
-      controller.addError(StateError('failed to start generation: $e'));
-      await controller.close();
-      receivePort.close();
-      if (!done.isCompleted) done.complete();
+      fail('failed to start generation: $e');
     }
     await done.future;
+    await PerformanceHint.stop(); // clocks go straight back
+    _onWorkerLost = null;
     if (identical(_activeCancel, cancelFlag)) _activeCancel = null;
     calloc.free(cancelFlag);
   }
 
+  /// Tokens per ADPF work cycle, and what a cycle is asked to cost. The
+  /// target is deliberately ambitious: a phone rarely does 40 ms a token on a
+  /// model worth loading, so the system is being asked for whatever clock it
+  /// can spare while a reply streams — and the session closes with it.
+  static const _hintCycle = 16;
+  static const _hintCycleTarget = Duration(milliseconds: 40 * _hintCycle);
+
   @override
   void cancel() => _activeCancel?.value = 1;
+
+  // --- generation worker ---------------------------------------------------
+
+  Future<SendPort>? _worker;
+  Isolate? _workerIsolate;
+  ReceivePort? _workerEvents;
+  void Function(String message)? _onWorkerLost;
+
+  Future<SendPort> _workerCommands() => _worker ??= _startWorker();
+
+  Future<SendPort> _startWorker() async {
+    final handshake = ReceivePort();
+    // onExit and onError share one port: either means the worker is gone and
+    // whoever waits on it — the handshake or a running generation — will
+    // never be answered otherwise.
+    final events = ReceivePort();
+    final ready = Completer<SendPort>();
+    handshake.listen((message) {
+      if (!ready.isCompleted) ready.complete(message as SendPort);
+      handshake.close();
+    });
+    events.listen((message) {
+      _worker = null;
+      _workerIsolate = null;
+      final reason = message is List
+          ? 'generation isolate died: ${message.firstOrNull}'
+          : 'generation isolate exited';
+      if (!ready.isCompleted) ready.completeError(StateError(reason));
+      _onWorkerLost?.call(reason);
+      handshake.close();
+      events.close();
+      if (identical(_workerEvents, events)) _workerEvents = null;
+    });
+    try {
+      _workerIsolate = await Isolate.spawn(
+        _generateWorker,
+        handshake.sendPort,
+        onExit: events.sendPort,
+        onError: events.sendPort,
+        errorsAreFatal: false,
+        debugName: 'cortiq-generate',
+      );
+    } catch (_) {
+      handshake.close();
+      events.close();
+      _worker = null;
+      rethrow;
+    }
+    _workerEvents = events;
+    return ready.future;
+  }
+
+  void _stopWorker() {
+    _workerIsolate?.kill(priority: Isolate.immediate);
+    _workerIsolate = null;
+    _workerEvents?.close();
+    _workerEvents = null;
+    _worker = null;
+  }
 }
 
 class _GenArgs {
@@ -335,53 +501,63 @@ class _GenArgs {
   final int maxTokens;
 }
 
-// Streams tokens from the blocking generate call. Runs in its own
-// isolate; the callback executes synchronously on this isolate's thread.
-void _generateWorker(_GenArgs args) {
-  final port = args.sendPort;
+// Long-lived generation worker: streams tokens from the blocking generate
+// call, one job at a time (the runtime serializes per handle anyway). The
+// token callback executes synchronously on this isolate's thread — the same
+// thread the engine pins to the big cores on the first call.
+void _generateWorker(SendPort handshake) {
+  final jobs = ReceivePort();
+  handshake.send(jobs.sendPort);
+
+  final lib = _openLibrary();
+  final lastError = lib
+      .lookupFunction<_LastErrorNative, _LastErrorNative>('cortiq_last_error');
+  _GenDart gen;
+  bool multiTurn;
   try {
-    final lib = _openLibrary();
-    _GenDart gen;
-    String payload;
-    try {
-      gen = lib.lookupFunction<_GenNative, _GenDart>('cortiq_chat_messages');
-      payload = args.messagesJson;
-    } catch (_) {
-      gen = lib.lookupFunction<_GenNative, _GenDart>('cortiq_chat');
-      payload = args.fallbackPrompt;
-    }
-    final lastError = lib.lookupFunction<_LastErrorNative, _LastErrorNative>(
-        'cortiq_last_error');
-    final cancelFlag =
-        ffi.Pointer<ffi.Uint8>.fromAddress(args.cancelFlagAddress);
-
-    final callback = ffi.NativeCallable<_TokenCbNative>.isolateLocal(
-      (ffi.Pointer<Utf8> token, ffi.Pointer<ffi.Void> user) {
-        port.send(token.toDartString());
-        return cancelFlag.value == 0;
-      },
-      exceptionalReturn: false,
-    );
-
-    final payloadPtr = payload.toNativeUtf8();
-    try {
-      final count = gen(
-        ffi.Pointer.fromAddress(args.handleAddress),
-        payloadPtr,
-        args.maxTokens,
-        callback.nativeFunction,
-        ffi.nullptr,
-      );
-      if (count < 0 && cancelFlag.value == 0) {
-        port.send(('error', 'generate: ${lastError().toDartString()}'));
-      } else {
-        port.send(('done', count));
-      }
-    } finally {
-      calloc.free(payloadPtr);
-      callback.close();
-    }
-  } catch (e) {
-    port.send(('error', e.toString()));
+    gen = lib.lookupFunction<_GenNative, _GenDart>('cortiq_chat_messages');
+    multiTurn = true;
+  } catch (_) {
+    // pre-0.3.10 library: only the single-turn entry point exists
+    gen = lib.lookupFunction<_GenNative, _GenDart>('cortiq_chat');
+    multiTurn = false;
   }
+
+  jobs.listen((message) {
+    final args = message as _GenArgs;
+    final port = args.sendPort;
+    try {
+      final payload = multiTurn ? args.messagesJson : args.fallbackPrompt;
+      final cancelFlag =
+          ffi.Pointer<ffi.Uint8>.fromAddress(args.cancelFlagAddress);
+      final callback = ffi.NativeCallable<_TokenCbNative>.isolateLocal(
+        (ffi.Pointer<Utf8> token, ffi.Pointer<ffi.Void> user) {
+          port.send(token.toDartString());
+          return cancelFlag.value == 0;
+        },
+        exceptionalReturn: false,
+      );
+
+      final payloadPtr = payload.toNativeUtf8();
+      try {
+        final count = gen(
+          ffi.Pointer.fromAddress(args.handleAddress),
+          payloadPtr,
+          args.maxTokens,
+          callback.nativeFunction,
+          ffi.nullptr,
+        );
+        if (count < 0 && cancelFlag.value == 0) {
+          port.send(('error', 'generate: ${lastError().toDartString()}'));
+        } else {
+          port.send(('done', count));
+        }
+      } finally {
+        calloc.free(payloadPtr);
+        callback.close();
+      }
+    } catch (e) {
+      port.send(('error', e.toString()));
+    }
+  });
 }

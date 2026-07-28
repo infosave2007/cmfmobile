@@ -12,6 +12,8 @@ class SettingsRepository {
   static const _kTopP = 'topP';
   static const _kMaxTokens = 'maxTokens';
   static const _kThreads = 'threads';
+  static const _kEngineFlags = 'engineFlags';
+  static const _kSchema = 'settingsSchema';
   static const _kDisableThinking = 'disableThinking';
   static const _kServerPort = 'serverPort';
   static const _kServerAuth = 'serverAuthEnabled';
@@ -26,6 +28,13 @@ class SettingsRepository {
       token = _generateToken();
       await p.setString(_kServerToken, token);
     }
+    // Schema 1 made the thread count auto-sized (0). Installs carrying the
+    // old hardcoded default get the new one; a value the user actually
+    // picked stays put.
+    if ((p.getInt(_kSchema) ?? 0) < 1) {
+      if (p.getInt(_kThreads) == 4) await p.setInt(_kThreads, 0);
+      await p.setInt(_kSchema, 1);
+    }
     return AppSettings(
       themeMode: ThemeMode.values.asNameMap()[p.getString(_kTheme)] ??
           ThemeMode.system,
@@ -33,7 +42,8 @@ class SettingsRepository {
       temperature: p.getDouble(_kTemperature) ?? 0.7,
       topP: p.getDouble(_kTopP) ?? 0.95,
       maxTokens: p.getInt(_kMaxTokens) ?? 1024,
-      threads: p.getInt(_kThreads) ?? 4,
+      threads: p.getInt(_kThreads) ?? 0,
+      engineFlags: p.getString(_kEngineFlags) ?? '',
       disableThinking: p.getBool(_kDisableThinking) ?? false,
       serverPort: p.getInt(_kServerPort) ?? 8080,
       serverAuthEnabled: p.getBool(_kServerAuth) ?? false,
@@ -55,6 +65,7 @@ class SettingsRepository {
     await p.setDouble(_kTopP, s.topP);
     await p.setInt(_kMaxTokens, s.maxTokens);
     await p.setInt(_kThreads, s.threads);
+    await p.setString(_kEngineFlags, s.engineFlags);
     await p.setBool(_kDisableThinking, s.disableThinking);
     await p.setInt(_kServerPort, s.serverPort);
     await p.setBool(_kServerAuth, s.serverAuthEnabled);

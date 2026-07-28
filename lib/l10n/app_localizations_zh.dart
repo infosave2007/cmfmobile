@@ -446,10 +446,23 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsThreads => 'CPU 线程数';
 
   @override
+  String settingsThreadsAuto(int count) {
+    return '自动（$count）';
+  }
+
+  @override
+  String get settingsThreadsHint =>
+      '“自动”会按引擎绑定工作线程的大核簇来设定线程数；超出部分只会增加等待。下次加载模型时生效。';
+
+  @override
   String get settingsUseGpu => '使用 GPU (Vulkan/Metal)';
 
   @override
   String get settingsUseGpuHint => '启用离散 GPU 执行图（在下次加载模型时生效）。';
+
+  @override
+  String get settingsUseGpuNeedsBackend =>
+      '需要带 Vulkan/Metal 后端的引擎构建，详见 native/TUNING.md。';
 
   @override
   String get settingsDisableThinking => '禁用思考';
@@ -457,6 +470,16 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get settingsDisableThinkingHint =>
       '推理模型（Qwen3/3.5）直接作答，不输出 <think> 步骤';
+
+  @override
+  String get settingsEngineSection => '引擎';
+
+  @override
+  String get settingsEngineFlags => '引擎参数（高级）';
+
+  @override
+  String get settingsEngineFlagsHint =>
+      '每行一个 CMF_KEY=value，加载模型时传给运行时。留空则使用默认值。';
 
   @override
   String get settingsServerSection => '服务器';

@@ -467,6 +467,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsThreads => 'Hilos de CPU';
 
   @override
+  String settingsThreadsAuto(int count) {
+    return 'Automático ($count)';
+  }
+
+  @override
+  String get settingsThreadsHint =>
+      '«Automático» ajusta el grupo al clúster de núcleos grandes al que el motor fija sus workers; más hilos solo añaden espera. Se aplica en la próxima carga del modelo.';
+
+  @override
   String get settingsUseGpu => 'Usar GPU (Vulkan/Metal)';
 
   @override
@@ -474,11 +483,25 @@ class AppLocalizationsEs extends AppLocalizations {
       'Habilita el gráfico de ejecución discreta de GPU (se aplica al cargar el siguiente modelo).';
 
   @override
+  String get settingsUseGpuNeedsBackend =>
+      'Requiere un motor compilado con el backend Vulkan/Metal: consulta native/TUNING.md.';
+
+  @override
   String get settingsDisableThinking => 'Desactivar pensamiento';
 
   @override
   String get settingsDisableThinkingHint =>
       'Los modelos de razonamiento (Qwen3/3.5) responden directamente, sin paso <think>';
+
+  @override
+  String get settingsEngineSection => 'Motor';
+
+  @override
+  String get settingsEngineFlags => 'Opciones del motor (avanzado)';
+
+  @override
+  String get settingsEngineFlagsHint =>
+      'Un CMF_CLAVE=valor por línea, enviado al motor al cargar el modelo. Vacío = valores por defecto.';
 
   @override
   String get settingsServerSection => 'Servidor';

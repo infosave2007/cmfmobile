@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../core/util/formats.dart';
 import '../../data/models/settings.dart';
+import '../../data/services/inference/engine_tuning.dart';
 import '../../l10n/app_localizations.dart';
 
 /// Languages shipped by the app — the same seven as cortiq-gateway.
@@ -28,6 +29,7 @@ class SettingsScreen extends ConsumerWidget {
     final notifier = ref.read(settingsProvider.notifier);
     final models = ref.watch(modelsProvider).value ?? const [];
     final engine = ref.watch(engineProvider);
+    final gpuBackend = engine.gpuBackendAvailable;
     final appVersion = ref.watch(appVersionProvider).value ?? '';
     final storageBytes =
         models.fold<int>(0, (sum, m) => sum + m.sizeBytes);
@@ -116,18 +118,35 @@ class SettingsScreen extends ConsumerWidget {
             _SliderTile(
               label: l.settingsThreads,
               value: settings.threads.toDouble(),
-              min: 1,
+              min: 0,
               max: 8,
-              divisions: 7,
-              display: '${settings.threads}',
+              divisions: 8,
+              display: settings.threads == 0
+                  ? l.settingsThreadsAuto(EngineTuning.resolveThreads(0))
+                  : '${settings.threads}',
               onChanged: (v) =>
                   notifier.updateSettings((s) => s.copyWith(threads: v.round())),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(l.settingsThreadsHint,
+                  style: const TextStyle(fontSize: 11)),
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(l.settingsUseGpu),
-              subtitle: Text(l.settingsUseGpuHint,
-                  style: const TextStyle(fontSize: 11)),
+              // The switch reaches cortiq_set_gpu either way; whether
+              // anything acts on it depends on the bundled runtime having a
+              // Vulkan/Metal backend linked in (native/TUNING.md). Only a
+              // runtime that says so — via the optional cortiq_gpu_available
+              // — earns the note being dropped.
+              subtitle: Text(
+                gpuBackend == true
+                    ? l.settingsUseGpuHint
+                    : '${l.settingsUseGpuHint}\n${l.settingsUseGpuNeedsBackend}',
+                style: const TextStyle(fontSize: 11),
+              ),
+              isThreeLine: gpuBackend != true,
               value: settings.useGpu,
               onChanged: (v) {
                 notifier.updateSettings((s) => s.copyWith(useGpu: v));
@@ -142,6 +161,29 @@ class SettingsScreen extends ConsumerWidget {
               value: settings.disableThinking,
               onChanged: (v) => notifier
                   .updateSettings((s) => s.copyWith(disableThinking: v)),
+            ),
+          ]),
+
+          _Section(title: l.settingsEngineSection, children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: TextFormField(
+                initialValue: settings.engineFlags,
+                maxLines: 4,
+                minLines: 2,
+                autocorrect: false,
+                enableSuggestions: false,
+                style: const TextStyle(
+                    fontFamily: 'monospace', fontSize: 12),
+                decoration: InputDecoration(
+                  labelText: l.settingsEngineFlags,
+                  helperText: l.settingsEngineFlagsHint,
+                  helperMaxLines: 3,
+                  hintText: 'CMF_REPACK=1',
+                ),
+                onChanged: (v) =>
+                    notifier.updateSettings((s) => s.copyWith(engineFlags: v)),
+              ),
             ),
           ]),
 

@@ -52,7 +52,21 @@ abstract class InferenceEngine {
 
   void setGpu(bool enable) {}
 
-  Future<void> loadModel(LocalModel model, {int threads = 4});
+  /// Whether this runtime was built with a GPU backend: true/false when it
+  /// can say, null when it offers no way to ask (every build up to and
+  /// including v0.5.28 — `cortiq_set_gpu` is accepted there whether or not
+  /// anything acts on it). See native/TUNING.md.
+  bool? get gpuBackendAvailable => null;
+
+  /// [threads] sizes the native worker pool (0 = size it to the device's big
+  /// cluster); [engineFlags] carries advanced `CMF_*=value` overrides. Both
+  /// reach the runtime through the process environment — see
+  /// [EngineTuning] — because the C ABI takes neither.
+  Future<void> loadModel(
+    LocalModel model, {
+    int threads = 0,
+    String engineFlags = '',
+  });
 
   Future<void> unload();
 

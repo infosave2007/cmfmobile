@@ -1,0 +1,14 @@
+<!-- Status-bar icon for the inference foreground service. Notification
+     small icons are masked to a single colour, so this is a flat white
+     silhouette on transparent: a chip outline with pins. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFFFF">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M8,6h8a2,2 0 0 1 2,2v8a2,2 0 0 1 -2,2h-8a2,2 0 0 1 -2,-2v-8a2,2 0 0 1 2,-2zM10,10h4v4h-4z M8.25,3h1.5v3h-1.5z M11.25,3h1.5v3h-1.5z M14.25,3h1.5v3h-1.5z M8.25,18h1.5v3h-1.5z M11.25,18h1.5v3h-1.5z M14.25,18h1.5v3h-1.5z M3,8.25h3v1.5h-3z M3,11.25h3v1.5h-3z M3,14.25h3v1.5h-3z M18,8.25h3v1.5h-3z M18,11.25h3v1.5h-3z M18,14.25h3v1.5h-3z" />
+</vector>

@@ -25,6 +25,51 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+        val performanceHint = PerformanceHint(applicationContext)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "cmf/perf_hint")
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "start" -> {
+                        val tids = call.argument<List<Int>>("tids") ?: emptyList()
+                        val target = call.argument<Number>("targetNanos")?.toLong() ?: 0L
+                        result.success(
+                            performanceHint.start(tids.toIntArray(), target)
+                        )
+                    }
+                    "report" -> {
+                        val actual = call.argument<Number>("actualNanos")?.toLong() ?: 0L
+                        performanceHint.report(actual)
+                        result.success(null)
+                    }
+                    "stop" -> {
+                        performanceHint.stop()
+                        result.success(null)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "cmf/foreground")
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "start" -> {
+                        val reason = call.argument<String>("reason")
+                            ?: InferenceService.REASON_GENERATION
+                        try {
+                            InferenceService.start(this, reason)
+                            result.success(true)
+                        } catch (e: Exception) {
+                            // Android 12+ refuses a background start; the work
+                            // still runs, just at background priority.
+                            result.success(false)
+                        }
+                    }
+                    "stop" -> {
+                        InferenceService.stop(this)
+                        result.success(null)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "cmf/device_memory")
             .setMethodCallHandler { call, result ->
                 when (call.method) {

@@ -1,9 +1,14 @@
 // Links the cortiq inference runtime (Rust staticlib from the cmf
 // release) into Runner. -force_load keeps the C ABI symbols alive for
 // DynamicLibrary.process() despite dead-code stripping.
-OTHER_LDFLAGS[sdk=iphoneos*] = $(inherited) -force_load $(PROJECT_DIR)/Frameworks/libcortiq_ffi.a
+//
+// Metal and friends are what the runtime's wgpu backend needs from
+// cortiq-ffi 0.5.31 on; without them the link fails on undefined Metal
+// symbols. IOSurface and CoreGraphics come in through wgpu's surface
+// support, which is linked in even though inference only ever computes.
+OTHER_LDFLAGS[sdk=iphoneos*] = $(inherited) -force_load $(PROJECT_DIR)/Frameworks/libcortiq_ffi.a -framework Metal -framework Foundation -framework QuartzCore -framework CoreGraphics -framework IOSurface
 // Simulator slice (aarch64-apple-ios-sim), built locally; without it the
 // simulator falls back to the demo engine.
-OTHER_LDFLAGS[sdk=iphonesimulator*] = $(inherited) -force_load $(PROJECT_DIR)/Frameworks/libcortiq_ffi_sim.a
+OTHER_LDFLAGS[sdk=iphonesimulator*] = $(inherited) -force_load $(PROJECT_DIR)/Frameworks/libcortiq_ffi_sim.a -framework Metal -framework Foundation -framework QuartzCore -framework CoreGraphics -framework IOSurface
 // The sim slice is arm64-only (Apple Silicon hosts).
 EXCLUDED_ARCHS[sdk=iphonesimulator*] = x86_64 i386

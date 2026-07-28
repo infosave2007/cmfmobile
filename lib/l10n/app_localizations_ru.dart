@@ -465,6 +465,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsThreads => 'Потоки CPU';
 
   @override
+  String settingsThreadsAuto(int count) {
+    return 'Авто ($count)';
+  }
+
+  @override
+  String get settingsThreadsHint =>
+      '«Авто» подбирает размер пула под кластер больших ядер, на который движок пиннит воркеров; лишние потоки только добавляют ожидание. Применяется при следующей загрузке модели.';
+
+  @override
   String get settingsUseGpu => 'Использовать GPU (Vulkan/Metal)';
 
   @override
@@ -472,11 +481,25 @@ class AppLocalizationsRu extends AppLocalizations {
       'Включить дискретный GPU (применится при следующей загрузке модели).';
 
   @override
+  String get settingsUseGpuNeedsBackend =>
+      'Нужна сборка движка с бэкендом Vulkan/Metal — см. native/TUNING.md.';
+
+  @override
   String get settingsDisableThinking => 'Отключить рассуждения';
 
   @override
   String get settingsDisableThinkingHint =>
       'Модели с рассуждением (Qwen3/3.5) отвечают сразу, без блока <think>';
+
+  @override
+  String get settingsEngineSection => 'Движок';
+
+  @override
+  String get settingsEngineFlags => 'Флаги движка (для опытных)';
+
+  @override
+  String get settingsEngineFlagsHint =>
+      'По одному CMF_КЛЮЧ=значение в строке, передаются движку при загрузке модели. Пусто — значения по умолчанию.';
 
   @override
   String get settingsServerSection => 'Сервер';

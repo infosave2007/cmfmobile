@@ -5,6 +5,45 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
 
+## [1.1.19] - 2026-07-28
+
+### Added
+- **GPU execution on mobile.** Bundled `libcortiq_ffi` upgraded to **v0.5.31**,
+  which ships the wgpu backend — Vulkan on arm64-v8a and x86_64, Metal on
+  iOS (armeabi-v7a stays CPU-only); `ios/Flutter/Cortiq.xcconfig` links the
+  Metal frameworks it needs. The **Use GPU** switch asks
+  `cortiq_gpu_available()` whether the backend is linked in *and* an adapter
+  comes up, so it only claims to work when it does.
+- **KV-cache reuse between turns** (engine v0.5.31): a turn that continues the
+  history prefills the new message instead of the whole session. `CMF_KV_REUSE=0`
+  in Engine flags turns it off.
+- **Performance hints (ADPF).** The pool's worker threads
+  (`cortiq_worker_tids`) get a `PerformanceHintManager` session on Android 12+
+  for the length of a reply, so the governor raises clocks for the threads
+  doing the work instead of guessing — and drops them when the reply ends.
+
+- **Right-sized worker pool.** The runtime's own default put ~7 workers on the
+  ~4 big cores it pins them to, so every per-layer barrier waited twice. The
+  app now sets the pool through `cortiq_set_threads` (falling back to the
+  `CMF_THREADS` environment variable on older runtimes), and the **CPU
+  threads** setting finally reaches inference at all — it used to be accepted
+  and dropped. 0 = auto; installs sitting on the old default of 4 are
+  migrated to auto.
+- **Foreground service** (`dataSync`) with a partial wake lock while a reply
+  is generated and while the server runs: a backgrounded process is confined
+  to the little cores, and that cpuset overrides the engine's own affinity.
+- Settings → Engine → **Engine flags**: advanced `CMF_KEY=value` lines passed
+  to the runtime at load time, for the knobs listed in `native/TUNING.md`.
+
+### Changed
+- Generation runs on one long-lived worker isolate instead of a fresh one per
+  reply, keeping the thread the engine pinned to the big cores.
+- Settings → About reports the pool size the engine actually built.
+
+### Removed
+- Stray duplicate `libcortiq_ffi 2.so` / `3.so` copies in `jniLibs` that were
+  being packaged alongside the real library (~17 MB per ABI).
+
 ## [1.1.17] - 2026-07-25
 
 ### Changed

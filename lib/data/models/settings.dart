@@ -7,7 +7,8 @@ class AppSettings {
     this.temperature = 0.7,
     this.topP = 0.95,
     this.maxTokens = 1024,
-    this.threads = 4,
+    this.threads = 0,
+    this.engineFlags = '',
     this.disableThinking = false,
     this.serverPort = 8080,
     this.serverAuthEnabled = false,
@@ -23,7 +24,16 @@ class AppSettings {
   final double temperature;
   final double topP;
   final int maxTokens;
+
+  /// Worker threads for inference and for the converter's isolate pool.
+  /// 0 = auto: the device's big-core cluster (see `EngineTuning`).
   final int threads;
+
+  /// Advanced `CMF_KEY=value` overrides (one per line) pushed into the
+  /// engine's environment at model load — the runtime's tuning knobs
+  /// (`CMF_REPACK`, `CMF_PREFILL_CHUNK`, `CMF_MLOCK`, …) have no UI of their
+  /// own, and the right value is device-specific.
+  final String engineFlags;
 
   /// Disable the model's reasoning/thinking pass (Qwen3/3.5): answer directly
   /// instead of emitting a `<think>` block. Applied to every generation.
@@ -42,6 +52,7 @@ class AppSettings {
     double? topP,
     int? maxTokens,
     int? threads,
+    String? engineFlags,
     bool? disableThinking,
     int? serverPort,
     bool? serverAuthEnabled,
@@ -56,6 +67,7 @@ class AppSettings {
         topP: topP ?? this.topP,
         maxTokens: maxTokens ?? this.maxTokens,
         threads: threads ?? this.threads,
+        engineFlags: engineFlags ?? this.engineFlags,
         disableThinking: disableThinking ?? this.disableThinking,
         serverPort: serverPort ?? this.serverPort,
         serverAuthEnabled: serverAuthEnabled ?? this.serverAuthEnabled,

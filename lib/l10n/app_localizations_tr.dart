@@ -464,6 +464,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsThreads => 'CPU iş parçacığı';
 
   @override
+  String settingsThreadsAuto(int count) {
+    return 'Otomatik ($count)';
+  }
+
+  @override
+  String get settingsThreadsHint =>
+      '“Otomatik”, havuzu motorun iş parçacıklarını sabitlediği büyük çekirdek kümesine göre boyutlandırır; fazlası yalnızca bekleme ekler. Bir sonraki model yüklemesinde uygulanır.';
+
+  @override
   String get settingsUseGpu => 'GPU kullan (Vulkan/Metal)';
 
   @override
@@ -471,11 +480,25 @@ class AppLocalizationsTr extends AppLocalizations {
       'Ayrık GPU yürütme grafiğini etkinleştirir (bir sonraki model yüklendiğinde uygulanır).';
 
   @override
+  String get settingsUseGpuNeedsBackend =>
+      'Vulkan/Metal arka ucuyla derlenmiş bir çalışma zamanı gerektirir — bkz. native/TUNING.md.';
+
+  @override
   String get settingsDisableThinking => 'Düşünmeyi devre dışı bırak';
 
   @override
   String get settingsDisableThinkingHint =>
       'Akıl yürüten modeller (Qwen3/3.5) <think> adımı olmadan doğrudan yanıt verir';
+
+  @override
+  String get settingsEngineSection => 'Motor';
+
+  @override
+  String get settingsEngineFlags => 'Motor bayrakları (gelişmiş)';
+
+  @override
+  String get settingsEngineFlagsHint =>
+      'Her satırda bir CMF_ANAHTAR=değer, model yüklenirken çalışma zamanına aktarılır. Boş = varsayılanlar.';
 
   @override
   String get settingsServerSection => 'Sunucu';

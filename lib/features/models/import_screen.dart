@@ -7,6 +7,7 @@ import '../../core/providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/util/formats.dart';
 import '../../data/models/conversion.dart';
+import '../../data/services/inference/engine_tuning.dart';
 import '../../l10n/app_localizations.dart';
 
 /// Ready-to-run .cmf repos pinned above the search results — one tap to
@@ -131,7 +132,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
                 quant: quant,
                 name: name,
                 hfToken: settings?.hfToken,
-                threads: settings?.threads ?? 4,
+                threads: EngineTuning.resolveThreads(settings?.threads ?? 0),
               );
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -193,7 +194,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
           repo: model.id,
           quant: QuantType.q8_2f, // ignored: the repo ships .cmf
           hfToken: settings?.hfToken,
-          threads: settings?.threads ?? 4,
+          threads: EngineTuning.resolveThreads(settings?.threads ?? 0),
         );
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(

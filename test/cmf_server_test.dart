@@ -267,7 +267,14 @@ class _FakeEngine implements InferenceEngine {
   }
 
   @override
-  Future<void> loadModel(LocalModel model, {int threads = 4}) async {}
+  bool? get gpuBackendAvailable => null;
+
+  @override
+  Future<void> loadModel(
+    LocalModel model, {
+    int threads = 0,
+    String engineFlags = '',
+  }) async {}
 
   @override
   Future<void> unload() async {}

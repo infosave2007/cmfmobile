@@ -930,6 +930,18 @@ abstract class AppLocalizations {
   /// **'Threads'**
   String get settingsThreads;
 
+  /// No description provided for @settingsThreadsAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto ({count})'**
+  String settingsThreadsAuto(int count);
+
+  /// No description provided for @settingsThreadsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto sizes the pool to the big-core cluster the engine pins its workers to; more threads than that only add wait time. Applied on next model load.'**
+  String get settingsThreadsHint;
+
   /// No description provided for @settingsUseGpu.
   ///
   /// In en, this message translates to:
@@ -942,6 +954,12 @@ abstract class AppLocalizations {
   /// **'Enable discrete GPU execution graph (applies on next model load).'**
   String get settingsUseGpuHint;
 
+  /// No description provided for @settingsUseGpuNeedsBackend.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs a runtime built with the Vulkan/Metal backend — see native/TUNING.md.'**
+  String get settingsUseGpuNeedsBackend;
+
   /// No description provided for @settingsDisableThinking.
   ///
   /// In en, this message translates to:
@@ -953,6 +971,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reasoning models (Qwen3/3.5) answer directly, with no <think> step'**
   String get settingsDisableThinkingHint;
+
+  /// No description provided for @settingsEngineSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Engine'**
+  String get settingsEngineSection;
+
+  /// No description provided for @settingsEngineFlags.
+  ///
+  /// In en, this message translates to:
+  /// **'Engine flags (advanced)'**
+  String get settingsEngineFlags;
+
+  /// No description provided for @settingsEngineFlagsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One CMF_KEY=value per line, pushed to the runtime on model load. Empty = engine defaults.'**
+  String get settingsEngineFlagsHint;
 
   /// No description provided for @settingsServerSection.
   ///
