@@ -5,6 +5,30 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
 
+## [1.1.20] - 2026-07-28
+
+Everything below came out of measuring 1.1.19 on a real phone
+(Snapdragon 778G+, Android 14) — the numbers and the method are in
+`native/TUNING.md`.
+
+### Fixed
+- **Stop now works during prefill.** It was wired to a flag the token
+  callback checks, so it could only take effect once tokens were flowing —
+  and a long prompt spends its first minute in prefill emitting nothing. Every
+  press of Stop during that minute did nothing at all. Engine v0.5.32 adds
+  `cortiq_cancel()`, checked on each prefill chunk too.
+- **Turning the GPU on no longer costs 14× on decode.** Measured with every
+  variable held: 13.30 tok/s with the switch off, 0.94 with it on. The cause
+  was the runtime's whole-token graph racing the CPU path on an adapter it is
+  documented to skip — ~300 barriered dispatches a token, which a tiled mobile
+  GPU drains its pipeline on. Fixed in the engine for v0.5.32; the app also
+  withholds the flag entirely for quantizations with no GPU kernel (VBIT),
+  where it can only add cost.
+
+### Changed
+- Engine updated to **v0.5.32** — the graph default, an honest thread count in
+  `/v1/cortiq/status`, and `cortiq_cancel()`.
+
 ## [1.1.19] - 2026-07-28
 
 ### Added

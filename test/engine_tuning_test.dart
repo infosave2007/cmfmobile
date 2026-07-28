@@ -95,26 +95,6 @@ CMF_BROKEN
     });
   });
 
-  group('flagsForLoad', () {
-    test('leaves the flags alone when the GPU is off', () {
-      expect(EngineTuning.flagsForLoad('', gpuEnabled: false), '');
-      expect(EngineTuning.flagsForLoad('CMF_MLOCK=1', gpuEnabled: false),
-          'CMF_MLOCK=1');
-    });
-
-    test('a value the user set explicitly is never overridden', () {
-      const explicit = 'CMF_GPU_WGPU_GRAPH=1';
-      expect(EngineTuning.flagsForLoad(explicit, gpuEnabled: true), explicit);
-    });
-
-    // The mobile default itself only applies on a device; off-device this
-    // returns the flags unchanged, which is what the host test sees.
-    test('off-device the flags pass through', () {
-      expect(EngineTuning.flagsForLoad('CMF_MLOCK=1', gpuEnabled: true),
-          'CMF_MLOCK=1');
-    });
-  });
-
   group('resolveThreads', () {
     test('an explicit setting is passed through', () {
       expect(EngineTuning.resolveThreads(3), 3);

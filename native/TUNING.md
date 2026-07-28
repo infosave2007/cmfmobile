@@ -173,9 +173,12 @@ size counted in `/proc` rather than read off the engine, CPU verified idle:
 | GPU off, repeated | 4 | 901 MB | 13.25 tok/s | — |
 | **GPU on, threads auto** | **4** | 1506 MB | **0.94 tok/s** | 58.1 s |
 | GPU on, `CMF_GPU_WGPU_GRAPH=0` | 4 | 1630 MB | **11.18 tok/s** | 63.9 s |
+| GPU on, engine v0.5.32, no workaround | 4 | 1585 MB | **11.69 tok/s** | 58.3 s |
 
-The last row is the fix verified on the device: keeping the whole-token graph
-out of the race recovers 12× of the 14×. The 16 % still missing against the
+The last two rows are the fix verified on the device — first by forcing
+`CMF_GPU_WGPU_GRAPH=0` from the app, then by v0.5.32 doing it correctly on
+its own with that workaround removed. Either way the whole-token graph stays
+out of the race and 12× of the 14× comes back. The 16 % still missing against the
 GPU-off baseline is what the per-op probe costs while it alternates arms on a
 model where the GPU cannot win any of them — which is why the app also
 withholds the flag entirely for quantizations with no GPU kernel.
@@ -250,32 +253,30 @@ running and the next request measures the queue.
 
 Not fixable from this repository:
 
-1. **The whole-token graph races on adapters it is documented to skip.**
-   `graph_on` falls back to "is the GPU enabled" when `CMF_GPU_WGPU_GRAPH` is
-   unset, without consulting the discrete-only `wgpu_graph_default()` right
-   above it — so on an Adreno the graph the source calls 0.2 tok/s becomes
-   eligible and races the CPU path, costing the 14× measured here. The app
-   works around it by passing `CMF_GPU_WGPU_GRAPH=0` on mobile; the fix
-   belongs in that branch.
-2. **`execution_mode` reports a thread count that is not the pool.** Four
-   live `cmf-pool-*` threads, `· 1 threads` in `/v1/cortiq/status`. Whatever
-   the number means, it is not what a reader assumes, and it sent this
-   investigation down two wrong paths. If `cortiq_worker_tids` shares the
-   source, the app's About line is wrong too.
-3. **Prefill does not scale with the pool.** 53–56 s for 1349 prompt tokens
-   across every configuration and both sessions, at 25 tok/s against a 13
-   tok/s decode. A batched prefill should be several times faster than
-   decode, and this is what a user feels as "it thinks for a minute" on a
-   long chat. `CMF_PREFILL_PROF`, `CMF_PREFILL_CHUNK`, `CMF_BATCH_K`.
-4. **A generation cannot be cancelled from outside.** A client that drops its
-   HTTP request leaves the generation running and the next one queued behind
-   it. Honouring a dropped connection would make the server much harder to
-   wedge.
-5. **The GPU flag is a 14× pessimisation on a model it cannot accelerate.**
-   Measured, all else equal. `cortiq_gpu_available()` answering per loaded
-   model rather than per device would let the app grey the switch out instead
-   of letting a user find this the slow way — and whatever the flag spends
-   those 14× on, when there is no GPU kernel in the path, is worth finding.
+1. **`execution_mode` still reports a thread count that is not the pool.**
+   Four live `cmf-pool-*` threads counted in `/proc`, `· 1 threads` in
+   `/v1/cortiq/status`, on v0.5.32 with the fix that was meant to close this —
+   with the app passing `cortiq_set_threads(0)` and `CMF_THREADS` cleared, so
+   the resolution should land on the big-core count. It reads as though
+   `effective_threads()` does not fall through to the topology when the
+   forced value is 0. The string also carries no SIMD name. This number sent
+   the GPU investigation down two wrong paths before it was caught by
+   counting threads, which is the only external ground truth.
+2. **Prefill does not scale with the pool** — 53–65 s for 1349 prompt tokens
+   in every configuration across three sessions, 25 tok/s against a 13 tok/s
+   decode. Diagnosed engine-side as GDN recurrence, sequential over positions:
+   only the heads parallelise, and chunked GEMM amortises the projections
+   alone. So the knobs could not have helped, and the fix is algorithmic
+   (chunked GDN). This is the largest remaining user-visible cost.
+3. ~~A generation cannot be cancelled from outside.~~ Closed in v0.5.32 by
+   `cortiq_cancel()`, which the runtime checks on each prefill chunk as well
+   as each decode step — so Stop now works during the prefill minute, where
+   the callback-based flag could never reach.
+4. **`cortiq_gpu_available()` could answer per loaded model.** Even with the
+   graph out of the way, the GPU on this hardware costs 12 % of decode
+   (11.69 against 13.30) buying nothing back, because a VBIT matvec has no GPU
+   kernel to win with. Answering per model would let the app grey the switch
+   out instead of leaving it as a setting that can only lose.
 
 Closed since this document was first written, all in the engine:
 `cortiq_set_threads`, `cortiq_gpu_available` and `cortiq_worker_tids` in the

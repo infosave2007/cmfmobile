@@ -161,10 +161,7 @@ class EngineController extends Notifier<EngineState> {
       await engine.loadModel(
         model,
         threads: settings?.threads ?? 0,
-        engineFlags: EngineTuning.flagsForLoad(
-          settings?.engineFlags ?? '',
-          gpuEnabled: gpuOn,
-        ),
+        engineFlags: settings?.engineFlags ?? '',
       );
       state = EngineState(loadedModelId: model.id, loadedModel: model);
     } catch (e) {
