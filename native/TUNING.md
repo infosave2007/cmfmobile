@@ -204,7 +204,18 @@ measurements above and outrank everything else:
    adapter the engine itself reports as available. Per-token matvecs should
    never reach the GPU; if `CMF_GPU_MIN_ROWS` is meant to prevent that, it
    does not.
-3. **The GPU flag should know what the model is made of.** For a dtype whose
+3. **`cortiq_set_threads` is overridden when the GPU is on.** With the
+   slider at 4 the app passes 4, the model is reloaded, and the engine still
+   reports a 2-thread pool. Whatever the reasoning, the embedder's explicit
+   number should win or the ABI should say it did not — as it stands the
+   Settings slider shows 4 while the engine runs 2.
+4. **Where the rest of the 13× goes is still open.** With the default
+   threshold nothing is eligible to offload for this model (VBIT returns to
+   the CPU kernel, the 2048- and 6140-row projections are far below 65536,
+   and the wgpu graph defaults off on integrated GPUs), so the halved pool
+   accounts for about 2× of the 13× and the remaining ~6× is unexplained
+   from reading the source. It needs the engine's own tracing.
+5. **The GPU flag should know what the model is made of.** For a dtype whose
    matvec has no GPU kernel — VBIT here — `cortiq_set_gpu(true)` can only
    lose: it halves the CPU pool and buys nothing back. Either the pool should
    not shrink when the loaded weights have no GPU path, or
