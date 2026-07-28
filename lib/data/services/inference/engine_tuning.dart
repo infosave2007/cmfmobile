@@ -45,27 +45,6 @@ abstract final class EngineTuning {
     return _bigCores;
   }
 
-  /// Quantizations whose matvec has no GPU kernel in the runtime: `QTensor::
-  /// matvec` returns into the CPU `vbitmatvec` before any GPU consideration,
-  /// so `cortiq_set_gpu(true)` can only add cost for them. Measured on a
-  /// Snapdragon 778G+ with everything else held equal — same 4-thread pool,
-  /// same free memory, idle CPU — decode went 13.30 → 0.94 tok/s and prefill
-  /// gained nothing (native/TUNING.md).
-  ///
-  /// A blocklist rather than an allowlist, so a quantization that gains a GPU
-  /// path later is not held back by a stale table here. Once
-  /// `cortiq_gpu_available()` answers per loaded model, this can go.
-  static const _quantsWithoutGpuKernel = {'VBIT', 'VBITRO', 'VBIT_RO'};
-
-  /// Whether the GPU flag is worth passing for a model of this quantization.
-  /// Unknown or absent quantization is treated as "let it through" — the
-  /// engine is the authority, this only blocks what has been measured to
-  /// hurt.
-  static bool gpuHelpsQuant(String? quantType) {
-    if (quantType == null || quantType.isEmpty) return true;
-    return !_quantsWithoutGpuKernel.contains(quantType.toUpperCase());
-  }
-
   /// Thread count for a settings value where 0 means "auto".
   ///
   /// Also used for the converter's isolate pool, which is why it always

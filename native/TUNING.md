@@ -189,11 +189,11 @@ threads in both rows, so the earlier "the engine halves the pool" reading was
 another artifact of the unreliable status string; memory is equal to within
 1 %; the CPU was 4.8 % busy before the run.
 
-Why it cannot win is in the source: this model is `quant_type: VBIT`, and
-`QTensor::matvec` returns into the CPU `vbitmatvec` kernel *before* any GPU
-consideration. There is no GPU matvec for this quantization to be faster
-at — but the flag still costs. Where those 14× are actually spent is not
-visible from reading the code and needs the engine's own profiling.
+A correction worth keeping, because it cost two rounds of wrong reasoning:
+the file's header says `quant_type: VBIT`, but that field is informational —
+the tensors are 58 % `q8_2f` and 42 % `q1`, which is what both the app and
+the engine actually work with. So the "VBIT has no GPU matvec" explanation
+for the slowdown was wrong; the graph race was the whole of it.
 
 Reading the engine (v0.5.28 source; the measurements are 0.5.31, so this
 narrows rather than proves) rules out every op gate for this model — a dense
@@ -276,11 +276,11 @@ Not fixable from this repository:
    `cortiq_cancel()`, which the runtime checks on each prefill chunk as well
    as each decode step — so Stop now works during the prefill minute, where
    the callback-based flag could never reach.
-4. **`cortiq_gpu_available()` could answer per loaded model.** Even with the
-   graph out of the way, the GPU on this hardware costs 12 % of decode
-   (11.69 against 13.30) buying nothing back, because a VBIT matvec has no GPU
-   kernel to win with. Answering per model would let the app grey the switch
-   out instead of leaving it as a setting that can only lose.
+4. ~~The GPU flag is a pessimisation.~~ With the graph fixed in v0.5.33 the
+   switch is a no-op on this hardware: 13.02 tok/s on, 13.30 off. The engine's
+   per-op probe times each class against the CPU and settles on the CPU,
+   which is the right outcome — decode is bandwidth-bound and an Adreno
+   shares the same LPDDR. Nothing left to fix here.
 
 Closed since this document was first written, all in the engine:
 `cortiq_set_threads`, `cortiq_gpu_available` and `cortiq_worker_tids` in the
