@@ -17,6 +17,10 @@ versions follow [SemVer](https://semver.org/).
 - **KV-cache reuse between turns** (engine v0.5.31): a turn that continues the
   history prefills the new message instead of the whole session. `CMF_KV_REUSE=0`
   in Engine flags turns it off.
+- The notification permission is now requested the first time a foreground
+  task starts, so the "Generating a reply" / "Serving models" notification is
+  actually visible — a foreground service whose notification is suppressed
+  leaves the work invisible, which is the one thing it must not be.
 - **Performance hints (ADPF).** The pool's worker threads
   (`cortiq_worker_tids`) get a `PerformanceHintManager` session on Android 12+
   for the length of a reply, so the governor raises clocks for the threads
