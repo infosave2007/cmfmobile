@@ -199,10 +199,33 @@ qwen3 in VBIT, 2048-row attention projections and 6140-row FFN:
 | wgpu whole-layer graph | `discrete_active()` | an Adreno is not discrete |
 | `enabled_here()` itself | thread-local + cached flag | cheap |
 
-So with the flag on, nothing should reach the GPU at all — and decode is
-still 14× slower. **The cost is not in the op routing**, which is the useful
-half of the finding: whoever profiles this next can skip the gates and look
-at what `cortiq_set_gpu(true)` changes at load or per token elsewhere.
+So no *operation* reaches the GPU — and the cost is not there. It is the
+**whole-token graph**, and the engine's own source names the failure mode:
+
+> tiled mobile GPUs (Adreno/Mali) drain the pipeline at every barrier — field
+> report: 0.2 tok/s on-graph vs 15 tok/s on the CPU
+
+On an integrated adapter the graph is meant to stay off; instead it *races*
+the normal path, generations alternating arms until one wins. Every
+graph-armed generation on this phone runs at that 0.2 tok/s.
+
+It races because of one branch (`pipeline.rs`, the decode path):
+
+```rust
+let graph_on = match graph_env.as_deref() {
+    Some("0") => false,
+    Some(_)   => true,
+    None      => GLOBAL_USE_GPU.load(..) || crate::gpu::wgpu_active(),
+};
+```
+
+The unset branch never consults `wgpu_graph_default()` — the discrete-only
+rule twenty lines above, whose comment promises that "integrated/mobile GPUs
+keep the per-op probe path". So `cortiq_set_gpu(true)` alone makes the graph
+eligible everywhere, `graph_trusted` is false on an Adreno, and the race
+starts. Setting the variable to `0` short-circuits it, which is what this app
+now does on mobile whenever the GPU is on — the per-op probe path, which
+arbitrates each operation against the CPU, is left intact.
 
 Prefill, meanwhile, sits at 53–58 s for 1349 tokens in every configuration
 ever measured across two sessions — 25 tok/s, barely twice the decode rate,
@@ -220,21 +243,28 @@ running and the next request measures the queue.
 
 Not fixable from this repository:
 
-1. **`execution_mode` reports a thread count that is not the pool.** Four
+1. **The whole-token graph races on adapters it is documented to skip.**
+   `graph_on` falls back to "is the GPU enabled" when `CMF_GPU_WGPU_GRAPH` is
+   unset, without consulting the discrete-only `wgpu_graph_default()` right
+   above it — so on an Adreno the graph the source calls 0.2 tok/s becomes
+   eligible and races the CPU path, costing the 14× measured here. The app
+   works around it by passing `CMF_GPU_WGPU_GRAPH=0` on mobile; the fix
+   belongs in that branch.
+2. **`execution_mode` reports a thread count that is not the pool.** Four
    live `cmf-pool-*` threads, `· 1 threads` in `/v1/cortiq/status`. Whatever
    the number means, it is not what a reader assumes, and it sent this
    investigation down two wrong paths. If `cortiq_worker_tids` shares the
    source, the app's About line is wrong too.
-2. **Prefill does not scale with the pool.** 53–56 s for 1349 prompt tokens
+3. **Prefill does not scale with the pool.** 53–56 s for 1349 prompt tokens
    across every configuration and both sessions, at 25 tok/s against a 13
    tok/s decode. A batched prefill should be several times faster than
    decode, and this is what a user feels as "it thinks for a minute" on a
    long chat. `CMF_PREFILL_PROF`, `CMF_PREFILL_CHUNK`, `CMF_BATCH_K`.
-3. **A generation cannot be cancelled from outside.** A client that drops its
+4. **A generation cannot be cancelled from outside.** A client that drops its
    HTTP request leaves the generation running and the next one queued behind
    it. Honouring a dropped connection would make the server much harder to
    wedge.
-4. **The GPU flag is a 14× pessimisation on a model it cannot accelerate.**
+5. **The GPU flag is a 14× pessimisation on a model it cannot accelerate.**
    Measured, all else equal. `cortiq_gpu_available()` answering per loaded
    model rather than per device would let the app grey the switch out instead
    of letting a user find this the slow way — and whatever the flag spends

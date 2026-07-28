@@ -156,11 +156,15 @@ class EngineController extends Notifier<EngineState> {
       // flag is a measured 14× loss on decode and a gain nowhere, so it is
       // withheld rather than honoured (native/TUNING.md).
       final gpuUseful = EngineTuning.gpuHelpsQuant(model.meta?.quantType);
-      engine.setGpu((settings?.useGpu ?? false) && gpuUseful);
+      final gpuOn = (settings?.useGpu ?? false) && gpuUseful;
+      engine.setGpu(gpuOn);
       await engine.loadModel(
         model,
         threads: settings?.threads ?? 0,
-        engineFlags: settings?.engineFlags ?? '',
+        engineFlags: EngineTuning.flagsForLoad(
+          settings?.engineFlags ?? '',
+          gpuEnabled: gpuOn,
+        ),
       );
       state = EngineState(loadedModelId: model.id, loadedModel: model);
     } catch (e) {

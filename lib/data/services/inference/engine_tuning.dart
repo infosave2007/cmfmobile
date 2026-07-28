@@ -66,6 +66,30 @@ abstract final class EngineTuning {
     return !_quantsWithoutGpuKernel.contains(quantType.toUpperCase());
   }
 
+  /// Flags to load with, given the user's own and whether the GPU is on.
+  ///
+  /// Adds `CMF_GPU_WGPU_GRAPH=0` on mobile. The runtime's whole-token graph
+  /// issues ~300 barriered dispatches per token, which a tiled GPU
+  /// (Adreno/Mali) drains its pipeline on — the engine's own source puts it
+  /// at 0.2 tok/s on-graph against 15 on the CPU. It means to keep that graph
+  /// off integrated adapters, but the check that would do it
+  /// (`wgpu_graph_default`, discrete-only) is not consulted when the variable
+  /// is unset: `graph_on` then falls back to "is the GPU enabled at all",
+  /// so switching the GPU on makes every other generation race the graph.
+  /// Turning it off leaves the per-op probe path, which arbitrates each
+  /// operation against the CPU and keeps whichever wins.
+  ///
+  /// An explicit `CMF_GPU_WGPU_GRAPH` from the user always wins — this only
+  /// fills in a default the runtime should arguably be picking itself.
+  static String flagsForLoad(String flags, {required bool gpuEnabled}) {
+    if (!gpuEnabled || !(Platform.isAndroid || Platform.isIOS)) return flags;
+    if (parseFlags(flags).containsKey('CMF_GPU_WGPU_GRAPH')) return flags;
+    final base = flags.trimRight();
+    return base.isEmpty
+        ? 'CMF_GPU_WGPU_GRAPH=0'
+        : '$base\nCMF_GPU_WGPU_GRAPH=0';
+  }
+
   /// Thread count for a settings value where 0 means "auto".
   ///
   /// Also used for the converter's isolate pool, which is why it always
