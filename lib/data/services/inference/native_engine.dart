@@ -64,6 +64,8 @@ typedef _SetThreadsDart = void Function(int);
 typedef _WorkerTidsNative = ffi.Int32 Function(
     ffi.Pointer<ffi.Int32>, ffi.Int32);
 typedef _WorkerTidsDart = int Function(ffi.Pointer<ffi.Int32>, int);
+typedef _CancelNative = ffi.Void Function(ffi.Pointer<ffi.Void>);
+typedef _CancelDart = void Function(ffi.Pointer<ffi.Void>);
 
 ffi.DynamicLibrary _openLibrary() {
   if (Platform.isAndroid) return ffi.DynamicLibrary.open('libcortiq_ffi.so');
@@ -112,6 +114,15 @@ class NativeCortiqEngine implements InferenceEngine {
         _setThreads = null;
         _workerTids = null;
       }
+      try {
+        // cortiq-ffi >= 0.5.32. Without it, cancelling can only be noticed
+        // between tokens — which never happens during a prefill, so Stop
+        // does nothing for the first minute of a long prompt.
+        _cancelNative =
+            lib.lookupFunction<_CancelNative, _CancelDart>('cortiq_cancel');
+      } catch (_) {
+        _cancelNative = null;
+      }
     } catch (_) {
       _lib = null;
     }
@@ -124,6 +135,7 @@ class NativeCortiqEngine implements InferenceEngine {
   _GpuAvailableDart? _gpuAvailable;
   _SetThreadsDart? _setThreads;
   _WorkerTidsDart? _workerTids;
+  _CancelDart? _cancelNative;
   String _version = '';
 
   ffi.Pointer<ffi.Void> _handle = ffi.nullptr;
@@ -421,7 +433,19 @@ class NativeCortiqEngine implements InferenceEngine {
   static const _hintCycleTarget = Duration(milliseconds: 40 * _hintCycle);
 
   @override
-  void cancel() => _activeCancel?.value = 1;
+  void cancel() {
+    // The shared byte stops decoding at the next token — which is all an
+    // older runtime can offer, and is useless while a long prompt is still
+    // prefilling because no token arrives to check it.
+    _activeCancel?.value = 1;
+    // 0.5.32+ can also break out of the prefill loop. Safe from this
+    // isolate: the ABI documents the flag as thread-safe and expects the
+    // call from a thread other than the blocked one.
+    final cancelNative = _cancelNative;
+    if (cancelNative != null && _handle != ffi.nullptr) {
+      cancelNative(_handle);
+    }
+  }
 
   // --- generation worker ---------------------------------------------------
 
