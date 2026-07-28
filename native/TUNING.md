@@ -164,26 +164,31 @@ configuration label in the first pass of this investigation came off that
 string, so those labels — and the "pool width" conclusions drawn from them —
 were wrong. Counting the threads is the only external ground truth.
 
-What survives, reproduced on a freshly rebooted device with the pool
-verified by thread count:
+The decisive comparison, every variable held down — same fresh boot, pool
+size counted in `/proc` rather than read off the engine, CPU verified idle:
 
-| config | pool (counted) | decode | prefill |
-|---|---|---|---|
-| CPU, threads auto, GPU off | 4 | **13.30 tok/s** | 53.3 s / 1349 tok |
-| same, repeated 20 min later | 4 | 13.25 tok/s | — |
+| config | pool (counted) | free RAM | decode | prefill |
+|---|---|---|---|---|
+| GPU off, threads auto | 4 | 1490 MB | **13.30 tok/s** | 53.3 s |
+| GPU off, repeated | 4 | 901 MB | 13.25 tok/s | — |
+| **GPU on, threads auto** | **4** | 1506 MB | **0.94 tok/s** | 58.1 s |
 
-Decode is stable to 0.5 % across runs, so the harness is sound; prefill
-reproduces at 53–56 s across sessions, which makes it the one solid
-performance finding here: at 25 tok/s it is barely twice the decode rate,
-where a batched prefill should be several times faster.
+**Turning the GPU on costs 14× on decode and gives prefill nothing.** Three
+decode runs at 0.98 / 0.92 / 0.94 — a 3 % spread, not noise. The pool is four
+threads in both rows, so the earlier "the engine halves the pool" reading was
+another artifact of the unreliable status string; memory is equal to within
+1 %; the CPU was 4.8 % busy before the run.
 
-GPU-enabled runs landed at ~0.9–1.0 tok/s, including one on a freshly
-rebooted device with 1.7 GB free — so memory pressure does not explain them.
-But the pool size in those runs was never verified by thread count, only by
-the string that turned out to be unreliable, so the comparison is not closed.
-What the source does say is that this model has nothing to gain: `quant_type`
-is VBIT, and `QTensor::matvec` returns into the CPU `vbitmatvec` kernel
-before any GPU consideration.
+Why it cannot win is in the source: this model is `quant_type: VBIT`, and
+`QTensor::matvec` returns into the CPU `vbitmatvec` kernel *before* any GPU
+consideration. There is no GPU matvec for this quantization to be faster
+at — but the flag still costs. Where those 14× are actually spent is not
+visible from reading the code and needs the engine's own profiling.
+
+Prefill, meanwhile, sits at 53–58 s for 1349 tokens in every configuration
+ever measured across two sessions — 25 tok/s, barely twice the decode rate,
+where a batched prefill should be several times faster. That is the finding
+with the most user-visible weight here.
 
 Protocol that makes a run trustworthy, learned by breaking each rule: reboot
 first and wait for `load average` to settle; keep `MemAvailable` well above
@@ -210,10 +215,11 @@ Not fixable from this repository:
    HTTP request leaves the generation running and the next one queued behind
    it. Honouring a dropped connection would make the server much harder to
    wedge.
-4. **`cortiq_gpu_available()` could answer per model.** For a dtype whose
-   matvec has no GPU kernel — VBIT — `cortiq_set_gpu(true)` cannot help, and
-   the app could grey the switch out instead of letting a user find that out
-   the slow way.
+4. **The GPU flag is a 14× pessimisation on a model it cannot accelerate.**
+   Measured, all else equal. `cortiq_gpu_available()` answering per loaded
+   model rather than per device would let the app grey the switch out instead
+   of letting a user find this the slow way — and whatever the flag spends
+   those 14× on, when there is no GPU kernel in the path, is worth finding.
 
 Closed since this document was first written, all in the engine:
 `cortiq_set_threads`, `cortiq_gpu_available` and `cortiq_worker_tids` in the
