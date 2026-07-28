@@ -152,16 +152,20 @@ the frameworks its Metal backend needs are already in
 ### Measured, 2026-07-28
 
 Xiaomi 2203129G (Snapdragon 778G+: 4×A78 at capacity ~1003–1024, 4×A55 at
-397), Android 14, engine v0.5.31, `bonsai-1.7b-coding` (Q4T, 591 MB), driven
+397), Android 14, engine v0.5.31, `bonsai-1.7b-coding` (VBIT, 591 MB, qwen3 arch, 28 layers), driven
 through the app's own server. Decode is the median of three 96-token
 generations, prefill the best of two 1349-token prompts with `max_tokens=1`.
+
+`pool` is what `/v1/cortiq/status` reports, which counts workers besides the
+calling thread — the Settings slider reads one higher.
 
 | config | pool | decode | prefill |
 |---|---|---|---|
 | CPU, threads auto | 4 | **13.22 tok/s** | 54.0 s |
 | CPU, threads 7 (slider) | 6 | 11.69 tok/s | 59.3 s |
 | GPU on | 2 | 1.04 tok/s | 56.7 s |
-| GPU on, `CMF_GPU_MIN_ROWS=64` | 4 | 0.96 tok/s | 57.3 s |
+| GPU on, `CMF_GPU_MIN_ROWS=64` | 2 | 0.96 tok/s | 57.3 s |
+| **CPU, slider 2, GPU off** | **1** | **0.92 tok/s** | 56.4 s |
 
 Three things fall out of this, and only the first was expected:
 
@@ -169,17 +173,22 @@ Three things fall out of this, and only the first was expected:
    run-to-run spread inside each config is 2 %, so the gap is real. This is
    the whole point of sizing to the big cluster instead of the runtime's
    `min(cores - 1, 8)`.
-2. **The GPU path costs 13× on decode** — 1.04 tok/s against 13.22 — and the
-   reason is visible in the engine source. This model is `quant_type: VBIT`,
-   and `QTensor::matvec` returns into the CPU `vbitmatvec` kernel *before*
-   any GPU consideration, so its per-token math has no GPU path to win with.
-   Turning the GPU on then costs twice: the engine halves the CPU pool
-   (4 → 2 threads, observed) and adds graph work on top. Note the fourth row
-   is not "GPU with a sane threshold": `CMF_GPU_MIN_ROWS` defaults to 65536
-   on unified memory precisely so that only lm_head-class matrices offload,
-   and setting it to 64 pushed every attention and FFN projection onto
-   Vulkan instead. The switch is off by default and should stay off for
-   VBIT models.
+2. **Decode falls off a cliff below 4 workers, and the GPU is only what
+   pushes it over.** The last row is the control: no GPU at all, pool of 1,
+   and decode is 0.92 tok/s — indistinguishable from the three GPU rows. So
+   the 13× is not the Vulkan path, it is the pool size, and enabling the GPU
+   costs what it costs because the engine then halves the pool to 2. Two
+   workers instead of four cannot explain 13× by itself, so something below
+   that width takes a different route through the kernels.
+
+   That the GPU has nothing to offer this model either way is visible in the
+   source: `quant_type` is VBIT, and `QTensor::matvec` returns into the CPU
+   `vbitmatvec` kernel *before* any GPU consideration. With the default
+   threshold nothing else qualifies either — the 2048- and 6140-row
+   projections sit far below 65536, and the wgpu graph defaults off on
+   integrated adapters. (The fourth row is not "GPU with a sane threshold":
+   `CMF_GPU_MIN_ROWS` defaults to 65536 on unified memory so that only
+   lm_head-class matrices offload, and setting it to 64 lowered the bar.)
 3. **Prefill ignores every knob**: 54–59 s across all four configs, i.e. it
    scales with neither the thread count nor the GPU. At 25 tok/s it is only
    twice the decode rate, where a batched prefill should be many times
@@ -200,21 +209,22 @@ measurements above and outrank everything else:
    pool has 2, 4 or 6 threads and whether the GPU is on — so the prefill path
    is not using the pool, and the GPU graph is not taking it either. At 25
    tok/s against a 13 tok/s decode, batching is buying almost nothing.
-2. **GPU decode is a 13× regression** on an Adreno 642L with a Vulkan
-   adapter the engine itself reports as available. Per-token matvecs should
-   never reach the GPU; if `CMF_GPU_MIN_ROWS` is meant to prevent that, it
-   does not.
+2. **Enabling the GPU halves the pool, and that is what costs the 13×.** The
+   Vulkan path itself is not the problem — a CPU-only run with a pool of 1
+   is just as slow (0.92 tok/s). But `cortiq_set_gpu(true)` makes the engine
+   drop to 2 workers, and at that width decode collapses (see 4). For a
+   model whose matvec has no GPU kernel at all, that trade is pure loss.
 3. **`cortiq_set_threads` is overridden when the GPU is on.** With the
    slider at 4 the app passes 4, the model is reloaded, and the engine still
    reports a 2-thread pool. Whatever the reasoning, the embedder's explicit
    number should win or the ABI should say it did not — as it stands the
    Settings slider shows 4 while the engine runs 2.
-4. **Where the rest of the 13× goes is still open.** With the default
-   threshold nothing is eligible to offload for this model (VBIT returns to
-   the CPU kernel, the 2048- and 6140-row projections are far below 65536,
-   and the wgpu graph defaults off on integrated GPUs), so the halved pool
-   accounts for about 2× of the 13× and the remaining ~6× is unexplained
-   from reading the source. It needs the engine's own tracing.
+4. **The pool-width cliff itself.** 1 worker → 0.92 tok/s, 2 → ~1.0,
+   4 → 13.22, 6 → 11.69. Between two and four workers the rate moves 13× for
+   twice the threads, which is not parallel scaling — below some width the
+   decode kernels appear to take a different path. This is the finding worth
+   chasing first: it is what makes the GPU switch expensive, and it would
+   equally hit any device where the big cluster is small.
 5. **The GPU flag should know what the model is made of.** For a dtype whose
    matvec has no GPU kernel — VBIT here — `cortiq_set_gpu(true)` can only
    lose: it halves the CPU pool and buys nothing back. Either the pool should
