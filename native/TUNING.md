@@ -152,76 +152,68 @@ the frameworks its Metal backend needs are already in
 ### Measured, 2026-07-28
 
 Xiaomi 2203129G (Snapdragon 778G+: 4×A78 at capacity ~1003–1024, 4×A55 at
-397), Android 14, engine v0.5.31, `bonsai-1.7b-coding` (VBIT, 591 MB, qwen3 arch, 28 layers), driven
-through the app's own server. Decode is the median of three 96-token
-generations, prefill the best of two 1349-token prompts with `max_tokens=1`.
+397), 8 GB RAM plus Xiaomi's 4 GB "memory extension" — which is swap on
+flash, not RAM, and it evicts an mmapped model eagerly. Android 14, engine
+v0.5.31, `bonsai-1.7b-coding` (VBIT, 591 MB, qwen3, 28 layers), driven
+through the app's own server.
 
-`pool` is what `/v1/cortiq/status` reports, which counts workers besides the
-calling thread — the Settings slider reads one higher.
+**Read the pool size from `/proc/<pid>/task/*/comm`, not from the engine.**
+`/v1/cortiq/status` reported `· 1 threads` while four `cmf-pool-*` threads
+were alive and pinned to the big cores, decoding at full speed. Every
+configuration label in the first pass of this investigation came off that
+string, so those labels — and the "pool width" conclusions drawn from them —
+were wrong. Counting the threads is the only external ground truth.
 
-| config | pool | decode | prefill | trustworthy? |
-|---|---|---|---|---|
-| CPU, threads auto | 4 | **13.22 tok/s** | 54.0 s | yes |
-| CPU, threads 7 (slider) | 6 | 11.69 tok/s | 59.3 s | yes |
-| GPU on | 2 | 1.04 tok/s | 56.7 s | **no** |
-| GPU on, `CMF_GPU_MIN_ROWS=64` | 2 | 0.96 tok/s | 57.3 s | **no** |
-| CPU, slider 2, GPU off | 1 | 0.92 tok/s | 56.4 s | **no** |
+What survives, reproduced on a freshly rebooted device with the pool
+verified by thread count:
 
-**Only the first two rows survive.** They ran minutes apart on a freshly
-loaded device, so the ~13 % decode difference between a pool sized to the big
-cluster and one sized past it is a real comparison — and it is the one this
-app's auto-sizing exists for.
+| config | pool (counted) | decode | prefill |
+|---|---|---|---|
+| CPU, threads auto, GPU off | 4 | **13.30 tok/s** | 53.3 s / 1349 tok |
+| same, repeated 20 min later | 4 | 13.25 tok/s | — |
 
-Everything below them was measured on a device that had drifted, and the
-drift dwarfs whatever was being tested. By the end of the session
-`MemAvailable` was 527 MB against a 591 MB model, 3.2 GB had gone to zram,
-and a generation showed near-zero process CPU while wall time ran — the
-weights were being paged back in rather than multiplied. On top of that,
-an HTTP request abandoned on a client timeout does **not** cancel the
-generation behind it: the engine serializes per handle, so each timed-out
-probe stayed queued and the next request measured the queue.
+Decode is stable to 0.5 % across runs, so the harness is sound; prefill
+reproduces at 53–56 s across sessions, which makes it the one solid
+performance finding here: at 25 tok/s it is barely twice the decode rate,
+where a batched prefill should be several times faster.
 
-So the "GPU costs 13×" and "decode falls off a cliff below four workers"
-readings are both unsupported. The GPU may well be a loss on this hardware —
-the source says a VBIT model has no GPU matvec to win with — but this
-session did not measure it.
+GPU-enabled runs landed at ~0.9–1.0 tok/s, including one on a freshly
+rebooted device with 1.7 GB free — so memory pressure does not explain them.
+But the pool size in those runs was never verified by thread count, only by
+the string that turned out to be unreliable, so the comparison is not closed.
+What the source does say is that this model has nothing to gain: `quant_type`
+is VBIT, and `QTensor::matvec` returns into the CPU `vbitmatvec` kernel
+before any GPU consideration.
 
-To measure it properly: reboot the phone first, check `MemAvailable` before
-each run and keep it well above the model size, give the device a minute
-between configurations, and never abandon a request on a timeout — read it
-to completion or restart the server between runs.
-
-Reproduce with any HTTP client against the app's server; the numbers above
-came from `/v1/chat/completions` plus `/v1/cortiq/status`, which reports the
-pool size the engine actually built.
+Protocol that makes a run trustworthy, learned by breaking each rule: reboot
+first and wait for `load average` to settle; keep `MemAvailable` well above
+the model size and check it after the run too; count pool threads in `/proc`;
+discard the first generation after a load; and never abandon a request on a
+client timeout — the engine serializes per handle, so the generation keeps
+running and the next request measures the queue.
 
 ## Open items for the engine
 
 Not fixable from this repository:
 
-1. **Prefill does not scale with the pool.** 54.0 s with four workers, 59.3 s
-   with six, for the same 1349-token prompt — and at 25 tok/s it is only
-   twice the decode rate, where a batched prefill should be several times
-   faster. This is the pair of readings the session can stand behind, and it
-   is what a user feels as "it thinks for a minute" on a long chat. Worth
-   `CMF_PREFILL_PROF`, `CMF_PREFILL_CHUNK` and `CMF_BATCH_K` before anything
-   else.
-2. **`cortiq_set_threads` is overridden when the GPU is on.** With the slider
-   at 4 the app passes 4, the model is reloaded, and the engine still reports
-   a 2-worker pool. Either the embedder's number should win or the ABI should
-   say it did not — as it stands the setting shows one number and the runtime
-   uses another.
-3. **A generation cannot be abandoned from the outside.** A client that gives
-   up on an HTTP request leaves the generation running and the next request
-   queued behind it, with no way to cancel. `/v1/chat/completions` honouring
-   a dropped connection would make the server much harder to wedge — and it
-   is what turned a benchmark run into a queue here.
+1. **`execution_mode` reports a thread count that is not the pool.** Four
+   live `cmf-pool-*` threads, `· 1 threads` in `/v1/cortiq/status`. Whatever
+   the number means, it is not what a reader assumes, and it sent this
+   investigation down two wrong paths. If `cortiq_worker_tids` shares the
+   source, the app's About line is wrong too.
+2. **Prefill does not scale with the pool.** 53–56 s for 1349 prompt tokens
+   across every configuration and both sessions, at 25 tok/s against a 13
+   tok/s decode. A batched prefill should be several times faster than
+   decode, and this is what a user feels as "it thinks for a minute" on a
+   long chat. `CMF_PREFILL_PROF`, `CMF_PREFILL_CHUNK`, `CMF_BATCH_K`.
+3. **A generation cannot be cancelled from outside.** A client that drops its
+   HTTP request leaves the generation running and the next one queued behind
+   it. Honouring a dropped connection would make the server much harder to
+   wedge.
 4. **`cortiq_gpu_available()` could answer per model.** For a dtype whose
    matvec has no GPU kernel — VBIT — `cortiq_set_gpu(true)` cannot help, and
    the app could grey the switch out instead of letting a user find that out
-   the slow way. (The op-level probe, on by default, already picks the faster
-   arm for the classes it arbitrates; VBIT returns to the CPU kernel before
-   reaching it.)
+   the slow way.
 
 Closed since this document was first written, all in the engine:
 `cortiq_set_threads`, `cortiq_gpu_available` and `cortiq_worker_tids` in the
