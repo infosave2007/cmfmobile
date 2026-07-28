@@ -159,42 +159,37 @@ generations, prefill the best of two 1349-token prompts with `max_tokens=1`.
 `pool` is what `/v1/cortiq/status` reports, which counts workers besides the
 calling thread — the Settings slider reads one higher.
 
-| config | pool | decode | prefill |
-|---|---|---|---|
-| CPU, threads auto | 4 | **13.22 tok/s** | 54.0 s |
-| CPU, threads 7 (slider) | 6 | 11.69 tok/s | 59.3 s |
-| GPU on | 2 | 1.04 tok/s | 56.7 s |
-| GPU on, `CMF_GPU_MIN_ROWS=64` | 2 | 0.96 tok/s | 57.3 s |
-| **CPU, slider 2, GPU off** | **1** | **0.92 tok/s** | 56.4 s |
+| config | pool | decode | prefill | trustworthy? |
+|---|---|---|---|---|
+| CPU, threads auto | 4 | **13.22 tok/s** | 54.0 s | yes |
+| CPU, threads 7 (slider) | 6 | 11.69 tok/s | 59.3 s | yes |
+| GPU on | 2 | 1.04 tok/s | 56.7 s | **no** |
+| GPU on, `CMF_GPU_MIN_ROWS=64` | 2 | 0.96 tok/s | 57.3 s | **no** |
+| CPU, slider 2, GPU off | 1 | 0.92 tok/s | 56.4 s | **no** |
 
-Three things fall out of this, and only the first was expected:
+**Only the first two rows survive.** They ran minutes apart on a freshly
+loaded device, so the ~13 % decode difference between a pool sized to the big
+cluster and one sized past it is a real comparison — and it is the one this
+app's auto-sizing exists for.
 
-1. **Auto-sizing the pool is worth ~13 % of decode** (13.22 vs 11.69) — the
-   run-to-run spread inside each config is 2 %, so the gap is real. This is
-   the whole point of sizing to the big cluster instead of the runtime's
-   `min(cores - 1, 8)`.
-2. **Decode falls off a cliff below 4 workers, and the GPU is only what
-   pushes it over.** The last row is the control: no GPU at all, pool of 1,
-   and decode is 0.92 tok/s — indistinguishable from the three GPU rows. So
-   the 13× is not the Vulkan path, it is the pool size, and enabling the GPU
-   costs what it costs because the engine then halves the pool to 2. Two
-   workers instead of four cannot explain 13× by itself, so something below
-   that width takes a different route through the kernels.
+Everything below them was measured on a device that had drifted, and the
+drift dwarfs whatever was being tested. By the end of the session
+`MemAvailable` was 527 MB against a 591 MB model, 3.2 GB had gone to zram,
+and a generation showed near-zero process CPU while wall time ran — the
+weights were being paged back in rather than multiplied. On top of that,
+an HTTP request abandoned on a client timeout does **not** cancel the
+generation behind it: the engine serializes per handle, so each timed-out
+probe stayed queued and the next request measured the queue.
 
-   That the GPU has nothing to offer this model either way is visible in the
-   source: `quant_type` is VBIT, and `QTensor::matvec` returns into the CPU
-   `vbitmatvec` kernel *before* any GPU consideration. With the default
-   threshold nothing else qualifies either — the 2048- and 6140-row
-   projections sit far below 65536, and the wgpu graph defaults off on
-   integrated adapters. (The fourth row is not "GPU with a sane threshold":
-   `CMF_GPU_MIN_ROWS` defaults to 65536 on unified memory so that only
-   lm_head-class matrices offload, and setting it to 64 lowered the bar.)
-3. **Prefill ignores every knob**: 54–59 s across all four configs, i.e. it
-   scales with neither the thread count nor the GPU. At 25 tok/s it is only
-   twice the decode rate, where a batched prefill should be many times
-   faster — this, not decode, is what a user feels as "it thinks for a
-   minute" on a long chat. Worth profiling with `CMF_PREFILL_PROF`,
-   `CMF_PREFILL_CHUNK` and `CMF_BATCH_K` before anything else in the engine.
+So the "GPU costs 13×" and "decode falls off a cliff below four workers"
+readings are both unsupported. The GPU may well be a loss on this hardware —
+the source says a VBIT model has no GPU matvec to win with — but this
+session did not measure it.
+
+To measure it properly: reboot the phone first, check `MemAvailable` before
+each run and keep it well above the model size, give the device a minute
+between configurations, and never abandon a request on a timeout — read it
+to completion or restart the server between runs.
 
 Reproduce with any HTTP client against the app's server; the numbers above
 came from `/v1/chat/completions` plus `/v1/cortiq/status`, which reports the
@@ -202,38 +197,31 @@ pool size the engine actually built.
 
 ## Open items for the engine
 
-Not fixable from this repository. The first two come straight out of the
-measurements above and outrank everything else:
+Not fixable from this repository:
 
-1. **Prefill does not scale.** Same ~55 s for 1349 prompt tokens whether the
-   pool has 2, 4 or 6 threads and whether the GPU is on — so the prefill path
-   is not using the pool, and the GPU graph is not taking it either. At 25
-   tok/s against a 13 tok/s decode, batching is buying almost nothing.
-2. **Enabling the GPU halves the pool, and that is what costs the 13×.** The
-   Vulkan path itself is not the problem — a CPU-only run with a pool of 1
-   is just as slow (0.92 tok/s). But `cortiq_set_gpu(true)` makes the engine
-   drop to 2 workers, and at that width decode collapses (see 4). For a
-   model whose matvec has no GPU kernel at all, that trade is pure loss.
-3. **`cortiq_set_threads` is overridden when the GPU is on.** With the
-   slider at 4 the app passes 4, the model is reloaded, and the engine still
-   reports a 2-thread pool. Whatever the reasoning, the embedder's explicit
-   number should win or the ABI should say it did not — as it stands the
-   Settings slider shows 4 while the engine runs 2.
-4. **The pool-width cliff itself.** 1 worker → 0.92 tok/s, 2 → ~1.0,
-   4 → 13.22, 6 → 11.69. Between two and four workers the rate moves 13× for
-   twice the threads, which is not parallel scaling — below some width the
-   decode kernels appear to take a different path. This is the finding worth
-   chasing first: it is what makes the GPU switch expensive, and it would
-   equally hit any device where the big cluster is small.
-5. **The GPU flag should know what the model is made of.** For a dtype whose
-   matvec has no GPU kernel — VBIT here — `cortiq_set_gpu(true)` can only
-   lose: it halves the CPU pool and buys nothing back. Either the pool should
-   not shrink when the loaded weights have no GPU path, or
-   `cortiq_gpu_available()` should answer per model rather than per device,
-   so the app can grey the switch out instead of letting a user find this the
-   slow way. The op-level probe (`probe_arm`, on by default, freezes the
-   faster arm after a 3× gap) already does the right thing for the classes it
-   arbitrates — VBIT simply returns before reaching it.
+1. **Prefill does not scale with the pool.** 54.0 s with four workers, 59.3 s
+   with six, for the same 1349-token prompt — and at 25 tok/s it is only
+   twice the decode rate, where a batched prefill should be several times
+   faster. This is the pair of readings the session can stand behind, and it
+   is what a user feels as "it thinks for a minute" on a long chat. Worth
+   `CMF_PREFILL_PROF`, `CMF_PREFILL_CHUNK` and `CMF_BATCH_K` before anything
+   else.
+2. **`cortiq_set_threads` is overridden when the GPU is on.** With the slider
+   at 4 the app passes 4, the model is reloaded, and the engine still reports
+   a 2-worker pool. Either the embedder's number should win or the ABI should
+   say it did not — as it stands the setting shows one number and the runtime
+   uses another.
+3. **A generation cannot be abandoned from the outside.** A client that gives
+   up on an HTTP request leaves the generation running and the next request
+   queued behind it, with no way to cancel. `/v1/chat/completions` honouring
+   a dropped connection would make the server much harder to wedge — and it
+   is what turned a benchmark run into a queue here.
+4. **`cortiq_gpu_available()` could answer per model.** For a dtype whose
+   matvec has no GPU kernel — VBIT — `cortiq_set_gpu(true)` cannot help, and
+   the app could grey the switch out instead of letting a user find that out
+   the slow way. (The op-level probe, on by default, already picks the faster
+   arm for the classes it arbitrates; VBIT returns to the CPU kernel before
+   reaching it.)
 
 Closed since this document was first written, all in the engine:
 `cortiq_set_threads`, `cortiq_gpu_available` and `cortiq_worker_tids` in the
