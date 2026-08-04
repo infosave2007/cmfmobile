@@ -75,12 +75,12 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Cortiq lets you attach images and files from your library to chat messages and import model files.</string>
+	<string>Cortiq does not read your photo library. Files are imported only through the system document picker; this declaration is required by the bundled file picker component.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Cortiq can attach a photo taken with the camera to a chat message.</string>
+	<string>Cortiq does not use the camera and never requests access to it; this declaration is required by a bundled component.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>The microphone is only accessed if you record a video to attach to a chat.</string>
+	<string>Cortiq does not use the microphone and never requests access to it; this declaration is required by a bundled component.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Location access is only used by the system to read the Wi-Fi network name shown on the server screen.</string>
+	<string>Cortiq does not request your location; this declaration is required by the networking component that displays the local server address.</string>
 </dict>
 </plist>

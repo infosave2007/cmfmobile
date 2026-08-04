@@ -5,6 +5,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
 
+## [1.1.23] - 2026-08-04
+
+### Changed
+- Engine updated to **v0.5.34 → v0.5.45**. Eleven engine releases, the ones
+  that matter on a phone: a tokenizer fix for `Metaspace` prepend living in
+  the pre-tokenizer (raw/completion prompts encoded the first word without
+  the leading `▁` on affected models — chat prompts were already bit-exact),
+  a worker-pool fix in 0.5.44 where a short job went to one worker while the
+  rest were woken for nothing, substantial Metal/wgpu kernel work (batched
+  prefill, MoE experts on the GPU), and the new `q4tp`/`q2tp` quantized
+  formats, so ready `.cmf` files in those formats now load.
+- iOS purpose strings rewritten to state the truth: the app never requests
+  the camera, microphone, photo library or location at runtime — the
+  declarations exist only because bundled components reference those APIs
+  (ITMS-90683). The only runtime permission prompt remains Local Network,
+  when the server starts.
+
 ## [1.1.22] - 2026-07-28
 
 ### Changed

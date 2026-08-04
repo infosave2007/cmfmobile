@@ -51,7 +51,7 @@ When the library is missing the app falls back to a clearly-labeled
 
 All three ABIs are checked into `android/app/src/main/jniLibs/`
 (arm64-v8a, armeabi-v7a, x86_64), taken from the cmf release
-[v0.5.34](https://github.com/infosave2007/cmf/releases/tag/v0.5.34)
+[v0.5.45](https://github.com/infosave2007/cmf/releases/tag/v0.5.45)
 (`libcortiq-ffi-<target>.tar.gz`) — Vulkan compute on arm64-v8a and x86_64
 (armeabi-v7a stays CPU-only by choice), the 0.5.30 ABI additions above, and
 KV-cache reuse between turns. To update:
