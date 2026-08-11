@@ -4,7 +4,7 @@
      language even before Flutter has started. -->
 <resources>
     <string name="fgs_channel_name">Yerel çıkarım</string>
-    <string name="fgs_title">CMF Mobile</string>
+    <string name="fgs_title">Cortiq</string>
     <string name="fgs_text_generation">Yanıt oluşturuluyor</string>
     <string name="fgs_text_server">Modeller bu cihazdan sunuluyor</string>
 </resources>

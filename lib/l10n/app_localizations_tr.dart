@@ -9,7 +9,7 @@ class AppLocalizationsTr extends AppLocalizations {
   AppLocalizationsTr([String locale = 'tr']) : super(locale);
 
   @override
-  String get appTitle => 'CMF Mobile';
+  String get appTitle => 'Cortiq';
 
   @override
   String get navChat => 'Sohbet';
@@ -537,6 +537,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String settingsVersionLine(String version) {
-    return 'CMF Mobile $version';
+    return 'Cortiq $version';
   }
 }

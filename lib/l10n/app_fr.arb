@@ -1,6 +1,6 @@
 {
   "@@locale": "fr",
-  "appTitle": "CMF Mobile",
+  "appTitle": "Cortiq",
   "navChat": "Chat",
   "navModels": "Modèles",
   "navServer": "Serveur",
@@ -158,5 +158,5 @@
   "settingsStorageUsage": "{size} dans {count} modèles",
   "settingsAbout": "À propos",
   "settingsAboutLine": "Protocole CMF v2 · moteur : {engine}",
-  "settingsVersionLine": "CMF Mobile {version}"
+  "settingsVersionLine": "Cortiq {version}"
 }

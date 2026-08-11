@@ -4,7 +4,7 @@
      language even before Flutter has started. -->
 <resources>
     <string name="fgs_channel_name">Lokale Inferenz</string>
-    <string name="fgs_title">CMF Mobile</string>
+    <string name="fgs_title">Cortiq</string>
     <string name="fgs_text_generation">Antwort wird erzeugt</string>
     <string name="fgs_text_server">Modelle werden vom Gerät bereitgestellt</string>
 </resources>

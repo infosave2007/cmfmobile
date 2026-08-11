@@ -9,7 +9,7 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
-  String get appTitle => 'CMF Mobile';
+  String get appTitle => 'Cortiq';
 
   @override
   String get navChat => 'Чат';
@@ -538,6 +538,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String settingsVersionLine(String version) {
-    return 'CMF Mobile $version';
+    return 'Cortiq $version';
   }
 }

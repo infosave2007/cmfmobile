@@ -1,53 +1,66 @@
 # App Review — ответ на Guideline 2.1 (Information Needed)
 
 Как использовать:
-1. Заполните `<ПЛЕЙСХОЛДЕРЫ>` в разделе «Reply» (модель iPhone и версия iOS).
-2. Запишите скринкаст по сценарию внизу файла на физическом iPhone.
-3. App Store Connect → My Apps → Cortiq → страница отклонённой версии →
+1. В разделе «Reply» замените `<DEVICE>` на устройство, где снято видео.
+   Если снимали в облаке реальных устройств BrowserStack, подставьте:
+   `iPhone 17 running iOS 26 (physical device, BrowserStack real-device cloud)`.
+   Строк с `<DEVICE>` две — в пунктах 1 и 2.
+2. App Store Connect → My Apps → Cortiq → страница отклонённой версии →
    Resolution Center (сообщение от App Review) → **Reply**: вставьте текст
    «Reply» и прикрепите видео к ответу.
-4. App Store Connect → App Review Information → **Notes**: вставьте тот же
-   текст (Apple просит хранить его там для будущих сабмитов) → Save →
+3. App Store Connect → App Review Information → **Notes**: вставьте тот же
+   текст (Apple просит хранить его там для будущих сабмитов) → Save.
+4. В самой версии выберите билд **1.1.23 (30)** — в нём переписаны purpose
+   strings, о которых Apple напоминает в подсказке по Guideline 5.1.1 →
    Submit for Review.
 
 ---
 
 ## Reply (вставить в Resolution Center, English)
 
-Thank you for the review. Below is the requested information. A screen
+Thank you for the review. Below is all of the requested information. A screen
 recording captured on a physical device is attached to this reply.
 
 **1. Screen recording**
 
-The attached recording was captured on a physical <IPHONE MODEL, e.g. iPhone 15 Pro>
-running iOS <VERSION>. It starts with launching the app from the Home Screen
-and walks through the full typical user flow: browsing the model library,
-downloading a featured model from Hugging Face, loading it, chatting with the
-model fully on-device (streaming replies with token statistics), attaching a
-text document to a prompt, and starting the optional local-network AI server.
+The attached recording was captured on a <DEVICE>. It begins with launching
+the app from the Home Screen and walks through the typical user flow across
+the core features: browsing the model library, downloading a featured model
+from Hugging Face, loading it into memory, chatting with the model fully
+on-device (streaming replies with token statistics), attaching a text
+document to a prompt, and starting the optional local-network AI server.
 
-Please note the following about the flows your checklist mentions:
-- The app has **no account system** — no registration, no login, no account
-  deletion. It works immediately after install.
-- The app is **completely free**: no purchases, no subscriptions, no paid
-  content, no ads.
-- There is **no shared or published user-generated content**. AI responses are
-  generated locally on the device, are visible only to the user, and are never
-  uploaded or shared, so there are no reporting/blocking mechanisms.
-- The **only runtime permission prompt** is the iOS Local Network permission,
-  which appears when the user starts the optional local server (shown in the
-  recording). The camera, microphone, photo-library and location usage
-  descriptions in Info.plist exist only because bundled framework components
-  statically reference those APIs (App Store upload validation ITMS-90683
-  requires the declarations); the app never requests or uses any of these
-  capabilities at runtime, and their purpose strings state this explicitly.
+Regarding the specific flows listed in your checklist:
+- **Account registration / login / deletion:** the app has no account system
+  at all — no registration, no login, no user profiles, nothing to delete.
+  It is fully functional immediately after installation.
+- **Paid content, purchases, subscriptions:** none. The app is completely
+  free, with no in-app purchases, no subscriptions and no advertising.
+- **User-generated content:** nothing is shared or published. AI responses
+  are generated locally on the device, are visible only to the user, and are
+  never uploaded to any server, so there is no content feed and therefore no
+  reporting or blocking mechanism.
+- **Permission prompts:** the only runtime permission the app ever requests
+  is the iOS Local Network permission, which appears when the user starts the
+  optional local server; it is shown in the recording. The camera,
+  microphone, photo-library and location usage descriptions present in
+  Info.plist exist only because bundled framework components statically
+  reference those APIs, which upload validation requires us to declare
+  (ITMS-90683). The app never requests or uses any of those capabilities at
+  runtime. In build 1.1.23 we rewrote each of those purpose strings to state
+  this plainly, so the declarations no longer describe functionality the app
+  does not have.
 
 **2. Devices and OS versions tested**
 
-- <IPHONE MODEL> — iOS <VERSION> (physical device)
-- iPhone 17 Pro, iPhone 17 Pro Max, iPad Pro 13-inch (M5) — iOS/iPadOS 26
-  simulators (UI and layout testing)
-- Distributed via TestFlight before submission.
+- <DEVICE> — the device used for the attached recording, exercising the full
+  flow: model download, on-device inference, and the local server.
+- iPhone 17, iPhone 17 Pro, iPhone 17 Pro Max and iPad Pro 13-inch (M5) on
+  iOS/iPadOS 26 simulators — user-interface and layout testing across screen
+  sizes, including iPad.
+- Android hardware is used for day-to-day inference testing of the shared
+  engine (the same runtime powers our Android build), which is why the
+  on-device model loading and generation paths are well exercised.
 
 **3. Purpose and target audience**
 
@@ -65,8 +78,9 @@ source (Apache-2.0): https://github.com/infosave2007/cmfmobile
 
 **4. Setup and access instructions**
 
-No login credentials, demo accounts or sample files are required. Everything
-is accessible immediately:
+No login credentials, demo accounts, sample files or configuration are
+required — there is nothing to unlock. Every feature is reachable from a
+fresh install:
 
 1. Launch the app → tab "Models".
 2. Tap a featured model (e.g. "Bonsai 1.7B", ~1 GB) → Download
@@ -80,15 +94,24 @@ is accessible immediately:
    same Wi-Fi can call the OpenAI-compatible API
    (POST /v1/chat/completions).
 
+Note on review conditions: the models are large files (roughly 1 GB for the
+smallest featured model), so the download step needs a Wi-Fi connection and a
+few minutes. If it is more convenient for the reviewer, the recording shows
+this step in full so it does not have to be repeated on the review device.
+
 **5. External services, tools and platforms**
 
 - **Hugging Face Hub (huggingface.co)** — the only external service the app
-  communicates with. It is used solely to search and download publicly
-  available open-source AI models over anonymous HTTPS (no API key, no
-  authentication, no personal data sent).
-- There are **no** analytics/tracking SDKs, no authentication services, no
-  payment processors, and no cloud AI services — all AI inference runs
-  on-device using the bundled open-source Cortiq runtime.
+  contacts. It is used solely to search for and download publicly available
+  open-source AI models over anonymous HTTPS: no API key, no authentication,
+  no account, and no personal or device data is sent.
+- **AI provider: none.** All inference runs locally on the device through the
+  bundled Cortiq runtime, our own open-source engine (Apache-2.0). No prompt
+  or response is ever sent off the device.
+- **No** analytics or tracking SDKs, **no** authentication services, **no**
+  payment processors, **no** advertising networks, **no** backend of our own.
+  The app collects no data whatsoever, which is what our App Privacy answers
+  declare.
 
 **6. Regional differences**
 
@@ -98,12 +121,18 @@ Chinese, Turkish); language follows the device setting.
 
 **7. Regulated industries / protected material**
 
-The app does not operate in a regulated industry and contains no protected
-third-party material. The app itself is our own open-source software
-(Apache-2.0). AI models are downloaded by the user directly from the public
-Hugging Face Hub under their respective open-source licenses; the featured
-models are openly licensed. AI-generated content is produced locally, shown
+The app does not operate in a regulated industry (no health, finance,
+gambling, government or similar functionality) and contains no protected
+third-party material. The application itself is our own software, published
+as open source under Apache-2.0. The AI models are not bundled with the app:
+the user downloads them directly from the public Hugging Face Hub under the
+models' own open-source licenses, and the featured models we highlight are
+openly licensed, including two we publish ourselves
+(huggingface.co/infosave). AI-generated content is produced locally, shown
 only to the user, and never published.
+
+We are happy to provide any further information or a longer recording if that
+would help complete the review.
 
 ---
 

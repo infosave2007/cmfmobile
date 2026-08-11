@@ -1,6 +1,6 @@
 {
   "@@locale": "zh",
-  "appTitle": "CMF Mobile",
+  "appTitle": "Cortiq",
   "navChat": "聊天",
   "navModels": "模型",
   "navServer": "服务器",
@@ -158,5 +158,5 @@
   "settingsStorageUsage": "{count} 个模型,共 {size}",
   "settingsAbout": "关于",
   "settingsAboutLine": "CMF 协议 v2 · 引擎:{engine}",
-  "settingsVersionLine": "CMF Mobile {version}"
+  "settingsVersionLine": "Cortiq {version}"
 }

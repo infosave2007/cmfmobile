@@ -4,7 +4,7 @@
      language even before Flutter has started. -->
 <resources>
     <string name="fgs_channel_name">Local inference</string>
-    <string name="fgs_title">CMF Mobile</string>
+    <string name="fgs_title">Cortiq</string>
     <string name="fgs_text_generation">Generating a reply</string>
     <string name="fgs_text_server">Serving models on this device</string>
 </resources>

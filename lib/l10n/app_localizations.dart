@@ -111,7 +111,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'CMF Mobile'**
+  /// **'Cortiq'**
   String get appTitle;
 
   /// No description provided for @navChat.
@@ -1053,7 +1053,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsVersionLine.
   ///
   /// In en, this message translates to:
-  /// **'CMF Mobile {version}'**
+  /// **'Cortiq {version}'**
   String settingsVersionLine(String version);
 }
 

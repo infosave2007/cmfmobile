@@ -5,6 +5,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
 
+## [1.1.24] - 2026-08-11
+
+### Changed
+- **The app is called Cortiq on the Home Screen too.** The store listing says
+  "Cortiq: Local AI Models" while the icon said "CMF Mobile" — two names for
+  one app, and no way for someone who just installed it to connect them
+  (App Store Guideline 2.3.8). The display name is now `Cortiq` on both iOS
+  and Android; the bundle identifier and package name are untouched.
+
 ## [1.1.23] - 2026-08-04
 
 ### Changed

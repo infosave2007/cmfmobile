@@ -1,6 +1,6 @@
 {
   "@@locale": "tr",
-  "appTitle": "CMF Mobile",
+  "appTitle": "Cortiq",
   "navChat": "Sohbet",
   "navModels": "Modeller",
   "navServer": "Sunucu",
@@ -158,5 +158,5 @@
   "settingsStorageUsage": "{count} modelde {size}",
   "settingsAbout": "Hakkında",
   "settingsAboutLine": "CMF protokolü v2 · motor: {engine}",
-  "settingsVersionLine": "CMF Mobile {version}"
+  "settingsVersionLine": "Cortiq {version}"
 }
