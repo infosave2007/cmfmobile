@@ -5,6 +5,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
 
+## [1.2.2] - 2026-08-12
+
+### Fixed
+- **The empty chat overflowed once the keyboard was up.** The starter screen
+  was a `Center` around a fixed column, so when the keyboard took half the
+  height there was nowhere for the suggestion chips to go — they were clipped
+  with no way to scroll to them, which on a debug build is the striped
+  "BOTTOM OVERFLOWED BY 46 PIXELS" banner and in release is silent. It now
+  centres while there is room and scrolls when there is not.
+- A literal NUL byte sat in `chat_screen.dart`, inside the string that detects
+  binary attachments. Valid Dart, but it made `file` report the source as
+  data, and `grep` skip it without a word — the file was invisible to a
+  plain search of the repository. Written as `'\x00'` now.
+
 ## [1.2.1] - 2026-08-12
 
 Both of these were found by running 1.2.0 on a real phone, and neither is

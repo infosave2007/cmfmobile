@@ -1,8 +1,19 @@
 name: iOS App Store Release
 
+# Deliberately NOT triggered by pushing a tag any more.
+#
+# This job signs with `-allowProvisioningUpdates`, and every Actions run is a
+# fresh machine with an empty keychain — so Xcode asks Apple for a NEW
+# certificate each time rather than reusing one. Firing on every `v*` tag
+# minted twelve "Apple Development: Created via API" duplicates and then hit
+# the account's certificate limit, which is what failed the v1.2.1 release.
+#
+# Until the job is switched to manual signing with a stored .p12 and an
+# explicit App Store profile (see native/README.md), release iOS from the
+# local Mac: `flutter build ipa --release --build-number=<v>` then altool.
+# That machine reuses the Apple Distribution identity already in its keychain
+# and creates nothing.
 on:
-  push:
-    tags: ['v*']
   workflow_dispatch:
     inputs:
       build_number:
