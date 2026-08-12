@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'companion.dart';
+
 class AppSettings {
   const AppSettings({
     this.themeMode = ThemeMode.system,
@@ -15,6 +17,10 @@ class AppSettings {
     this.serverToken = '',
     this.hfToken = '',
     this.useGpu = false,
+    this.companionRole = CompanionRole.local,
+    this.companionAddress = '',
+    this.companionToken = '',
+    this.companionWorkerPort = 9911,
   });
 
   final ThemeMode themeMode;
@@ -44,6 +50,20 @@ class AppSettings {
   final String hfToken;
   final bool useGpu;
 
+  /// Which side computes. Persisted so a phone set up as a worker comes back
+  /// as one, but never auto-applied over the network: see [CompanionConfig].
+  final CompanionRole companionRole;
+
+  /// `host:port` of the desktop's worker.
+  final String companionAddress;
+
+  /// Shared secret, the same string on both devices. Sent in clear text, so
+  /// it belongs on a cable or a network the user trusts.
+  final String companionToken;
+
+  /// Port this device listens on when it serves its layers.
+  final int companionWorkerPort;
+
   AppSettings copyWith({
     ThemeMode? themeMode,
     String? localeCode,
@@ -59,6 +79,10 @@ class AppSettings {
     String? serverToken,
     String? hfToken,
     bool? useGpu,
+    CompanionRole? companionRole,
+    String? companionAddress,
+    String? companionToken,
+    int? companionWorkerPort,
   }) =>
       AppSettings(
         themeMode: themeMode ?? this.themeMode,
@@ -74,5 +98,10 @@ class AppSettings {
         serverToken: serverToken ?? this.serverToken,
         hfToken: hfToken ?? this.hfToken,
         useGpu: useGpu ?? this.useGpu,
+        companionRole: companionRole ?? this.companionRole,
+        companionAddress: companionAddress ?? this.companionAddress,
+        companionToken: companionToken ?? this.companionToken,
+        companionWorkerPort:
+            companionWorkerPort ?? this.companionWorkerPort,
       );
 }

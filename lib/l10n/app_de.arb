@@ -138,7 +138,13 @@
   "settingsMaxTokens": "Max. Token",
   "settingsThreads": "CPU-Threads",
   "settingsThreadsAuto": "Automatisch ({count})",
-  "@settingsThreadsAuto": { "placeholders": { "count": { "type": "int" } } },
+  "@settingsThreadsAuto": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsThreadsHint": "„Automatisch“ richtet den Pool nach dem Big-Core-Cluster aus, an den die Engine ihre Worker bindet; mehr Threads erzeugen nur Wartezeit. Wird beim nächsten Laden des Modells angewendet.",
   "settingsUseGpu": "GPU verwenden (Vulkan/Metal)",
   "settingsUseGpuHint": "Aktiviert den dedizierten GPU-Ausführungsgraph (wird beim nächsten Laden des Modells angewendet).",
@@ -158,5 +164,40 @@
   "settingsStorageUsage": "{size} in {count} Modellen",
   "settingsAbout": "Über",
   "settingsAboutLine": "CMF-Protokoll v2 · Engine: {engine}",
-  "settingsVersionLine": "Cortiq {version}"
+  "settingsVersionLine": "Cortiq {version}",
+  "navCompanion": "Begleiter",
+  "companionTitle": "Begleiter",
+  "companionSubtitle": "Verbinden Sie dieses Gerät mit einem Desktop. Ein Split macht ein Modell nicht schneller — ein Token durchläuft die Schichten der Reihe nach —, sondern ermöglicht ein Modell, das hier nicht hineinpasst.",
+  "companionUnsupported": "Die Laufzeit dieses Builds beherrscht kein Splitting; nötig ist cortiq 0.5.70 oder neuer.",
+  "companionWhereTitle": "Wo gerechnet wird",
+  "companionRoleLocal": "Hier",
+  "companionRoleLocalHint": "Alles läuft auf diesem Gerät.",
+  "companionRoleDesktop": "Auf dem Desktop",
+  "companionRoleDesktopHint": "Der Desktop hält die Schichten, den Kopf und den Sampler; dieses Gerät behält den Tokenizer und zeichnet die Antwort. Für ein Modell, das hier nicht hineinpasst.",
+  "companionRoleWorkerHint": "Leihen Sie einem Desktop den Speicher dieses Geräts: Ein Teil der Modellschichten wird hier gerechnet. Lohnt sich nur, wenn das Modell auf dem Desktop allein nicht hineinpasst.",
+  "companionAddress": "Desktop-Adresse",
+  "companionToken": "Gemeinsames Token",
+  "companionTokenHint": "Dieselbe Zeichenkette auf beiden Geräten. Außer bei Loopback erforderlich.",
+  "companionOverCable": "Kabel",
+  "companionOverWifi": "WLAN",
+  "companionWifiWarning": "Über WLAN fällt pro Token ein Roundtrip an, und der langsame Ausläufer landet direkt vor dem Nutzer: typisch etwa 9 ms, im 99. Perzentil aber 95 ms gegenüber 2,9 ms am Kabel. Besser USB-Tethering — oder hier rechnen.",
+  "companionCheck": "Prüfen",
+  "companionCheckOk": "Die Gegenstelle hat geantwortet.",
+  "companionNeedsModel": "Laden Sie zuerst das Modell: Tokenizer und Chat-Vorlage werden aus der lokalen Datei gelesen, auch wenn der Desktop rechnet.",
+  "companionServeTitle": "Schichten bereitstellen",
+  "companionWorkerPort": "Port",
+  "companionWorkerStart": "Bereitstellen starten",
+  "companionWorkerListening": "Lauscht auf {address}",
+  "companionWorkerOneWay": "Die Laufzeit bietet keinen Aufruf, den Listener zu stoppen — er läuft, bis die App geschlossen wird.",
+  "companionStatsTitle": "Die Gegenstelle jetzt",
+  "companionStatClock": "CPU-Takt",
+  "companionStatTemp": "Temperatur",
+  "companionStatMemory": "Freier Speicher",
+  "companionStatThreads": "Worker-Threads",
+  "companionStatPlatform": "Plattform",
+  "companionStatUnknown": "nicht gemeldet",
+  "companionClockWarning": "Die Gegenstelle läuft deutlich unter ihrem Taktbereich. Ein Worker, der kurz rechnet und dann am Socket wartet, überzeugt den Governor nie hochzutakten — gemessen etwa die halbe Durchsatzrate.",
+  "companionSameModel": "Auf beiden Geräten muss dieselbe .cmf-Datei liegen. Der Handshake vergleicht sie und weist eine fremde ab, sodass eine Abweichung laut fehlschlägt statt Unsinn zu erzeugen.",
+  "companionWireNote": "Beide Seiten müssen dieselbe Engine-Version fahren. Der Handshake vergleicht die Protokollversion und sagt es, wenn sie abweicht.",
+  "companionTokenClearText": "Das Token wird im Klartext übertragen. Nutzen Sie ein Kabel oder ein Netz, dem Sie vertrauen."
 }

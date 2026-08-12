@@ -89,6 +89,7 @@ class InferenceService : Service() {
         )
         val text = when (reason) {
             REASON_SERVER -> R.string.fgs_text_server
+            REASON_COMPANION -> R.string.fgs_text_companion
             else -> R.string.fgs_text_generation
         }
         val notification: Notification =
@@ -117,6 +118,10 @@ class InferenceService : Service() {
         const val EXTRA_REASON = "reason"
         const val REASON_GENERATION = "generation"
         const val REASON_SERVER = "server"
+
+        /// Serving layer spans to a desktop coordinator. Outlives every other
+        /// reason: the runtime has no call to stop that listener.
+        const val REASON_COMPANION = "companion"
 
         private const val CHANNEL_ID = "cmf_inference"
         private const val NOTIFICATION_ID = 1

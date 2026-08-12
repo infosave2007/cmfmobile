@@ -540,4 +540,123 @@ class AppLocalizationsRu extends AppLocalizations {
   String settingsVersionLine(String version) {
     return 'Cortiq $version';
   }
+
+  @override
+  String get navCompanion => 'Компаньон';
+
+  @override
+  String get companionTitle => 'Компаньон';
+
+  @override
+  String get companionSubtitle =>
+      'Свяжите это устройство с десктопом. Сплит не ускоряет модель — токен идёт по слоям последовательно, — он позволяет запустить ту, которая сюда не помещается.';
+
+  @override
+  String get companionUnsupported =>
+      'Движок этой сборки не умеет сплит: нужен cortiq 0.5.70 или новее.';
+
+  @override
+  String get companionWhereTitle => 'Где считать';
+
+  @override
+  String get companionRoleLocal => 'Здесь';
+
+  @override
+  String get companionRoleLocalHint => 'Всё считается на этом устройстве.';
+
+  @override
+  String get companionRoleDesktop => 'На десктопе';
+
+  @override
+  String get companionRoleDesktopHint =>
+      'Десктоп держит слои, голову и сэмплер; это устройство оставляет себе токенизатор и рисует ответ. Для модели, которая сюда не помещается.';
+
+  @override
+  String get companionRoleWorkerHint =>
+      'Одолжить память этого устройства десктопу: часть слоёв модели считается здесь. Имеет смысл только тогда, когда на десктопе модель не помещается.';
+
+  @override
+  String get companionAddress => 'Адрес десктопа';
+
+  @override
+  String get companionToken => 'Общий токен';
+
+  @override
+  String get companionTokenHint =>
+      'Одна и та же строка на обоих устройствах. Обязателен для всех адресов, кроме loopback.';
+
+  @override
+  String get companionOverCable => 'Кабель';
+
+  @override
+  String get companionOverWifi => 'Wi-Fi';
+
+  @override
+  String get companionWifiWarning =>
+      'По Wi-Fi на каждый токен приходится один круг, поэтому пользователь видит именно хвост: около 9 мс типично, но 95 мс на 99-м процентиле против 2.9 мс по кабелю. Лучше USB-тетеринг — или считать здесь.';
+
+  @override
+  String get companionCheck => 'Проверить';
+
+  @override
+  String get companionCheckOk => 'Пир ответил.';
+
+  @override
+  String get companionNeedsModel =>
+      'Сначала загрузите модель: токенизатор и шаблон чата читаются из локального файла, даже когда считает десктоп.';
+
+  @override
+  String get companionServeTitle => 'Отдавать слои';
+
+  @override
+  String get companionWorkerPort => 'Порт';
+
+  @override
+  String get companionWorkerStart => 'Начать отдавать';
+
+  @override
+  String companionWorkerListening(String address) {
+    return 'Слушает на $address';
+  }
+
+  @override
+  String get companionWorkerOneWay =>
+      'Остановить слушателя рантайм не умеет — он живёт до закрытия приложения.';
+
+  @override
+  String get companionStatsTitle => 'Пир сейчас';
+
+  @override
+  String get companionStatClock => 'Частота CPU';
+
+  @override
+  String get companionStatTemp => 'Температура';
+
+  @override
+  String get companionStatMemory => 'Свободная память';
+
+  @override
+  String get companionStatThreads => 'Рабочих потоков';
+
+  @override
+  String get companionStatPlatform => 'Платформа';
+
+  @override
+  String get companionStatUnknown => 'не сообщается';
+
+  @override
+  String get companionClockWarning =>
+      'Пир работает сильно ниже своего диапазона частот. Воркер, который считает несколько миллисекунд и потом ждёт на сокете, не убеждает губернатор разогнаться, — это измерено примерно как половина пропускной способности.';
+
+  @override
+  String get companionSameModel =>
+      'На обоих устройствах должен лежать один и тот же файл .cmf. Рукопожатие сверяет его и отвергает чужой, поэтому несовпадение выдаст ошибку, а не бессмыслицу.';
+
+  @override
+  String get companionWireNote =>
+      'Обе стороны должны быть на одной версии движка. Рукопожатие сверяет версию протокола и прямо сообщает о расхождении.';
+
+  @override
+  String get companionTokenClearText =>
+      'Токен уходит открытым текстом. Используйте кабель или доверенную сеть.';
 }

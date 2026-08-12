@@ -138,7 +138,13 @@
   "settingsMaxTokens": "Макс. токенов",
   "settingsThreads": "Потоки CPU",
   "settingsThreadsAuto": "Авто ({count})",
-  "@settingsThreadsAuto": { "placeholders": { "count": { "type": "int" } } },
+  "@settingsThreadsAuto": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsThreadsHint": "«Авто» подбирает размер пула под кластер больших ядер, на который движок пиннит воркеров; лишние потоки только добавляют ожидание. Применяется при следующей загрузке модели.",
   "settingsUseGpu": "Использовать GPU (Vulkan/Metal)",
   "settingsUseGpuHint": "Включить дискретный GPU (применится при следующей загрузке модели).",
@@ -158,5 +164,40 @@
   "settingsStorageUsage": "{size} в {count} моделях",
   "settingsAbout": "О приложении",
   "settingsAboutLine": "Протокол CMF v2 · движок: {engine}",
-  "settingsVersionLine": "Cortiq {version}"
+  "settingsVersionLine": "Cortiq {version}",
+  "navCompanion": "Компаньон",
+  "companionTitle": "Компаньон",
+  "companionSubtitle": "Свяжите это устройство с десктопом. Сплит не ускоряет модель — токен идёт по слоям последовательно, — он позволяет запустить ту, которая сюда не помещается.",
+  "companionUnsupported": "Движок этой сборки не умеет сплит: нужен cortiq 0.5.70 или новее.",
+  "companionWhereTitle": "Где считать",
+  "companionRoleLocal": "Здесь",
+  "companionRoleLocalHint": "Всё считается на этом устройстве.",
+  "companionRoleDesktop": "На десктопе",
+  "companionRoleDesktopHint": "Десктоп держит слои, голову и сэмплер; это устройство оставляет себе токенизатор и рисует ответ. Для модели, которая сюда не помещается.",
+  "companionRoleWorkerHint": "Одолжить память этого устройства десктопу: часть слоёв модели считается здесь. Имеет смысл только тогда, когда на десктопе модель не помещается.",
+  "companionAddress": "Адрес десктопа",
+  "companionToken": "Общий токен",
+  "companionTokenHint": "Одна и та же строка на обоих устройствах. Обязателен для всех адресов, кроме loopback.",
+  "companionOverCable": "Кабель",
+  "companionOverWifi": "Wi-Fi",
+  "companionWifiWarning": "По Wi-Fi на каждый токен приходится один круг, поэтому пользователь видит именно хвост: около 9 мс типично, но 95 мс на 99-м процентиле против 2.9 мс по кабелю. Лучше USB-тетеринг — или считать здесь.",
+  "companionCheck": "Проверить",
+  "companionCheckOk": "Пир ответил.",
+  "companionNeedsModel": "Сначала загрузите модель: токенизатор и шаблон чата читаются из локального файла, даже когда считает десктоп.",
+  "companionServeTitle": "Отдавать слои",
+  "companionWorkerPort": "Порт",
+  "companionWorkerStart": "Начать отдавать",
+  "companionWorkerListening": "Слушает на {address}",
+  "companionWorkerOneWay": "Остановить слушателя рантайм не умеет — он живёт до закрытия приложения.",
+  "companionStatsTitle": "Пир сейчас",
+  "companionStatClock": "Частота CPU",
+  "companionStatTemp": "Температура",
+  "companionStatMemory": "Свободная память",
+  "companionStatThreads": "Рабочих потоков",
+  "companionStatPlatform": "Платформа",
+  "companionStatUnknown": "не сообщается",
+  "companionClockWarning": "Пир работает сильно ниже своего диапазона частот. Воркер, который считает несколько миллисекунд и потом ждёт на сокете, не убеждает губернатор разогнаться, — это измерено примерно как половина пропускной способности.",
+  "companionSameModel": "На обоих устройствах должен лежать один и тот же файл .cmf. Рукопожатие сверяет его и отвергает чужой, поэтому несовпадение выдаст ошибку, а не бессмыслицу.",
+  "companionWireNote": "Обе стороны должны быть на одной версии движка. Рукопожатие сверяет версию протокола и прямо сообщает о расхождении.",
+  "companionTokenClearText": "Токен уходит открытым текстом. Используйте кабель или доверенную сеть."
 }

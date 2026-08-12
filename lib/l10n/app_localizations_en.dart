@@ -537,4 +537,123 @@ class AppLocalizationsEn extends AppLocalizations {
   String settingsVersionLine(String version) {
     return 'Cortiq $version';
   }
+
+  @override
+  String get navCompanion => 'Companion';
+
+  @override
+  String get companionTitle => 'Companion';
+
+  @override
+  String get companionSubtitle =>
+      'Pair this device with a desktop. A split does not make a model faster — a token walks the layers in order — it makes a model possible that would not fit here.';
+
+  @override
+  String get companionUnsupported =>
+      'This build\'s runtime cannot split; it needs cortiq 0.5.70 or newer.';
+
+  @override
+  String get companionWhereTitle => 'Where it computes';
+
+  @override
+  String get companionRoleLocal => 'Here';
+
+  @override
+  String get companionRoleLocalHint => 'Everything runs on this device.';
+
+  @override
+  String get companionRoleDesktop => 'On the desktop';
+
+  @override
+  String get companionRoleDesktopHint =>
+      'The desktop holds the layers, the head and the sampler; this device keeps the tokenizer and draws the reply. Use it for a model this device cannot hold.';
+
+  @override
+  String get companionRoleWorkerHint =>
+      'Lend this device\'s memory to a desktop: a span of the model\'s layers is computed here. Worth it only when the model does not fit on the desktop alone.';
+
+  @override
+  String get companionAddress => 'Desktop address';
+
+  @override
+  String get companionToken => 'Shared token';
+
+  @override
+  String get companionTokenHint =>
+      'The same string on both devices. Required unless the address is loopback.';
+
+  @override
+  String get companionOverCable => 'Cable';
+
+  @override
+  String get companionOverWifi => 'Wi-Fi';
+
+  @override
+  String get companionWifiWarning =>
+      'Over Wi-Fi there is one round trip per token, so the slow tail lands in front of the user: about 9 ms typical but 95 ms at the 99th percentile, against 2.9 ms on a cable. Prefer USB tethering, or compute here.';
+
+  @override
+  String get companionCheck => 'Check';
+
+  @override
+  String get companionCheckOk => 'The peer answered.';
+
+  @override
+  String get companionNeedsModel =>
+      'Load the model first — the tokenizer and chat template are read from the local file even when the desktop does the computing.';
+
+  @override
+  String get companionServeTitle => 'Serve layers';
+
+  @override
+  String get companionWorkerPort => 'Port';
+
+  @override
+  String get companionWorkerStart => 'Start serving';
+
+  @override
+  String companionWorkerListening(String address) {
+    return 'Listening on $address';
+  }
+
+  @override
+  String get companionWorkerOneWay =>
+      'The runtime offers no call to stop the listener, so it runs until the app is closed.';
+
+  @override
+  String get companionStatsTitle => 'The peer right now';
+
+  @override
+  String get companionStatClock => 'CPU clock';
+
+  @override
+  String get companionStatTemp => 'Temperature';
+
+  @override
+  String get companionStatMemory => 'Memory free';
+
+  @override
+  String get companionStatThreads => 'Worker threads';
+
+  @override
+  String get companionStatPlatform => 'Platform';
+
+  @override
+  String get companionStatUnknown => 'not reported';
+
+  @override
+  String get companionClockWarning =>
+      'The peer is running well below its clock range. A worker that computes briefly and then waits on the socket never convinces the governor to speed up, which measured as about half the throughput.';
+
+  @override
+  String get companionSameModel =>
+      'Both devices must hold the same .cmf file. The handshake compares it and refuses a stranger, so a mismatch fails loudly instead of producing nonsense.';
+
+  @override
+  String get companionWireNote =>
+      'Both sides must run the same engine version. The handshake compares the wire version and says so when they differ.';
+
+  @override
+  String get companionTokenClearText =>
+      'The token travels in clear text. Use a cable, or a network you trust.';
 }

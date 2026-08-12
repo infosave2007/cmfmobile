@@ -519,4 +519,117 @@ class AppLocalizationsZh extends AppLocalizations {
   String settingsVersionLine(String version) {
     return 'Cortiq $version';
   }
+
+  @override
+  String get navCompanion => '协同';
+
+  @override
+  String get companionTitle => '协同';
+
+  @override
+  String get companionSubtitle =>
+      '将本机与桌面端配对。拆分并不会让模型更快——一个词元要按顺序走完所有层——它让本机放不下的模型成为可能。';
+
+  @override
+  String get companionUnsupported => '此版本的运行时不支持拆分，需要 cortiq 0.5.70 或更新版本。';
+
+  @override
+  String get companionWhereTitle => '在哪里计算';
+
+  @override
+  String get companionRoleLocal => '本机';
+
+  @override
+  String get companionRoleLocalHint => '全部在本机运行。';
+
+  @override
+  String get companionRoleDesktop => '桌面端';
+
+  @override
+  String get companionRoleDesktopHint =>
+      '桌面端持有各层、输出头和采样器；本机只保留分词器并显示回复。适用于本机放不下的模型。';
+
+  @override
+  String get companionRoleWorkerHint =>
+      '把本机内存借给桌面端：模型的一段层在这里计算。只有当模型在桌面端单独放不下时才值得。';
+
+  @override
+  String get companionAddress => '桌面端地址';
+
+  @override
+  String get companionToken => '共享令牌';
+
+  @override
+  String get companionTokenHint => '两台设备上必须是同一字符串。除回环地址外均为必填。';
+
+  @override
+  String get companionOverCable => '数据线';
+
+  @override
+  String get companionOverWifi => 'Wi-Fi';
+
+  @override
+  String get companionWifiWarning =>
+      '走 Wi-Fi 时每个词元都要往返一次，用户看到的正是长尾：典型约 9 毫秒，但第 99 百分位为 95 毫秒，而数据线只有 2.9 毫秒。建议使用 USB 网络共享，或就在本机计算。';
+
+  @override
+  String get companionCheck => '检查';
+
+  @override
+  String get companionCheckOk => '对端已响应。';
+
+  @override
+  String get companionNeedsModel => '请先加载模型：即使由桌面端计算，分词器和聊天模板也从本地文件读取。';
+
+  @override
+  String get companionServeTitle => '提供层';
+
+  @override
+  String get companionWorkerPort => '端口';
+
+  @override
+  String get companionWorkerStart => '开始提供';
+
+  @override
+  String companionWorkerListening(String address) {
+    return '正在监听 $address';
+  }
+
+  @override
+  String get companionWorkerOneWay => '运行时没有停止监听的接口，它会一直运行到应用关闭。';
+
+  @override
+  String get companionStatsTitle => '对端当前状态';
+
+  @override
+  String get companionStatClock => 'CPU 频率';
+
+  @override
+  String get companionStatTemp => '温度';
+
+  @override
+  String get companionStatMemory => '可用内存';
+
+  @override
+  String get companionStatThreads => '工作线程';
+
+  @override
+  String get companionStatPlatform => '平台';
+
+  @override
+  String get companionStatUnknown => '未提供';
+
+  @override
+  String get companionClockWarning =>
+      '对端运行频率远低于其上限。一个只计算几毫秒随后就在套接字上等待的工作进程，永远说服不了调频策略升频——实测约为一半的吞吐量。';
+
+  @override
+  String get companionSameModel =>
+      '两台设备必须持有同一个 .cmf 文件。握手会进行比对并拒绝不匹配的文件，因此不一致会明确报错，而不是产生乱码。';
+
+  @override
+  String get companionWireNote => '两端必须运行同一引擎版本。握手会比对协议版本，不一致时会明确说明。';
+
+  @override
+  String get companionTokenClearText => '令牌以明文传输。请使用数据线或可信网络。';
 }

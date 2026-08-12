@@ -1,12 +1,10 @@
 {
   "@@locale": "en",
   "appTitle": "Cortiq",
-
   "navChat": "Chat",
   "navModels": "Models",
   "navServer": "Server",
   "navSettings": "Settings",
-
   "actionCancel": "Cancel",
   "actionDelete": "Delete",
   "actionClose": "Close",
@@ -15,7 +13,6 @@
   "actionRetry": "Retry",
   "actionLoad": "Load",
   "copiedToClipboard": "Copied to clipboard",
-
   "chatEmptyTitle": "Start a conversation",
   "chatEmptyBody": "Everything runs locally on this device — no cloud, no data leaves your phone.",
   "chatNoModelTitle": "No model loaded",
@@ -25,7 +22,13 @@
   "chatAttachDocument": "Attach document",
   "chatAttachmentsNotSupported": "This model cannot take document attachments.",
   "chatAttachmentTooLarge": "File is too large — up to {limit} of text is supported.",
-  "@chatAttachmentTooLarge": { "placeholders": { "limit": { "type": "String" } } },
+  "@chatAttachmentTooLarge": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
   "chatAttachmentUnreadable": "Could not read this file as text.",
   "chatStop": "Stop",
   "chatSend": "Send",
@@ -38,22 +41,41 @@
   "chatDeleteChatConfirm": "Delete this chat and its history?",
   "chatUntitled": "New chat",
   "chatSessionTokens": "{prompt} prompt · {completion} completion tokens",
-  "@chatSessionTokens": { "placeholders": { "prompt": { "type": "String" }, "completion": { "type": "String" } } },
+  "@chatSessionTokens": {
+    "placeholders": {
+      "prompt": {
+        "type": "String"
+      },
+      "completion": {
+        "type": "String"
+      }
+    }
+  },
   "chatModelPickerTitle": "Model",
   "chatModelLoading": "Loading model…",
   "engineLoadFailed": "Failed to load model: {error}",
-  "@engineLoadFailed": { "placeholders": { "error": { "type": "String" } } },
+  "@engineLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "chatDemoBadge": "demo engine",
   "chatDemoBanner": "The native cortiq runtime is not bundled in this build — replies are simulated. See native/README.md.",
   "chatGenerationError": "Generation failed",
   "chatSuggestion1": "Explain how CMF task masks work",
   "chatSuggestion2": "Summarize the attached document",
   "chatSuggestion3": "Write a SQL query for monthly revenue",
-
   "statsTokensPerSecond": "{tps} tok/s",
-  "@statsTokensPerSecond": { "placeholders": { "tps": { "type": "String" } } },
+  "@statsTokensPerSecond": {
+    "placeholders": {
+      "tps": {
+        "type": "String"
+      }
+    }
+  },
   "statsFinishLength": "cut off at max tokens",
-
   "modelsTitle": "Models",
   "modelsEmptyTitle": "No models yet",
   "modelsEmptyBody": "Download a model from Hugging Face or import a .cmf file from this device.",
@@ -65,25 +87,68 @@
   "modelsUnloadHint": "Frees memory and battery",
   "modelsDeleteTitle": "Delete model",
   "modelsDeleteConfirm": "Delete \"{name}\" from this device?",
-  "@modelsDeleteConfirm": { "placeholders": { "name": { "type": "String" } } },
+  "@modelsDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "modelsInvalidFile": "Unreadable CMF file",
   "modelsImportedSnack": "Imported {name}",
-  "@modelsImportedSnack": { "placeholders": { "name": { "type": "String" } } },
+  "@modelsImportedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "modelsMetaLayers": "{n} layers",
-  "@modelsMetaLayers": { "placeholders": { "n": { "type": "int" } } },
+  "@modelsMetaLayers": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "modelsMetaContext": "{n} ctx",
-  "@modelsMetaContext": { "placeholders": { "n": { "type": "String" } } },
+  "@modelsMetaContext": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
   "modelsMetaTasks": "{n} tasks",
-  "@modelsMetaTasks": { "placeholders": { "n": { "type": "int" } } },
+  "@modelsMetaTasks": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "modelsAttachmentsOk": "documents",
   "modelsMetaRam": "~{size} RAM",
-  "@modelsMetaRam": { "placeholders": { "size": { "type": "String" } } },
-
+  "@modelsMetaRam": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "memoryWarnTitle": "Might not fit in memory",
   "memoryWarnBody": "This model needs about {need} of RAM to run, but only about {total} is usable right now. Loading may fail, run very slowly, or the system may kill the app mid-generation.",
-  "@memoryWarnBody": { "placeholders": { "need": { "type": "String" }, "total": { "type": "String" } } },
+  "@memoryWarnBody": {
+    "placeholders": {
+      "need": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
   "memoryWarnLoadAnyway": "Load anyway",
-
   "importTitle": "Hugging Face",
   "importSubtitle": "Search Hugging Face, convert to a local .cmf, and run it on this phone.",
   "importSearchPlaceholder": "Search models (e.g. qwen3, llama)…",
@@ -113,7 +178,6 @@
   "importPhaseConverting": "converting",
   "importPhaseQuantizing": "quantizing",
   "importPhaseFinalizing": "finalizing",
-
   "quantQ8_2fDesc": "8-bit two-field (𝒲×θ) — best quality/size. Converts on device.",
   "quantQ8RowDesc": "8-bit per-row — simple, robust. Converts on device.",
   "quantQ1tDesc": "Ternary ~2.25–3 bit with an f16 outlier overlay — below q4, training-free. Smallest usable file, largest quality drop. Converts on device.",
@@ -121,7 +185,6 @@
   "quantVbitDesc": "Variable 3–8 bit — per-expert budgets. Needs a .cmf repo or the desktop toolchain.",
   "quantQ1Desc": "1.5-bit — for 1-bit-trained models (Bonsai, BitNet). A 27B model fits in ~5 GB. Converts on device.",
   "quantF16Desc": "16-bit — no quantization, large file. Converts on device.",
-
   "serverTitle": "Server",
   "serverSubtitle": "Serve the loaded model to your network over the CMF protocol (OpenAI-compatible API).",
   "serverStart": "Start server",
@@ -144,7 +207,6 @@
   "serverNoRequestsYet": "No requests yet. Point any OpenAI-compatible client at this phone.",
   "serverKeepAwakeNote": "The screen stays awake while the server is running.",
   "serverEndpointsTitle": "Endpoints",
-
   "settingsTitle": "Settings",
   "settingsAppearance": "Appearance",
   "settingsTheme": "Theme",
@@ -159,7 +221,13 @@
   "settingsMaxTokens": "Max tokens",
   "settingsThreads": "Threads",
   "settingsThreadsAuto": "Auto ({count})",
-  "@settingsThreadsAuto": { "placeholders": { "count": { "type": "int" } } },
+  "@settingsThreadsAuto": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsThreadsHint": "Auto sizes the pool to the big-core cluster the engine pins its workers to; more threads than that only add wait time. Applied on next model load.",
   "settingsUseGpu": "Use GPU (Vulkan/Metal)",
   "settingsUseGpuHint": "Enable discrete GPU execution graph (applies on next model load).",
@@ -177,10 +245,73 @@
   "settingsHfTokenHint": "hf_… (needed for gated models)",
   "settingsStorage": "Storage",
   "settingsStorageUsage": "{size} in {count} models",
-  "@settingsStorageUsage": { "placeholders": { "size": { "type": "String" }, "count": { "type": "int" } } },
+  "@settingsStorageUsage": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsAbout": "About",
   "settingsAboutLine": "CMF protocol v2 · engine: {engine}",
-  "@settingsAboutLine": { "placeholders": { "engine": { "type": "String" } } },
+  "@settingsAboutLine": {
+    "placeholders": {
+      "engine": {
+        "type": "String"
+      }
+    }
+  },
   "settingsVersionLine": "Cortiq {version}",
-  "@settingsVersionLine": { "placeholders": { "version": { "type": "String" } } }
+  "@settingsVersionLine": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "navCompanion": "Companion",
+  "companionTitle": "Companion",
+  "companionSubtitle": "Pair this device with a desktop. A split does not make a model faster — a token walks the layers in order — it makes a model possible that would not fit here.",
+  "companionUnsupported": "This build's runtime cannot split; it needs cortiq 0.5.70 or newer.",
+  "companionWhereTitle": "Where it computes",
+  "companionRoleLocal": "Here",
+  "companionRoleLocalHint": "Everything runs on this device.",
+  "companionRoleDesktop": "On the desktop",
+  "companionRoleDesktopHint": "The desktop holds the layers, the head and the sampler; this device keeps the tokenizer and draws the reply. Use it for a model this device cannot hold.",
+  "companionRoleWorkerHint": "Lend this device's memory to a desktop: a span of the model's layers is computed here. Worth it only when the model does not fit on the desktop alone.",
+  "companionAddress": "Desktop address",
+  "companionToken": "Shared token",
+  "companionTokenHint": "The same string on both devices. Required unless the address is loopback.",
+  "companionOverCable": "Cable",
+  "companionOverWifi": "Wi-Fi",
+  "companionWifiWarning": "Over Wi-Fi there is one round trip per token, so the slow tail lands in front of the user: about 9 ms typical but 95 ms at the 99th percentile, against 2.9 ms on a cable. Prefer USB tethering, or compute here.",
+  "companionCheck": "Check",
+  "companionCheckOk": "The peer answered.",
+  "companionNeedsModel": "Load the model first — the tokenizer and chat template are read from the local file even when the desktop does the computing.",
+  "companionServeTitle": "Serve layers",
+  "companionWorkerPort": "Port",
+  "companionWorkerStart": "Start serving",
+  "companionWorkerListening": "Listening on {address}",
+  "@companionWorkerListening": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "companionWorkerOneWay": "The runtime offers no call to stop the listener, so it runs until the app is closed.",
+  "companionStatsTitle": "The peer right now",
+  "companionStatClock": "CPU clock",
+  "companionStatTemp": "Temperature",
+  "companionStatMemory": "Memory free",
+  "companionStatThreads": "Worker threads",
+  "companionStatPlatform": "Platform",
+  "companionStatUnknown": "not reported",
+  "companionClockWarning": "The peer is running well below its clock range. A worker that computes briefly and then waits on the socket never convinces the governor to speed up, which measured as about half the throughput.",
+  "companionSameModel": "Both devices must hold the same .cmf file. The handshake compares it and refuses a stranger, so a mismatch fails loudly instead of producing nonsense.",
+  "companionWireNote": "Both sides must run the same engine version. The handshake compares the wire version and says so when they differ.",
+  "companionTokenClearText": "The token travels in clear text. Use a cable, or a network you trust."
 }

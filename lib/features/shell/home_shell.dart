@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers.dart';
+import '../../data/models/companion.dart';
 import '../../l10n/app_localizations.dart';
 import '../chat/chat_screen.dart';
+import '../companion/companion_screen.dart';
 import '../models/models_screen.dart';
 import '../server/server_screen.dart';
 import '../settings/settings_screen.dart';
@@ -17,6 +19,10 @@ class HomeShell extends ConsumerWidget {
     final index = ref.watch(shellIndexProvider);
     final serverRunning = ref.watch(
         serverControllerProvider.select((s) => s.running));
+    // A split is easy to forget about and changes where every reply comes
+    // from, so the tab carries the same dot the server does.
+    final companionActive = ref.watch(companionControllerProvider.select(
+        (s) => s.role != CompanionRole.local || s.workerListening));
 
     // Engine failures (bad file, unsupported arch, OOM) must be loud —
     // a silent spinner reset reads as "nothing happened".
@@ -37,6 +43,7 @@ class HomeShell extends ConsumerWidget {
           ChatScreen(),
           ModelsScreen(),
           ServerScreen(),
+          CompanionScreen(),
           SettingsScreen(),
         ],
       ),
@@ -69,6 +76,21 @@ class HomeShell extends ConsumerWidget {
               child: const Icon(Icons.wifi_tethering),
             ),
             label: l.navServer,
+          ),
+          NavigationDestination(
+            icon: Badge(
+              isLabelVisible: companionActive,
+              smallSize: 8,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              child: const Icon(Icons.devices_outlined),
+            ),
+            selectedIcon: Badge(
+              isLabelVisible: companionActive,
+              smallSize: 8,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              child: const Icon(Icons.devices),
+            ),
+            label: l.navCompanion,
           ),
           NavigationDestination(
             icon: const Icon(Icons.tune_outlined),

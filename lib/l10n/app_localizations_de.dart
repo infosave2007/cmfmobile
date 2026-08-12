@@ -540,4 +540,123 @@ class AppLocalizationsDe extends AppLocalizations {
   String settingsVersionLine(String version) {
     return 'Cortiq $version';
   }
+
+  @override
+  String get navCompanion => 'Begleiter';
+
+  @override
+  String get companionTitle => 'Begleiter';
+
+  @override
+  String get companionSubtitle =>
+      'Verbinden Sie dieses Gerät mit einem Desktop. Ein Split macht ein Modell nicht schneller — ein Token durchläuft die Schichten der Reihe nach —, sondern ermöglicht ein Modell, das hier nicht hineinpasst.';
+
+  @override
+  String get companionUnsupported =>
+      'Die Laufzeit dieses Builds beherrscht kein Splitting; nötig ist cortiq 0.5.70 oder neuer.';
+
+  @override
+  String get companionWhereTitle => 'Wo gerechnet wird';
+
+  @override
+  String get companionRoleLocal => 'Hier';
+
+  @override
+  String get companionRoleLocalHint => 'Alles läuft auf diesem Gerät.';
+
+  @override
+  String get companionRoleDesktop => 'Auf dem Desktop';
+
+  @override
+  String get companionRoleDesktopHint =>
+      'Der Desktop hält die Schichten, den Kopf und den Sampler; dieses Gerät behält den Tokenizer und zeichnet die Antwort. Für ein Modell, das hier nicht hineinpasst.';
+
+  @override
+  String get companionRoleWorkerHint =>
+      'Leihen Sie einem Desktop den Speicher dieses Geräts: Ein Teil der Modellschichten wird hier gerechnet. Lohnt sich nur, wenn das Modell auf dem Desktop allein nicht hineinpasst.';
+
+  @override
+  String get companionAddress => 'Desktop-Adresse';
+
+  @override
+  String get companionToken => 'Gemeinsames Token';
+
+  @override
+  String get companionTokenHint =>
+      'Dieselbe Zeichenkette auf beiden Geräten. Außer bei Loopback erforderlich.';
+
+  @override
+  String get companionOverCable => 'Kabel';
+
+  @override
+  String get companionOverWifi => 'WLAN';
+
+  @override
+  String get companionWifiWarning =>
+      'Über WLAN fällt pro Token ein Roundtrip an, und der langsame Ausläufer landet direkt vor dem Nutzer: typisch etwa 9 ms, im 99. Perzentil aber 95 ms gegenüber 2,9 ms am Kabel. Besser USB-Tethering — oder hier rechnen.';
+
+  @override
+  String get companionCheck => 'Prüfen';
+
+  @override
+  String get companionCheckOk => 'Die Gegenstelle hat geantwortet.';
+
+  @override
+  String get companionNeedsModel =>
+      'Laden Sie zuerst das Modell: Tokenizer und Chat-Vorlage werden aus der lokalen Datei gelesen, auch wenn der Desktop rechnet.';
+
+  @override
+  String get companionServeTitle => 'Schichten bereitstellen';
+
+  @override
+  String get companionWorkerPort => 'Port';
+
+  @override
+  String get companionWorkerStart => 'Bereitstellen starten';
+
+  @override
+  String companionWorkerListening(String address) {
+    return 'Lauscht auf $address';
+  }
+
+  @override
+  String get companionWorkerOneWay =>
+      'Die Laufzeit bietet keinen Aufruf, den Listener zu stoppen — er läuft, bis die App geschlossen wird.';
+
+  @override
+  String get companionStatsTitle => 'Die Gegenstelle jetzt';
+
+  @override
+  String get companionStatClock => 'CPU-Takt';
+
+  @override
+  String get companionStatTemp => 'Temperatur';
+
+  @override
+  String get companionStatMemory => 'Freier Speicher';
+
+  @override
+  String get companionStatThreads => 'Worker-Threads';
+
+  @override
+  String get companionStatPlatform => 'Plattform';
+
+  @override
+  String get companionStatUnknown => 'nicht gemeldet';
+
+  @override
+  String get companionClockWarning =>
+      'Die Gegenstelle läuft deutlich unter ihrem Taktbereich. Ein Worker, der kurz rechnet und dann am Socket wartet, überzeugt den Governor nie hochzutakten — gemessen etwa die halbe Durchsatzrate.';
+
+  @override
+  String get companionSameModel =>
+      'Auf beiden Geräten muss dieselbe .cmf-Datei liegen. Der Handshake vergleicht sie und weist eine fremde ab, sodass eine Abweichung laut fehlschlägt statt Unsinn zu erzeugen.';
+
+  @override
+  String get companionWireNote =>
+      'Beide Seiten müssen dieselbe Engine-Version fahren. Der Handshake vergleicht die Protokollversion und sagt es, wenn sie abweicht.';
+
+  @override
+  String get companionTokenClearText =>
+      'Das Token wird im Klartext übertragen. Nutzen Sie ein Kabel oder ein Netz, dem Sie vertrauen.';
 }

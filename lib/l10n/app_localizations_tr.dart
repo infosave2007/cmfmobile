@@ -539,4 +539,123 @@ class AppLocalizationsTr extends AppLocalizations {
   String settingsVersionLine(String version) {
     return 'Cortiq $version';
   }
+
+  @override
+  String get navCompanion => 'Eşlik';
+
+  @override
+  String get companionTitle => 'Eşlik';
+
+  @override
+  String get companionSubtitle =>
+      'Bu cihazı bir masaüstüyle eşleştirin. Katmanları bölmek modeli hızlandırmaz — bir jeton katmanları sırayla dolaşır — buraya sığmayacak bir modeli mümkün kılar.';
+
+  @override
+  String get companionUnsupported =>
+      'Bu sürümün çalışma zamanı bölmeyi desteklemiyor; cortiq 0.5.70 veya üstü gerekiyor.';
+
+  @override
+  String get companionWhereTitle => 'Nerede hesaplanıyor';
+
+  @override
+  String get companionRoleLocal => 'Burada';
+
+  @override
+  String get companionRoleLocalHint => 'Her şey bu cihazda çalışır.';
+
+  @override
+  String get companionRoleDesktop => 'Masaüstünde';
+
+  @override
+  String get companionRoleDesktopHint =>
+      'Katmanları, başlığı ve örnekleyiciyi masaüstü tutar; bu cihaz yalnızca sözcükleyiciyi tutar ve yanıtı çizer. Buraya sığmayan bir model için.';
+
+  @override
+  String get companionRoleWorkerHint =>
+      'Bu cihazın belleğini bir masaüstüne ödünç verin: modelin bir bölüm katmanı burada hesaplanır. Yalnızca model masaüstüne tek başına sığmadığında değer.';
+
+  @override
+  String get companionAddress => 'Masaüstü adresi';
+
+  @override
+  String get companionToken => 'Ortak belirteç';
+
+  @override
+  String get companionTokenHint =>
+      'Her iki cihazda aynı dizi. Geri döngü dışındaki adresler için zorunludur.';
+
+  @override
+  String get companionOverCable => 'Kablo';
+
+  @override
+  String get companionOverWifi => 'Wi-Fi';
+
+  @override
+  String get companionWifiWarning =>
+      'Wi-Fi üzerinde her jeton için bir gidiş dönüş vardır, dolayısıyla kullanıcının gördüğü şey yavaş kuyruktur: tipik olarak yaklaşık 9 ms, ancak 99. yüzdelikte 95 ms; kabloda ise 2,9 ms. USB bağlantı paylaşımını tercih edin ya da burada hesaplayın.';
+
+  @override
+  String get companionCheck => 'Denetle';
+
+  @override
+  String get companionCheckOk => 'Karşı taraf yanıt verdi.';
+
+  @override
+  String get companionNeedsModel =>
+      'Önce modeli yükleyin: hesaplamayı masaüstü yapsa bile sözcükleyici ve sohbet şablonu yerel dosyadan okunur.';
+
+  @override
+  String get companionServeTitle => 'Katman sun';
+
+  @override
+  String get companionWorkerPort => 'Bağlantı noktası';
+
+  @override
+  String get companionWorkerStart => 'Sunmaya başla';
+
+  @override
+  String companionWorkerListening(String address) {
+    return '$address adresinde dinliyor';
+  }
+
+  @override
+  String get companionWorkerOneWay =>
+      'Çalışma zamanı dinleyiciyi durduracak bir çağrı sunmuyor; uygulama kapanana kadar çalışır.';
+
+  @override
+  String get companionStatsTitle => 'Karşı taraf şu anda';
+
+  @override
+  String get companionStatClock => 'CPU frekansı';
+
+  @override
+  String get companionStatTemp => 'Sıcaklık';
+
+  @override
+  String get companionStatMemory => 'Boş bellek';
+
+  @override
+  String get companionStatThreads => 'Çalışan iş parçacığı';
+
+  @override
+  String get companionStatPlatform => 'Platform';
+
+  @override
+  String get companionStatUnknown => 'bildirilmedi';
+
+  @override
+  String get companionClockWarning =>
+      'Karşı taraf frekans aralığının çok altında çalışıyor. Kısa süre hesaplayıp sonra sokette bekleyen bir işçi, yöneticiyi hızlanmaya asla ikna edemez — ölçümde verimin yaklaşık yarısı.';
+
+  @override
+  String get companionSameModel =>
+      'Her iki cihazda da aynı .cmf dosyası bulunmalıdır. El sıkışma bunu karşılaştırır ve yabancı bir dosyayı reddeder; böylece uyuşmazlık saçmalık üretmek yerine açıkça hata verir.';
+
+  @override
+  String get companionWireNote =>
+      'Her iki taraf da aynı motor sürümünü çalıştırmalıdır. El sıkışma protokol sürümünü karşılaştırır ve farklıysa bunu söyler.';
+
+  @override
+  String get companionTokenClearText =>
+      'Belirteç düz metin olarak iletilir. Kablo ya da güvendiğiniz bir ağ kullanın.';
 }

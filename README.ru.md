@@ -83,7 +83,7 @@ flutter run
 ```
 
 **Приложение идёт с настоящим рантаймом cortiq** —
-`libcortiq_ffi` v0.5.69 (arm64-v8a, armeabi-v7a, x86_64 + статическая библиотека iOS) из [релизов cmf](https://github.com/infosave2007/cmf/releases)
+`libcortiq_ffi` v0.5.70 (arm64-v8a, armeabi-v7a, x86_64 + статическая библиотека iOS) из [релизов cmf](https://github.com/infosave2007/cmf/releases)
 вшит в `android/app/src/main/jniLibs/`, так что чат и сервер выполняют
 реальный инференс на устройстве из коробки (проверено end-to-end:
 qwen3-5-4b Q8_2F стримит через этот же биндинг — см. `tool/ffi_smoke.dart`).

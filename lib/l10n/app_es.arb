@@ -138,7 +138,13 @@
   "settingsMaxTokens": "Tokens máx.",
   "settingsThreads": "Hilos de CPU",
   "settingsThreadsAuto": "Automático ({count})",
-  "@settingsThreadsAuto": { "placeholders": { "count": { "type": "int" } } },
+  "@settingsThreadsAuto": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsThreadsHint": "«Automático» ajusta el grupo al clúster de núcleos grandes al que el motor fija sus workers; más hilos solo añaden espera. Se aplica en la próxima carga del modelo.",
   "settingsUseGpu": "Usar GPU (Vulkan/Metal)",
   "settingsUseGpuHint": "Habilita el gráfico de ejecución discreta de GPU (se aplica al cargar el siguiente modelo).",
@@ -158,5 +164,40 @@
   "settingsStorageUsage": "{size} en {count} modelos",
   "settingsAbout": "Acerca de",
   "settingsAboutLine": "Protocolo CMF v2 · motor: {engine}",
-  "settingsVersionLine": "Cortiq {version}"
+  "settingsVersionLine": "Cortiq {version}",
+  "navCompanion": "Compañero",
+  "companionTitle": "Compañero",
+  "companionSubtitle": "Empareja este dispositivo con un escritorio. Repartir las capas no acelera un modelo — un token recorre las capas en orden —, hace posible un modelo que aquí no cabría.",
+  "companionUnsupported": "El motor de esta versión no puede repartir capas; hace falta cortiq 0.5.70 o posterior.",
+  "companionWhereTitle": "Dónde se calcula",
+  "companionRoleLocal": "Aquí",
+  "companionRoleLocalHint": "Todo se ejecuta en este dispositivo.",
+  "companionRoleDesktop": "En el escritorio",
+  "companionRoleDesktopHint": "El escritorio guarda las capas, la cabeza y el muestreador; este dispositivo conserva el tokenizador y dibuja la respuesta. Para un modelo que aquí no cabe.",
+  "companionRoleWorkerHint": "Presta la memoria de este dispositivo a un escritorio: aquí se calcula un tramo de las capas del modelo. Solo merece la pena cuando el modelo no cabe en el escritorio por sí solo.",
+  "companionAddress": "Dirección del escritorio",
+  "companionToken": "Token compartido",
+  "companionTokenHint": "La misma cadena en ambos dispositivos. Obligatorio salvo en bucle local.",
+  "companionOverCable": "Cable",
+  "companionOverWifi": "Wi-Fi",
+  "companionWifiWarning": "Por Wi-Fi hay una ida y vuelta por token, así que la cola lenta es lo que ve el usuario: unos 9 ms típicos pero 95 ms en el percentil 99, frente a 2,9 ms por cable. Mejor anclaje USB — o calcular aquí.",
+  "companionCheck": "Comprobar",
+  "companionCheckOk": "El par respondió.",
+  "companionNeedsModel": "Carga primero el modelo: el tokenizador y la plantilla de chat se leen del archivo local aunque calcule el escritorio.",
+  "companionServeTitle": "Servir capas",
+  "companionWorkerPort": "Puerto",
+  "companionWorkerStart": "Empezar a servir",
+  "companionWorkerListening": "Escuchando en {address}",
+  "companionWorkerOneWay": "El motor no ofrece ninguna llamada para detener la escucha: dura hasta que se cierra la aplicación.",
+  "companionStatsTitle": "El par ahora mismo",
+  "companionStatClock": "Frecuencia de CPU",
+  "companionStatTemp": "Temperatura",
+  "companionStatMemory": "Memoria libre",
+  "companionStatThreads": "Hilos de trabajo",
+  "companionStatPlatform": "Plataforma",
+  "companionStatUnknown": "no informado",
+  "companionClockWarning": "El par funciona muy por debajo de su rango de frecuencia. Un worker que calcula un instante y luego espera en el socket nunca convence al gobernador de subir la frecuencia: se midió como la mitad del rendimiento.",
+  "companionSameModel": "Ambos dispositivos deben tener el mismo archivo .cmf. El apretón de manos lo compara y rechaza uno ajeno, de modo que una discrepancia falla de forma visible en lugar de producir disparates.",
+  "companionWireNote": "Ambos lados deben usar la misma versión del motor. El apretón de manos compara la versión del protocolo y lo indica si difiere.",
+  "companionTokenClearText": "El token viaja en texto plano. Usa un cable o una red de confianza."
 }

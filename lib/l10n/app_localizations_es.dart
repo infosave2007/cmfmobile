@@ -542,4 +542,123 @@ class AppLocalizationsEs extends AppLocalizations {
   String settingsVersionLine(String version) {
     return 'Cortiq $version';
   }
+
+  @override
+  String get navCompanion => 'Compañero';
+
+  @override
+  String get companionTitle => 'Compañero';
+
+  @override
+  String get companionSubtitle =>
+      'Empareja este dispositivo con un escritorio. Repartir las capas no acelera un modelo — un token recorre las capas en orden —, hace posible un modelo que aquí no cabría.';
+
+  @override
+  String get companionUnsupported =>
+      'El motor de esta versión no puede repartir capas; hace falta cortiq 0.5.70 o posterior.';
+
+  @override
+  String get companionWhereTitle => 'Dónde se calcula';
+
+  @override
+  String get companionRoleLocal => 'Aquí';
+
+  @override
+  String get companionRoleLocalHint => 'Todo se ejecuta en este dispositivo.';
+
+  @override
+  String get companionRoleDesktop => 'En el escritorio';
+
+  @override
+  String get companionRoleDesktopHint =>
+      'El escritorio guarda las capas, la cabeza y el muestreador; este dispositivo conserva el tokenizador y dibuja la respuesta. Para un modelo que aquí no cabe.';
+
+  @override
+  String get companionRoleWorkerHint =>
+      'Presta la memoria de este dispositivo a un escritorio: aquí se calcula un tramo de las capas del modelo. Solo merece la pena cuando el modelo no cabe en el escritorio por sí solo.';
+
+  @override
+  String get companionAddress => 'Dirección del escritorio';
+
+  @override
+  String get companionToken => 'Token compartido';
+
+  @override
+  String get companionTokenHint =>
+      'La misma cadena en ambos dispositivos. Obligatorio salvo en bucle local.';
+
+  @override
+  String get companionOverCable => 'Cable';
+
+  @override
+  String get companionOverWifi => 'Wi-Fi';
+
+  @override
+  String get companionWifiWarning =>
+      'Por Wi-Fi hay una ida y vuelta por token, así que la cola lenta es lo que ve el usuario: unos 9 ms típicos pero 95 ms en el percentil 99, frente a 2,9 ms por cable. Mejor anclaje USB — o calcular aquí.';
+
+  @override
+  String get companionCheck => 'Comprobar';
+
+  @override
+  String get companionCheckOk => 'El par respondió.';
+
+  @override
+  String get companionNeedsModel =>
+      'Carga primero el modelo: el tokenizador y la plantilla de chat se leen del archivo local aunque calcule el escritorio.';
+
+  @override
+  String get companionServeTitle => 'Servir capas';
+
+  @override
+  String get companionWorkerPort => 'Puerto';
+
+  @override
+  String get companionWorkerStart => 'Empezar a servir';
+
+  @override
+  String companionWorkerListening(String address) {
+    return 'Escuchando en $address';
+  }
+
+  @override
+  String get companionWorkerOneWay =>
+      'El motor no ofrece ninguna llamada para detener la escucha: dura hasta que se cierra la aplicación.';
+
+  @override
+  String get companionStatsTitle => 'El par ahora mismo';
+
+  @override
+  String get companionStatClock => 'Frecuencia de CPU';
+
+  @override
+  String get companionStatTemp => 'Temperatura';
+
+  @override
+  String get companionStatMemory => 'Memoria libre';
+
+  @override
+  String get companionStatThreads => 'Hilos de trabajo';
+
+  @override
+  String get companionStatPlatform => 'Plataforma';
+
+  @override
+  String get companionStatUnknown => 'no informado';
+
+  @override
+  String get companionClockWarning =>
+      'El par funciona muy por debajo de su rango de frecuencia. Un worker que calcula un instante y luego espera en el socket nunca convence al gobernador de subir la frecuencia: se midió como la mitad del rendimiento.';
+
+  @override
+  String get companionSameModel =>
+      'Ambos dispositivos deben tener el mismo archivo .cmf. El apretón de manos lo compara y rechaza uno ajeno, de modo que una discrepancia falla de forma visible en lugar de producir disparates.';
+
+  @override
+  String get companionWireNote =>
+      'Ambos lados deben usar la misma versión del motor. El apretón de manos compara la versión del protocolo y lo indica si difiere.';
+
+  @override
+  String get companionTokenClearText =>
+      'El token viaja en texto plano. Usa un cable o una red de confianza.';
 }

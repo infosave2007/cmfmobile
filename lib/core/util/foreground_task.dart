@@ -19,6 +19,14 @@ abstract final class ForegroundTask {
   /// The CMF server — held from start to stop.
   static const server = 'server';
 
+  /// Serving layer spans to a desktop coordinator. Held for as long as the
+  /// listener lives, which is the life of the process: the runtime has no
+  /// call to stop it. The governor is the reason this matters — a worker that
+  /// computes for a few milliseconds and then blocks on a socket never
+  /// convinces `schedutil` to raise the clock, and that measured as half the
+  /// throughput.
+  static const companion = 'companion';
+
   static final Set<String> _holders = {};
 
   static Future<void> acquire(String reason) async {

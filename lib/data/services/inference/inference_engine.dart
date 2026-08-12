@@ -70,6 +70,40 @@ abstract class InferenceEngine {
 
   Future<void> unload();
 
+  // --- network split (cortiq-ffi >= 0.5.70) ---------------------------------
+  //
+  // Defaults say "no": the demo engine has no peer to talk to, and neither
+  // does a native runtime older than 0.5.70. Callers check
+  // [supportsCompanion] before offering any of it.
+
+  /// True when this runtime can hand layers to a peer, or take them.
+  bool get supportsCompanion => false;
+
+  /// Serves this device's copy of [modelPath] to somebody else's coordinator.
+  void startWorker({
+    required String modelPath,
+    required String listen,
+    String token = '',
+  }) =>
+      throw UnsupportedError('this engine cannot serve layers');
+
+  /// Routes every later generation through a peer holding the same file.
+  void setPeer({
+    required String addr,
+    String token = '',
+    int split = 0,
+    bool head = true,
+    String dtype = 'f16',
+  }) =>
+      throw UnsupportedError('this engine cannot borrow a peer');
+
+  /// Back to computing locally. A no-op where there was never a peer.
+  void clearPeer() {}
+
+  /// What the peer costs right now; empty when there is none. Absent keys
+  /// mean the platform does not expose them and must not be read as zero.
+  Map<String, dynamic> peerStats() => const {};
+
   /// Streams generated text. Implementations must emit a final event with
   /// done=true and stats filled in (also after cancellation).
   Stream<GenerationEvent> generate(GenerationRequest request);

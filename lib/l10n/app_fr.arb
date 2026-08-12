@@ -138,7 +138,13 @@
   "settingsMaxTokens": "Tokens max",
   "settingsThreads": "Threads CPU",
   "settingsThreadsAuto": "Auto ({count})",
-  "@settingsThreadsAuto": { "placeholders": { "count": { "type": "int" } } },
+  "@settingsThreadsAuto": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsThreadsHint": "« Auto » dimensionne le pool sur le cluster de gros cœurs auquel le moteur épingle ses workers ; au-delà, les threads n'ajoutent que de l'attente. Appliqué au prochain chargement du modèle.",
   "settingsUseGpu": "Utiliser le GPU (Vulkan/Metal)",
   "settingsUseGpuHint": "Active le graphe d'exécution GPU discret (appliqué au prochain chargement de modèle).",
@@ -158,5 +164,40 @@
   "settingsStorageUsage": "{size} dans {count} modèles",
   "settingsAbout": "À propos",
   "settingsAboutLine": "Protocole CMF v2 · moteur : {engine}",
-  "settingsVersionLine": "Cortiq {version}"
+  "settingsVersionLine": "Cortiq {version}",
+  "navCompanion": "Compagnon",
+  "companionTitle": "Compagnon",
+  "companionSubtitle": "Associez cet appareil à un ordinateur. Un partage ne rend pas un modèle plus rapide — un jeton parcourt les couches dans l'ordre — il rend possible un modèle qui ne tiendrait pas ici.",
+  "companionUnsupported": "Le moteur de cette version ne sait pas partager les couches ; il faut cortiq 0.5.70 ou plus récent.",
+  "companionWhereTitle": "Où ça calcule",
+  "companionRoleLocal": "Ici",
+  "companionRoleLocalHint": "Tout s'exécute sur cet appareil.",
+  "companionRoleDesktop": "Sur l'ordinateur",
+  "companionRoleDesktopHint": "L'ordinateur détient les couches, la tête et l'échantillonneur ; cet appareil garde le tokeniseur et affiche la réponse. Pour un modèle qui ne tient pas ici.",
+  "companionRoleWorkerHint": "Prêtez la mémoire de cet appareil à un ordinateur : une partie des couches du modèle est calculée ici. Utile seulement quand le modèle ne tient pas sur l'ordinateur seul.",
+  "companionAddress": "Adresse de l'ordinateur",
+  "companionToken": "Jeton partagé",
+  "companionTokenHint": "La même chaîne sur les deux appareils. Obligatoire sauf en boucle locale.",
+  "companionOverCable": "Câble",
+  "companionOverWifi": "Wi-Fi",
+  "companionWifiWarning": "En Wi-Fi, il y a un aller-retour par jeton, et c'est la traîne que voit l'utilisateur : environ 9 ms en typique mais 95 ms au 99e centile, contre 2,9 ms sur câble. Préférez le partage par USB — ou calculez ici.",
+  "companionCheck": "Vérifier",
+  "companionCheckOk": "Le pair a répondu.",
+  "companionNeedsModel": "Chargez d'abord le modèle : le tokeniseur et le gabarit de conversation sont lus dans le fichier local, même quand l'ordinateur calcule.",
+  "companionServeTitle": "Fournir des couches",
+  "companionWorkerPort": "Port",
+  "companionWorkerStart": "Commencer à fournir",
+  "companionWorkerListening": "À l'écoute sur {address}",
+  "companionWorkerOneWay": "Le moteur n'offre aucun appel pour arrêter l'écoute : elle dure jusqu'à la fermeture de l'application.",
+  "companionStatsTitle": "Le pair en ce moment",
+  "companionStatClock": "Fréquence CPU",
+  "companionStatTemp": "Température",
+  "companionStatMemory": "Mémoire libre",
+  "companionStatThreads": "Fils de travail",
+  "companionStatPlatform": "Plateforme",
+  "companionStatUnknown": "non communiqué",
+  "companionClockWarning": "Le pair tourne bien en dessous de sa plage de fréquences. Un worker qui calcule brièvement puis attend sur la socket ne convainc jamais le gouverneur d'accélérer — mesuré à environ la moitié du débit.",
+  "companionSameModel": "Les deux appareils doivent détenir le même fichier .cmf. La poignée de main le compare et rejette un fichier étranger : un écart échoue franchement au lieu de produire n'importe quoi.",
+  "companionWireNote": "Les deux côtés doivent utiliser la même version du moteur. La poignée de main compare la version du protocole et le signale en cas d'écart.",
+  "companionTokenClearText": "Le jeton circule en clair. Utilisez un câble ou un réseau de confiance."
 }

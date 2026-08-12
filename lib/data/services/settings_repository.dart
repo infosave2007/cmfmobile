@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/companion.dart';
 import '../models/settings.dart';
 
 class SettingsRepository {
@@ -20,6 +21,10 @@ class SettingsRepository {
   static const _kServerToken = 'serverToken';
   static const _kHfToken = 'hfToken';
   static const _kUseGpu = 'useGpu';
+  static const _kCompanionRole = 'companionRole';
+  static const _kCompanionAddress = 'companionAddress';
+  static const _kCompanionToken = 'companionToken';
+  static const _kCompanionPort = 'companionWorkerPort';
 
   Future<AppSettings> load() async {
     final p = await SharedPreferences.getInstance();
@@ -50,6 +55,16 @@ class SettingsRepository {
       serverToken: token,
       hfToken: p.getString(_kHfToken) ?? '',
       useGpu: p.getBool(_kUseGpu) ?? false,
+      // A peer is never restored as active: the address was reachable when it
+      // was saved, and a phone that silently dials a desktop it can no longer
+      // see would look like a broken model rather than a missing cable. The
+      // screen restores the role, the user presses Connect.
+      companionRole: CompanionRole.values
+              .asNameMap()[p.getString(_kCompanionRole)] ??
+          CompanionRole.local,
+      companionAddress: p.getString(_kCompanionAddress) ?? '',
+      companionToken: p.getString(_kCompanionToken) ?? '',
+      companionWorkerPort: p.getInt(_kCompanionPort) ?? 9911,
     );
   }
 
@@ -72,6 +87,10 @@ class SettingsRepository {
     await p.setString(_kServerToken, s.serverToken);
     await p.setString(_kHfToken, s.hfToken);
     await p.setBool(_kUseGpu, s.useGpu);
+    await p.setString(_kCompanionRole, s.companionRole.name);
+    await p.setString(_kCompanionAddress, s.companionAddress);
+    await p.setString(_kCompanionToken, s.companionToken);
+    await p.setInt(_kCompanionPort, s.companionWorkerPort);
   }
 
   static String _generateToken() {

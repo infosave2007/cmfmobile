@@ -544,4 +544,123 @@ class AppLocalizationsFr extends AppLocalizations {
   String settingsVersionLine(String version) {
     return 'Cortiq $version';
   }
+
+  @override
+  String get navCompanion => 'Compagnon';
+
+  @override
+  String get companionTitle => 'Compagnon';
+
+  @override
+  String get companionSubtitle =>
+      'Associez cet appareil à un ordinateur. Un partage ne rend pas un modèle plus rapide — un jeton parcourt les couches dans l\'ordre — il rend possible un modèle qui ne tiendrait pas ici.';
+
+  @override
+  String get companionUnsupported =>
+      'Le moteur de cette version ne sait pas partager les couches ; il faut cortiq 0.5.70 ou plus récent.';
+
+  @override
+  String get companionWhereTitle => 'Où ça calcule';
+
+  @override
+  String get companionRoleLocal => 'Ici';
+
+  @override
+  String get companionRoleLocalHint => 'Tout s\'exécute sur cet appareil.';
+
+  @override
+  String get companionRoleDesktop => 'Sur l\'ordinateur';
+
+  @override
+  String get companionRoleDesktopHint =>
+      'L\'ordinateur détient les couches, la tête et l\'échantillonneur ; cet appareil garde le tokeniseur et affiche la réponse. Pour un modèle qui ne tient pas ici.';
+
+  @override
+  String get companionRoleWorkerHint =>
+      'Prêtez la mémoire de cet appareil à un ordinateur : une partie des couches du modèle est calculée ici. Utile seulement quand le modèle ne tient pas sur l\'ordinateur seul.';
+
+  @override
+  String get companionAddress => 'Adresse de l\'ordinateur';
+
+  @override
+  String get companionToken => 'Jeton partagé';
+
+  @override
+  String get companionTokenHint =>
+      'La même chaîne sur les deux appareils. Obligatoire sauf en boucle locale.';
+
+  @override
+  String get companionOverCable => 'Câble';
+
+  @override
+  String get companionOverWifi => 'Wi-Fi';
+
+  @override
+  String get companionWifiWarning =>
+      'En Wi-Fi, il y a un aller-retour par jeton, et c\'est la traîne que voit l\'utilisateur : environ 9 ms en typique mais 95 ms au 99e centile, contre 2,9 ms sur câble. Préférez le partage par USB — ou calculez ici.';
+
+  @override
+  String get companionCheck => 'Vérifier';
+
+  @override
+  String get companionCheckOk => 'Le pair a répondu.';
+
+  @override
+  String get companionNeedsModel =>
+      'Chargez d\'abord le modèle : le tokeniseur et le gabarit de conversation sont lus dans le fichier local, même quand l\'ordinateur calcule.';
+
+  @override
+  String get companionServeTitle => 'Fournir des couches';
+
+  @override
+  String get companionWorkerPort => 'Port';
+
+  @override
+  String get companionWorkerStart => 'Commencer à fournir';
+
+  @override
+  String companionWorkerListening(String address) {
+    return 'À l\'écoute sur $address';
+  }
+
+  @override
+  String get companionWorkerOneWay =>
+      'Le moteur n\'offre aucun appel pour arrêter l\'écoute : elle dure jusqu\'à la fermeture de l\'application.';
+
+  @override
+  String get companionStatsTitle => 'Le pair en ce moment';
+
+  @override
+  String get companionStatClock => 'Fréquence CPU';
+
+  @override
+  String get companionStatTemp => 'Température';
+
+  @override
+  String get companionStatMemory => 'Mémoire libre';
+
+  @override
+  String get companionStatThreads => 'Fils de travail';
+
+  @override
+  String get companionStatPlatform => 'Plateforme';
+
+  @override
+  String get companionStatUnknown => 'non communiqué';
+
+  @override
+  String get companionClockWarning =>
+      'Le pair tourne bien en dessous de sa plage de fréquences. Un worker qui calcule brièvement puis attend sur la socket ne convainc jamais le gouverneur d\'accélérer — mesuré à environ la moitié du débit.';
+
+  @override
+  String get companionSameModel =>
+      'Les deux appareils doivent détenir le même fichier .cmf. La poignée de main le compare et rejette un fichier étranger : un écart échoue franchement au lieu de produire n\'importe quoi.';
+
+  @override
+  String get companionWireNote =>
+      'Les deux côtés doivent utiliser la même version du moteur. La poignée de main compare la version du protocole et le signale en cas d\'écart.';
+
+  @override
+  String get companionTokenClearText =>
+      'Le jeton circule en clair. Utilisez un câble ou un réseau de confiance.';
 }

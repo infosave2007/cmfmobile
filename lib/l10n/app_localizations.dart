@@ -1055,6 +1055,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cortiq {version}'**
   String settingsVersionLine(String version);
+
+  /// No description provided for @navCompanion.
+  ///
+  /// In en, this message translates to:
+  /// **'Companion'**
+  String get navCompanion;
+
+  /// No description provided for @companionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Companion'**
+  String get companionTitle;
+
+  /// No description provided for @companionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair this device with a desktop. A split does not make a model faster — a token walks the layers in order — it makes a model possible that would not fit here.'**
+  String get companionSubtitle;
+
+  /// No description provided for @companionUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This build\'s runtime cannot split; it needs cortiq 0.5.70 or newer.'**
+  String get companionUnsupported;
+
+  /// No description provided for @companionWhereTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Where it computes'**
+  String get companionWhereTitle;
+
+  /// No description provided for @companionRoleLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Here'**
+  String get companionRoleLocal;
+
+  /// No description provided for @companionRoleLocalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything runs on this device.'**
+  String get companionRoleLocalHint;
+
+  /// No description provided for @companionRoleDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'On the desktop'**
+  String get companionRoleDesktop;
+
+  /// No description provided for @companionRoleDesktopHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The desktop holds the layers, the head and the sampler; this device keeps the tokenizer and draws the reply. Use it for a model this device cannot hold.'**
+  String get companionRoleDesktopHint;
+
+  /// No description provided for @companionRoleWorkerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Lend this device\'s memory to a desktop: a span of the model\'s layers is computed here. Worth it only when the model does not fit on the desktop alone.'**
+  String get companionRoleWorkerHint;
+
+  /// No description provided for @companionAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop address'**
+  String get companionAddress;
+
+  /// No description provided for @companionToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared token'**
+  String get companionToken;
+
+  /// No description provided for @companionTokenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The same string on both devices. Required unless the address is loopback.'**
+  String get companionTokenHint;
+
+  /// No description provided for @companionOverCable.
+  ///
+  /// In en, this message translates to:
+  /// **'Cable'**
+  String get companionOverCable;
+
+  /// No description provided for @companionOverWifi.
+  ///
+  /// In en, this message translates to:
+  /// **'Wi-Fi'**
+  String get companionOverWifi;
+
+  /// No description provided for @companionWifiWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Over Wi-Fi there is one round trip per token, so the slow tail lands in front of the user: about 9 ms typical but 95 ms at the 99th percentile, against 2.9 ms on a cable. Prefer USB tethering, or compute here.'**
+  String get companionWifiWarning;
+
+  /// No description provided for @companionCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Check'**
+  String get companionCheck;
+
+  /// No description provided for @companionCheckOk.
+  ///
+  /// In en, this message translates to:
+  /// **'The peer answered.'**
+  String get companionCheckOk;
+
+  /// No description provided for @companionNeedsModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Load the model first — the tokenizer and chat template are read from the local file even when the desktop does the computing.'**
+  String get companionNeedsModel;
+
+  /// No description provided for @companionServeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Serve layers'**
+  String get companionServeTitle;
+
+  /// No description provided for @companionWorkerPort.
+  ///
+  /// In en, this message translates to:
+  /// **'Port'**
+  String get companionWorkerPort;
+
+  /// No description provided for @companionWorkerStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start serving'**
+  String get companionWorkerStart;
+
+  /// No description provided for @companionWorkerListening.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening on {address}'**
+  String companionWorkerListening(String address);
+
+  /// No description provided for @companionWorkerOneWay.
+  ///
+  /// In en, this message translates to:
+  /// **'The runtime offers no call to stop the listener, so it runs until the app is closed.'**
+  String get companionWorkerOneWay;
+
+  /// No description provided for @companionStatsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The peer right now'**
+  String get companionStatsTitle;
+
+  /// No description provided for @companionStatClock.
+  ///
+  /// In en, this message translates to:
+  /// **'CPU clock'**
+  String get companionStatClock;
+
+  /// No description provided for @companionStatTemp.
+  ///
+  /// In en, this message translates to:
+  /// **'Temperature'**
+  String get companionStatTemp;
+
+  /// No description provided for @companionStatMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'Memory free'**
+  String get companionStatMemory;
+
+  /// No description provided for @companionStatThreads.
+  ///
+  /// In en, this message translates to:
+  /// **'Worker threads'**
+  String get companionStatThreads;
+
+  /// No description provided for @companionStatPlatform.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform'**
+  String get companionStatPlatform;
+
+  /// No description provided for @companionStatUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'not reported'**
+  String get companionStatUnknown;
+
+  /// No description provided for @companionClockWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'The peer is running well below its clock range. A worker that computes briefly and then waits on the socket never convinces the governor to speed up, which measured as about half the throughput.'**
+  String get companionClockWarning;
+
+  /// No description provided for @companionSameModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Both devices must hold the same .cmf file. The handshake compares it and refuses a stranger, so a mismatch fails loudly instead of producing nonsense.'**
+  String get companionSameModel;
+
+  /// No description provided for @companionWireNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Both sides must run the same engine version. The handshake compares the wire version and says so when they differ.'**
+  String get companionWireNote;
+
+  /// No description provided for @companionTokenClearText.
+  ///
+  /// In en, this message translates to:
+  /// **'The token travels in clear text. Use a cable, or a network you trust.'**
+  String get companionTokenClearText;
 }
 
 class _AppLocalizationsDelegate

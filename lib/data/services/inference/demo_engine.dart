@@ -9,7 +9,9 @@ import 'inference_engine.dart';
 /// (e.g. simulators). Streams a clearly-labeled simulated reply so the whole
 /// UX — streaming, stats, server — can be exercised end to end. The UI shows
 /// a "demo engine" badge whenever this engine is active.
-class DemoEngine implements InferenceEngine {
+/// Extends rather than implements so the companion defaults — "this runtime
+/// has no peer" — come from one place instead of being restated here.
+class DemoEngine extends InferenceEngine {
   LocalModel? _loaded;
   bool _cancelled = false;
 

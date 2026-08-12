@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../data/models/chat.dart';
+import '../data/models/companion.dart';
 import '../data/models/local_model.dart';
 import '../data/models/server.dart';
 import '../data/models/settings.dart';
@@ -513,3 +514,199 @@ class ServerController extends Notifier<ServerState> {
 
 final serverControllerProvider =
     NotifierProvider<ServerController, ServerState>(ServerController.new);
+
+// ---------------------------------------------------------------------------
+// Companion (network split with a desktop)
+// ---------------------------------------------------------------------------
+
+class CompanionState {
+  const CompanionState({
+    this.role = CompanionRole.local,
+    this.busy = false,
+    this.error,
+    this.workerListenAddress,
+    this.stats = PeerStats.empty,
+    this.lastCheckOk,
+  });
+
+  /// The role currently applied to the engine — not the one saved in
+  /// settings, which is only a starting point for the screen.
+  final CompanionRole role;
+  final bool busy;
+  final String? error;
+
+  /// Address the worker listener bound to, or null when it is not running.
+  final String? workerListenAddress;
+  final PeerStats stats;
+
+  /// Result of the last explicit check, null when none was run since the
+  /// configuration changed.
+  final bool? lastCheckOk;
+
+  bool get workerListening => workerListenAddress != null;
+
+  CompanionState copyWith({
+    CompanionRole? role,
+    bool? busy,
+    String? error,
+    bool clearError = false,
+    String? workerListenAddress,
+    PeerStats? stats,
+    bool? lastCheckOk,
+    bool clearCheck = false,
+  }) =>
+      CompanionState(
+        role: role ?? this.role,
+        busy: busy ?? this.busy,
+        error: clearError ? null : (error ?? this.error),
+        workerListenAddress: workerListenAddress ?? this.workerListenAddress,
+        stats: stats ?? this.stats,
+        lastCheckOk: clearCheck ? null : (lastCheckOk ?? this.lastCheckOk),
+      );
+}
+
+class CompanionController extends Notifier<CompanionState> {
+  @override
+  CompanionState build() {
+    // Captured now rather than read on dispose: by then the container may be
+    // tearing down and refuse a read.
+    final engine = ref.read(engineProvider);
+    ref.onDispose(() {
+      // The peer is process-wide state in the runtime; leaving it set while
+      // this controller is gone would route generations at a desktop nothing
+      // is watching.
+      engine.clearPeer();
+      ForegroundTask.release(ForegroundTask.companion);
+      KeepAwake.disable();
+    });
+    return const CompanionState();
+  }
+
+  /// False on the demo engine and on any runtime older than cortiq 0.5.70.
+  bool get supported => ref.read(engineProvider).supportsCompanion;
+
+  /// Routes generation through the desktop: it holds the layers, the head and
+  /// the sampler, this device keeps the tokenizer and draws the tokens.
+  ///
+  /// This does not dial — the runtime connects on the first generation, so a
+  /// wrong address or a desktop on another engine version surfaces as a chat
+  /// error with the runtime's own text.
+  Future<void> useDesktop() async {
+    final engine = ref.read(engineProvider);
+    if (!engine.supportsCompanion) return;
+    final settings = ref.read(settingsProvider).value ?? const AppSettings();
+    final address = CompanionConfig.validate(settings.companionAddress);
+    if (address == null) {
+      state = state.copyWith(error: 'address must be host:port');
+      return;
+    }
+    state = state.copyWith(busy: true, clearError: true);
+    try {
+      engine.setPeer(
+        addr: address,
+        token: settings.companionToken,
+        // Role, not load percentage: 0 leaves this side with the tokenizer
+        // only, which is the configuration the measurements support.
+        split: 0,
+        // The head does not shrink as layers move away, so leaving it here
+        // caps the phone at its own head — 29 ms of a 73 ms token.
+        head: true,
+      );
+      state = state.copyWith(
+          role: CompanionRole.desktop, busy: false, clearCheck: true);
+      await _persistRole(CompanionRole.desktop);
+    } catch (e) {
+      state = state.copyWith(busy: false, error: e.toString());
+    }
+  }
+
+  /// One short generation through whatever is configured, so the lazy dial
+  /// happens here rather than in the middle of the user's first message.
+  ///
+  /// The runtime reports a wrong address, a missing token, a different model
+  /// or a mismatched wire version as an error on this call — which is the
+  /// point: a spinner that never resolves would say none of that.
+  Future<void> check() async {
+    if (ref.read(engineControllerProvider).loadedModel == null) {
+      state = state.copyWith(error: 'load the model first', lastCheckOk: false);
+      return;
+    }
+    state = state.copyWith(busy: true, clearError: true, clearCheck: true);
+    try {
+      final engine = ref.read(engineProvider);
+      await for (final event in engine.generate(const GenerationRequest(
+        messages: [ChatMessage(role: ChatRole.user, content: 'ping')],
+        maxTokens: 1,
+      ))) {
+        if (event.done) break;
+      }
+      state = state.copyWith(busy: false, lastCheckOk: true);
+      refreshStats();
+    } catch (e) {
+      state = state.copyWith(
+          busy: false, lastCheckOk: false, error: e.toString());
+    }
+  }
+
+  /// Back to computing on this device.
+  Future<void> useLocal() async {
+    ref.read(engineProvider).clearPeer();
+    state = state.copyWith(
+        role: CompanionRole.local, stats: PeerStats.empty, clearError: true);
+    await _persistRole(CompanionRole.local);
+  }
+
+  /// Serves this device's copy of the loaded model to a desktop coordinator.
+  ///
+  /// One-way: the runtime has no call to stop the listener, so it lives until
+  /// the app's process does. The screen says so rather than offering a Stop
+  /// that would lie.
+  Future<void> startWorker() async {
+    final engine = ref.read(engineProvider);
+    if (!engine.supportsCompanion || state.workerListening) return;
+    final model = ref.read(engineControllerProvider).loadedModel;
+    if (model == null) {
+      state = state.copyWith(error: 'load the model first');
+      return;
+    }
+    final settings = ref.read(settingsProvider).value ?? const AppSettings();
+    final listen = '0.0.0.0:${settings.companionWorkerPort}';
+    state = state.copyWith(busy: true, clearError: true);
+    try {
+      engine.startWorker(
+        modelPath: model.filePath,
+        listen: listen,
+        token: settings.companionToken,
+      );
+      // Same reasoning as the server: a background process is confined to the
+      // little-core cpuset, and the governor already under-clocks a worker
+      // that computes briefly and then blocks on a socket.
+      await KeepAwake.enable();
+      await ForegroundTask.acquire(ForegroundTask.companion);
+      state = state.copyWith(
+        role: CompanionRole.worker,
+        busy: false,
+        workerListenAddress: listen,
+      );
+      await _persistRole(CompanionRole.worker);
+    } catch (e) {
+      state = state.copyWith(busy: false, error: e.toString());
+    }
+  }
+
+  /// Reads what the peer costs right now. Called between turns — never inside
+  /// a decode loop.
+  void refreshStats() {
+    final json = ref.read(engineProvider).peerStats();
+    state = state.copyWith(
+        stats: json.isEmpty ? PeerStats.empty : PeerStats.fromJson(json));
+  }
+
+  Future<void> _persistRole(CompanionRole role) => ref
+      .read(settingsProvider.notifier)
+      .updateSettings((s) => s.copyWith(companionRole: role));
+}
+
+final companionControllerProvider =
+    NotifierProvider<CompanionController, CompanionState>(
+        CompanionController.new);

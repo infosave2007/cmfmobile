@@ -5,6 +5,54 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
 
+## [1.2.0] - 2026-08-12
+
+### Added
+- **Companion — this phone and a desktop as one runtime.** A new tab pairs
+  the device with a desktop running `cortiq worker` (engine 0.5.70's
+  `cortiq_set_peer` / `cortiq_worker_start` / `cortiq_peer_stats`), in either
+  direction:
+  - **Compute on the desktop.** It holds the layers, the `lm_head` and the
+    sampler; the phone keeps the tokenizer and draws the reply. This is what
+    puts a 34.7B MoE on a phone with 2 GB free at 16.3 tok/s. The head always
+    travels with the layers, because the head does not shrink as layers move
+    away — leaving it here capped a phone at its own 29 ms out of a 73 ms
+    token, and moving it measured 12.6 → 26.0 tok/s on Bonsai 1.7B.
+  - **Serve layers to a desktop**, so the desktop can run a model larger than
+    its own memory. It holds the foreground service and the wake lock, for
+    the same reason the server does: a background worker that computes for a
+    few milliseconds and then blocks on a socket never convinces the governor
+    to raise the clock, which measured as half the throughput.
+
+  The screen offers roles rather than a load percentage, and declines to
+  offer the one thing users would ask for first. A token walks the layers in
+  order, so splitting a model that already fits is *slower* than the faster
+  side alone — measured in both directions and on both transports. What a
+  split buys is a model that would not otherwise run at all.
+
+  It is also honest about the wire. The address bar labels the transport, and
+  Wi-Fi carries a warning: one round trip per token means the tail is what
+  the user sees, and that tail is 94.8 ms at p99 against 2.9 ms on a cable.
+  The peer readout shows a field the platform does not expose as *not
+  reported*, never as zero — a scheduler that reads a missing clock as 0 MHz
+  parks a node that is running perfectly well.
+
+  Two limits the screen states rather than hides: the runtime has no call to
+  stop a started worker, so it listens until the app closes; and the shared
+  token travels in clear text, so this belongs on a cable or a network you
+  trust.
+
+### Changed
+- Engine updated to **v0.5.69 → v0.5.70**, which is where the split ABI
+  lives. Both sides must run it: the handshake compares a wire version and
+  refuses a mismatch with a message rather than producing garbage.
+- The Android build recipe in `native/README.md` is now per-ABI, because the
+  two differences are silent. Vulkan on the 64-bit ABIs is behind a
+  non-default cargo feature, and a library built without it loads, runs and
+  reports the right version with the GPU quietly gone; armeabi-v7a needs its
+  page size forced to 16 KB, which NDK 28 does by itself only for 64-bit
+  output. Both are now checked on the artifact before it is committed.
+
 ## [1.1.26] - 2026-08-12
 
 (v1.1.25 carries the same engine update but was never shipped — the iOS

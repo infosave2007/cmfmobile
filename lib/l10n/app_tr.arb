@@ -138,7 +138,13 @@
   "settingsMaxTokens": "Maks. token",
   "settingsThreads": "CPU iş parçacığı",
   "settingsThreadsAuto": "Otomatik ({count})",
-  "@settingsThreadsAuto": { "placeholders": { "count": { "type": "int" } } },
+  "@settingsThreadsAuto": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsThreadsHint": "“Otomatik”, havuzu motorun iş parçacıklarını sabitlediği büyük çekirdek kümesine göre boyutlandırır; fazlası yalnızca bekleme ekler. Bir sonraki model yüklemesinde uygulanır.",
   "settingsUseGpu": "GPU kullan (Vulkan/Metal)",
   "settingsUseGpuHint": "Ayrık GPU yürütme grafiğini etkinleştirir (bir sonraki model yüklendiğinde uygulanır).",
@@ -158,5 +164,40 @@
   "settingsStorageUsage": "{count} modelde {size}",
   "settingsAbout": "Hakkında",
   "settingsAboutLine": "CMF protokolü v2 · motor: {engine}",
-  "settingsVersionLine": "Cortiq {version}"
+  "settingsVersionLine": "Cortiq {version}",
+  "navCompanion": "Eşlik",
+  "companionTitle": "Eşlik",
+  "companionSubtitle": "Bu cihazı bir masaüstüyle eşleştirin. Katmanları bölmek modeli hızlandırmaz — bir jeton katmanları sırayla dolaşır — buraya sığmayacak bir modeli mümkün kılar.",
+  "companionUnsupported": "Bu sürümün çalışma zamanı bölmeyi desteklemiyor; cortiq 0.5.70 veya üstü gerekiyor.",
+  "companionWhereTitle": "Nerede hesaplanıyor",
+  "companionRoleLocal": "Burada",
+  "companionRoleLocalHint": "Her şey bu cihazda çalışır.",
+  "companionRoleDesktop": "Masaüstünde",
+  "companionRoleDesktopHint": "Katmanları, başlığı ve örnekleyiciyi masaüstü tutar; bu cihaz yalnızca sözcükleyiciyi tutar ve yanıtı çizer. Buraya sığmayan bir model için.",
+  "companionRoleWorkerHint": "Bu cihazın belleğini bir masaüstüne ödünç verin: modelin bir bölüm katmanı burada hesaplanır. Yalnızca model masaüstüne tek başına sığmadığında değer.",
+  "companionAddress": "Masaüstü adresi",
+  "companionToken": "Ortak belirteç",
+  "companionTokenHint": "Her iki cihazda aynı dizi. Geri döngü dışındaki adresler için zorunludur.",
+  "companionOverCable": "Kablo",
+  "companionOverWifi": "Wi-Fi",
+  "companionWifiWarning": "Wi-Fi üzerinde her jeton için bir gidiş dönüş vardır, dolayısıyla kullanıcının gördüğü şey yavaş kuyruktur: tipik olarak yaklaşık 9 ms, ancak 99. yüzdelikte 95 ms; kabloda ise 2,9 ms. USB bağlantı paylaşımını tercih edin ya da burada hesaplayın.",
+  "companionCheck": "Denetle",
+  "companionCheckOk": "Karşı taraf yanıt verdi.",
+  "companionNeedsModel": "Önce modeli yükleyin: hesaplamayı masaüstü yapsa bile sözcükleyici ve sohbet şablonu yerel dosyadan okunur.",
+  "companionServeTitle": "Katman sun",
+  "companionWorkerPort": "Bağlantı noktası",
+  "companionWorkerStart": "Sunmaya başla",
+  "companionWorkerListening": "{address} adresinde dinliyor",
+  "companionWorkerOneWay": "Çalışma zamanı dinleyiciyi durduracak bir çağrı sunmuyor; uygulama kapanana kadar çalışır.",
+  "companionStatsTitle": "Karşı taraf şu anda",
+  "companionStatClock": "CPU frekansı",
+  "companionStatTemp": "Sıcaklık",
+  "companionStatMemory": "Boş bellek",
+  "companionStatThreads": "Çalışan iş parçacığı",
+  "companionStatPlatform": "Platform",
+  "companionStatUnknown": "bildirilmedi",
+  "companionClockWarning": "Karşı taraf frekans aralığının çok altında çalışıyor. Kısa süre hesaplayıp sonra sokette bekleyen bir işçi, yöneticiyi hızlanmaya asla ikna edemez — ölçümde verimin yaklaşık yarısı.",
+  "companionSameModel": "Her iki cihazda da aynı .cmf dosyası bulunmalıdır. El sıkışma bunu karşılaştırır ve yabancı bir dosyayı reddeder; böylece uyuşmazlık saçmalık üretmek yerine açıkça hata verir.",
+  "companionWireNote": "Her iki taraf da aynı motor sürümünü çalıştırmalıdır. El sıkışma protokol sürümünü karşılaştırır ve farklıysa bunu söyler.",
+  "companionTokenClearText": "Belirteç düz metin olarak iletilir. Kablo ya da güvendiğiniz bir ağ kullanın."
 }

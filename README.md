@@ -78,6 +78,22 @@ converter, and an OpenAI-compatible server speaking the CMF protocol.
 - Optional **Bearer-token auth** (a mobile addition — the desktop server is local-first)
 - Keep-awake while serving
 
+### 🔗 Companion (network split with a desktop)
+- Pair the phone with a desktop running `cortiq worker` and let the desktop
+  hold the layers, the head and the sampler — the phone keeps the tokenizer
+  and draws. This is what makes a **34.7B MoE usable on a phone with 2 GB
+  free: 16.3 tok/s**
+- Or the other way round: the phone **serves a span of its layers** so a
+  desktop can run a model larger than its own memory
+- Roles, not a load percentage — a token walks the layers in order, so a
+  split buys memory rather than speed, and the app never offers to "speed
+  up" a model that already fits
+- Honest about the wire: the transport is labeled (cable vs Wi-Fi) and Wi-Fi
+  is called out, because one round trip per token puts a 95 ms p99 in front
+  of the user against 2.9 ms on a cable
+- Live peer readout — clock, temperature, free memory, threads — with
+  absent fields shown as *not reported* rather than zero
+
 ### 🌍 Localization
 Seven languages, matching cortiq-gateway: **English, Русский, Deutsch, Français, Español, 中文, Türkçe**.
 
@@ -90,7 +106,7 @@ flutter run
 ```
 
 **The app ships with the real cortiq runtime** —
-`libcortiq_ffi` v0.5.69 (arm64-v8a, armeabi-v7a, x86_64 + iOS static lib) from the [cmf releases](https://github.com/infosave2007/cmf/releases)
+`libcortiq_ffi` v0.5.70 (arm64-v8a, armeabi-v7a, x86_64 + iOS static lib) from the [cmf releases](https://github.com/infosave2007/cmf/releases)
 is bundled in `android/app/src/main/jniLibs/`, so chat and the server run
 actual on-device inference out of the box (verified end-to-end: qwen3-5-4b
 Q8_2F streams through the same binding — see `tool/ffi_smoke.dart`).

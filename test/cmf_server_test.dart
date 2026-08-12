@@ -238,7 +238,7 @@ class _Response {
   final String body;
 }
 
-class _FakeEngine implements InferenceEngine {
+class _FakeEngine extends InferenceEngine {
   bool fail = false;
   int calls = 0;
   int cancels = 0;

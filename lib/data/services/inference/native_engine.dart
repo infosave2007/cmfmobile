@@ -67,6 +67,11 @@ typedef _WorkerTidsDart = int Function(ffi.Pointer<ffi.Int32>, int);
 typedef _CancelNative = ffi.Void Function(ffi.Pointer<ffi.Void>);
 typedef _CancelDart = void Function(ffi.Pointer<ffi.Void>);
 typedef _ExecInfoNative = ffi.Pointer<Utf8> Function();
+typedef _WorkerStartNative = ffi.Int32 Function(ffi.Pointer<Utf8>);
+typedef _WorkerStartDart = int Function(ffi.Pointer<Utf8>);
+typedef _SetPeerNative = ffi.Int32 Function(ffi.Pointer<Utf8>);
+typedef _SetPeerDart = int Function(ffi.Pointer<Utf8>);
+typedef _PeerStatsNative = ffi.Pointer<Utf8> Function();
 
 ffi.DynamicLibrary _openLibrary() {
   if (Platform.isAndroid) return ffi.DynamicLibrary.open('libcortiq_ffi.so');
@@ -135,6 +140,21 @@ class NativeCortiqEngine implements InferenceEngine {
       } catch (_) {
         _execInfo = null;
       }
+      try {
+        // cortiq-ffi >= 0.5.70 — the network split. Optional like everything
+        // above, so a phone still running an older runtime keeps working; it
+        // simply has no companion, which [supportsCompanion] reports.
+        _workerStart = lib.lookupFunction<_WorkerStartNative, _WorkerStartDart>(
+            'cortiq_worker_start');
+        _setPeer =
+            lib.lookupFunction<_SetPeerNative, _SetPeerDart>('cortiq_set_peer');
+        _peerStats = lib.lookupFunction<_PeerStatsNative, _PeerStatsNative>(
+            'cortiq_peer_stats');
+      } catch (_) {
+        _workerStart = null;
+        _setPeer = null;
+        _peerStats = null;
+      }
     } catch (_) {
       _lib = null;
     }
@@ -149,6 +169,9 @@ class NativeCortiqEngine implements InferenceEngine {
   _WorkerTidsDart? _workerTids;
   _CancelDart? _cancelNative;
   _ExecInfoNative? _execInfo;
+  _WorkerStartDart? _workerStart;
+  _SetPeerDart? _setPeer;
+  _PeerStatsNative? _peerStats;
   String _version = '';
 
   ffi.Pointer<ffi.Void> _handle = ffi.nullptr;
@@ -299,6 +322,122 @@ class NativeCortiqEngine implements InferenceEngine {
       ];
     } finally {
       calloc.free(buffer);
+    }
+  }
+
+  // --- network split (cortiq-ffi >= 0.5.70) ---------------------------------
+
+  /// True when the runtime carries the split ABI. Older libraries load and
+  /// run exactly as before, they just have no companion to offer.
+  @override
+  bool get supportsCompanion => _setPeer != null;
+
+  /// Serves this device's copy of [modelPath] to somebody else's coordinator.
+  ///
+  /// The listener lives on a background thread, but the port is bound and the
+  /// file checked on this one, so a busy port or a missing file is an
+  /// exception here rather than a thread that quietly died. A token is
+  /// mandatory for anything but loopback — the runtime refuses to listen
+  /// without one, and it travels in clear text, so this belongs on a cable or
+  /// a network you trust (native/README.md).
+  @override
+  void startWorker({
+    required String modelPath,
+    required String listen,
+    String token = '',
+  }) {
+    final workerStart = _workerStart;
+    if (workerStart == null) {
+      throw StateError('this runtime has no worker ABI (needs cortiq 0.5.70)');
+    }
+    final config = jsonEncode({
+      'model': modelPath,
+      'listen': listen,
+      if (token.isNotEmpty) 'token': token,
+    }).toNativeUtf8();
+    try {
+      if (workerStart(config) != 0) {
+        throw StateError('cortiq_worker_start: ${_lastErrorText()}');
+      }
+    } finally {
+      calloc.free(config);
+    }
+  }
+
+  /// Routes every later generation through [addr], which must hold the same
+  /// `.cmf` file — the handshake compares `dir_hash` and refuses a stranger.
+  ///
+  /// [split] is the first layer the peer runs, so 0 leaves this side holding
+  /// only the tokenizer. [head] moves `lm_head` and the sampler across too and
+  /// brings back a token id instead of a hidden state; on a phone that was
+  /// worth about 29 ms of a 73 ms token, because the head does not shrink as
+  /// layers move away. [dtype] `f32` reproduces local text bit for bit, `f16`
+  /// halves the wire and legitimately diverges around the 30th token.
+  ///
+  /// Nothing dials here: the connection is raised on the next generation, so
+  /// an unreachable peer surfaces there, as a generation error.
+  @override
+  void setPeer({
+    required String addr,
+    String token = '',
+    int split = 0,
+    bool head = true,
+    String dtype = 'f16',
+  }) {
+    final setPeer = _setPeer;
+    if (setPeer == null) {
+      throw StateError('this runtime has no peer ABI (needs cortiq 0.5.70)');
+    }
+    final config = jsonEncode({
+      'addr': addr,
+      if (token.isNotEmpty) 'token': token,
+      'split': split,
+      'head': head,
+      'dtype': dtype,
+    }).toNativeUtf8();
+    try {
+      if (setPeer(config) != 0) {
+        throw StateError('cortiq_set_peer: ${_lastErrorText()}');
+      }
+    } finally {
+      calloc.free(config);
+    }
+  }
+
+  /// Goes back to computing locally. Safe on a runtime without the ABI.
+  @override
+  void clearPeer() => _setPeer?.call(ffi.nullptr);
+
+  /// What the peer is worth right now. Absent fields mean the platform does
+  /// not expose them and are left absent — a scheduler that reads a missing
+  /// clock as 0 MHz parks a healthy node. Empty when no peer is connected.
+  @override
+  Map<String, dynamic> peerStats() {
+    final peerStats = _peerStats;
+    if (peerStats == null) return const {};
+    try {
+      final ptr = peerStats();
+      if (ptr == ffi.nullptr) return const {};
+      final decoded = jsonDecode(ptr.toDartString());
+      return decoded is Map<String, dynamic> ? decoded : const {};
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  /// The runtime's account of the most recent failure on this thread. Only
+  /// meaningful straight after a call that reported one.
+  String _lastErrorText() {
+    final lib = _lib;
+    if (lib == null) return 'unknown error';
+    try {
+      final text = lib
+          .lookupFunction<_LastErrorNative, _LastErrorNative>(
+              'cortiq_last_error')()
+          .toDartString();
+      return text.isEmpty ? 'unknown error' : text;
+    } catch (_) {
+      return 'unknown error';
     }
   }
 
