@@ -221,6 +221,17 @@ class _CompanionScreenState extends ConsumerState<CompanionScreen> {
                       ),
                     ],
 
+                    // The app's own refusals are translated; text from the
+                    // runtime is shown verbatim, because it names the thing
+                    // that went wrong ("wire version 4 != 5") and a
+                    // translation would only make it harder to look up.
+                    if (_faultText(l, companion.fault) case final String text)
+                      ...[
+                      const SizedBox(height: 10),
+                      Text(text,
+                          style:
+                              TextStyle(color: scheme.error, fontSize: 12)),
+                    ],
                     if (companion.error != null) ...[
                       const SizedBox(height: 10),
                       Text(companion.error!,
@@ -326,6 +337,13 @@ class _CompanionScreenState extends ConsumerState<CompanionScreen> {
       ),
     );
   }
+
+  String? _faultText(AppLocalizations l, CompanionFault? fault) =>
+      switch (fault) {
+        CompanionFault.addressInvalid => l.companionErrorAddress,
+        CompanionFault.modelNotLoaded => l.companionNeedsModel,
+        null => null,
+      };
 
   Future<void> _saveFields() async {
     final port = int.tryParse(_port.text.trim());

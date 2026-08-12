@@ -29,6 +29,24 @@ enum CompanionRole {
   worker,
 }
 
+/// A refusal that comes from the app, not the runtime.
+///
+/// The controller reports one of these instead of a message, because the
+/// message has to be localized and the controller has no localizations —
+/// that is the screen's job. Text coming back from the engine itself
+/// (`wire version 4 ≠ 5`, `address in use`) travels as-is: it is a
+/// diagnostic, and translating it would only make it harder to search for.
+enum CompanionFault {
+  /// The address is not `host:port`. Caught here so it fails where it was
+  /// typed rather than on the first generation.
+  addressInvalid,
+
+  /// No model is loaded. The file is read locally for the tokenizer and the
+  /// chat template even when the desktop does the computing, and it is what
+  /// the worker role serves.
+  modelNotLoaded,
+}
+
 /// Where the peer lives, and how the phone talks to it.
 class CompanionConfig {
   const CompanionConfig({

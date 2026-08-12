@@ -539,7 +539,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get navCompanion => 'Companion';
+  String get navCompanion => 'Split';
 
   @override
   String get companionTitle => 'Companion';
@@ -656,4 +656,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get companionTokenClearText =>
       'The token travels in clear text. Use a cable, or a network you trust.';
+
+  @override
+  String get companionErrorAddress =>
+      'The address must be host:port, for example 192.168.1.5:9911.';
 }

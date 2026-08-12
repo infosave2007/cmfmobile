@@ -165,7 +165,7 @@
   "settingsAbout": "Acerca de",
   "settingsAboutLine": "Protocolo CMF v2 · motor: {engine}",
   "settingsVersionLine": "Cortiq {version}",
-  "navCompanion": "Compañero",
+  "navCompanion": "Split",
   "companionTitle": "Compañero",
   "companionSubtitle": "Empareja este dispositivo con un escritorio. Repartir las capas no acelera un modelo — un token recorre las capas en orden —, hace posible un modelo que aquí no cabría.",
   "companionUnsupported": "El motor de esta versión no puede repartir capas; hace falta cortiq 0.5.70 o posterior.",
@@ -199,5 +199,6 @@
   "companionClockWarning": "El par funciona muy por debajo de su rango de frecuencia. Un worker que calcula un instante y luego espera en el socket nunca convence al gobernador de subir la frecuencia: se midió como la mitad del rendimiento.",
   "companionSameModel": "Ambos dispositivos deben tener el mismo archivo .cmf. El apretón de manos lo compara y rechaza uno ajeno, de modo que una discrepancia falla de forma visible en lugar de producir disparates.",
   "companionWireNote": "Ambos lados deben usar la misma versión del motor. El apretón de manos compara la versión del protocolo y lo indica si difiere.",
-  "companionTokenClearText": "El token viaja en texto plano. Usa un cable o una red de confianza."
+  "companionTokenClearText": "El token viaja en texto plano. Usa un cable o una red de confianza.",
+  "companionErrorAddress": "La dirección debe ser host:port, por ejemplo 192.168.1.5:9911."
 }

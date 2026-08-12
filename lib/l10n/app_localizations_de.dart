@@ -21,7 +21,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get navServer => 'Server';
 
   @override
-  String get navSettings => 'Einstellungen';
+  String get navSettings => 'Optionen';
 
   @override
   String get actionCancel => 'Abbrechen';
@@ -542,7 +542,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get navCompanion => 'Begleiter';
+  String get navCompanion => 'Split';
 
   @override
   String get companionTitle => 'Begleiter';
@@ -659,4 +659,8 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get companionTokenClearText =>
       'Das Token wird im Klartext übertragen. Nutzen Sie ein Kabel oder ein Netz, dem Sie vertrauen.';
+
+  @override
+  String get companionErrorAddress =>
+      'Die Adresse muss host:port lauten, zum Beispiel 192.168.1.5:9911.';
 }

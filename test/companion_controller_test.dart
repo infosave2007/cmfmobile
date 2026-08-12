@@ -56,7 +56,10 @@ void main() {
 
       expect(engine.peerAddr, isNull, reason: 'engine must not be touched');
       expect(stateOf().role, CompanionRole.local);
-      expect(stateOf().error, isNotNull);
+      // A fault, not a message: the controller has no localizations, and an
+      // English sentence in a Russian UI is exactly what that produced.
+      expect(stateOf().fault, CompanionFault.addressInvalid);
+      expect(stateOf().error, isNull);
     });
 
     test('surfaces the runtime error and stays local', () async {
@@ -112,7 +115,7 @@ void main() {
 
       expect(engine.workerListen, isNull);
       expect(stateOf().workerListening, isFalse);
-      expect(stateOf().error, isNotNull);
+      expect(stateOf().fault, CompanionFault.modelNotLoaded);
     });
 
     test('a busy port is reported, not swallowed', () async {

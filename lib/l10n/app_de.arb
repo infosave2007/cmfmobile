@@ -4,7 +4,7 @@
   "navChat": "Chat",
   "navModels": "Modelle",
   "navServer": "Server",
-  "navSettings": "Einstellungen",
+  "navSettings": "Optionen",
   "actionCancel": "Abbrechen",
   "actionDelete": "Löschen",
   "actionClose": "Schließen",
@@ -165,7 +165,7 @@
   "settingsAbout": "Über",
   "settingsAboutLine": "CMF-Protokoll v2 · Engine: {engine}",
   "settingsVersionLine": "Cortiq {version}",
-  "navCompanion": "Begleiter",
+  "navCompanion": "Split",
   "companionTitle": "Begleiter",
   "companionSubtitle": "Verbinden Sie dieses Gerät mit einem Desktop. Ein Split macht ein Modell nicht schneller — ein Token durchläuft die Schichten der Reihe nach —, sondern ermöglicht ein Modell, das hier nicht hineinpasst.",
   "companionUnsupported": "Die Laufzeit dieses Builds beherrscht kein Splitting; nötig ist cortiq 0.5.70 oder neuer.",
@@ -199,5 +199,6 @@
   "companionClockWarning": "Die Gegenstelle läuft deutlich unter ihrem Taktbereich. Ein Worker, der kurz rechnet und dann am Socket wartet, überzeugt den Governor nie hochzutakten — gemessen etwa die halbe Durchsatzrate.",
   "companionSameModel": "Auf beiden Geräten muss dieselbe .cmf-Datei liegen. Der Handshake vergleicht sie und weist eine fremde ab, sodass eine Abweichung laut fehlschlägt statt Unsinn zu erzeugen.",
   "companionWireNote": "Beide Seiten müssen dieselbe Engine-Version fahren. Der Handshake vergleicht die Protokollversion und sagt es, wenn sie abweicht.",
-  "companionTokenClearText": "Das Token wird im Klartext übertragen. Nutzen Sie ein Kabel oder ein Netz, dem Sie vertrauen."
+  "companionTokenClearText": "Das Token wird im Klartext übertragen. Nutzen Sie ein Kabel oder ein Netz, dem Sie vertrauen.",
+  "companionErrorAddress": "Die Adresse muss host:port lauten, zum Beispiel 192.168.1.5:9911."
 }

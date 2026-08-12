@@ -165,7 +165,7 @@
   "settingsAbout": "Hakkında",
   "settingsAboutLine": "CMF protokolü v2 · motor: {engine}",
   "settingsVersionLine": "Cortiq {version}",
-  "navCompanion": "Eşlik",
+  "navCompanion": "Bölme",
   "companionTitle": "Eşlik",
   "companionSubtitle": "Bu cihazı bir masaüstüyle eşleştirin. Katmanları bölmek modeli hızlandırmaz — bir jeton katmanları sırayla dolaşır — buraya sığmayacak bir modeli mümkün kılar.",
   "companionUnsupported": "Bu sürümün çalışma zamanı bölmeyi desteklemiyor; cortiq 0.5.70 veya üstü gerekiyor.",
@@ -199,5 +199,6 @@
   "companionClockWarning": "Karşı taraf frekans aralığının çok altında çalışıyor. Kısa süre hesaplayıp sonra sokette bekleyen bir işçi, yöneticiyi hızlanmaya asla ikna edemez — ölçümde verimin yaklaşık yarısı.",
   "companionSameModel": "Her iki cihazda da aynı .cmf dosyası bulunmalıdır. El sıkışma bunu karşılaştırır ve yabancı bir dosyayı reddeder; böylece uyuşmazlık saçmalık üretmek yerine açıkça hata verir.",
   "companionWireNote": "Her iki taraf da aynı motor sürümünü çalıştırmalıdır. El sıkışma protokol sürümünü karşılaştırır ve farklıysa bunu söyler.",
-  "companionTokenClearText": "Belirteç düz metin olarak iletilir. Kablo ya da güvendiğiniz bir ağ kullanın."
+  "companionTokenClearText": "Belirteç düz metin olarak iletilir. Kablo ya da güvendiğiniz bir ağ kullanın.",
+  "companionErrorAddress": "Adres host:port biçiminde olmalıdır, örneğin 192.168.1.5:9911."
 }

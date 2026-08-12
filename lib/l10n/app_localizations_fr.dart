@@ -546,7 +546,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get navCompanion => 'Compagnon';
+  String get navCompanion => 'Split';
 
   @override
   String get companionTitle => 'Compagnon';
@@ -663,4 +663,8 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get companionTokenClearText =>
       'Le jeton circule en clair. Utilisez un câble ou un réseau de confiance.';
+
+  @override
+  String get companionErrorAddress =>
+      'L\'adresse doit être host:port, par exemple 192.168.1.5:9911.';
 }

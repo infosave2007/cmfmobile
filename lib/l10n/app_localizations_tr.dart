@@ -541,7 +541,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get navCompanion => 'Eşlik';
+  String get navCompanion => 'Bölme';
 
   @override
   String get companionTitle => 'Eşlik';
@@ -658,4 +658,8 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get companionTokenClearText =>
       'Belirteç düz metin olarak iletilir. Kablo ya da güvendiğiniz bir ağ kullanın.';
+
+  @override
+  String get companionErrorAddress =>
+      'Adres host:port biçiminde olmalıdır, örneğin 192.168.1.5:9911.';
 }

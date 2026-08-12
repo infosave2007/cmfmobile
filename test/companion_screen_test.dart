@@ -101,6 +101,18 @@ void main() {
     expect(find.text('Где считать'), findsOneWidget);
     expect(find.text('Здесь'), findsOneWidget);
   });
+
+  testWidgets('a refused address is reported in the UI language',
+      (tester) async {
+    // This shipped once as a hardcoded English sentence in a Russian screen.
+    await pumpScreen(tester, locale: const Locale('ru'));
+    await tester.tap(find.text('На десктопе'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Адрес должен быть'), findsOneWidget);
+    expect(find.textContaining('host:port'), findsOneWidget);
+    expect(find.textContaining('address must be'), findsNothing);
+  });
 }
 
 class _FakeEngine extends InferenceEngine {

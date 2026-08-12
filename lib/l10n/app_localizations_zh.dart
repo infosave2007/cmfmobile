@@ -521,7 +521,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get navCompanion => '协同';
+  String get navCompanion => '拆分';
 
   @override
   String get companionTitle => '协同';
@@ -632,4 +632,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get companionTokenClearText => '令牌以明文传输。请使用数据线或可信网络。';
+
+  @override
+  String get companionErrorAddress => '地址必须为 host:port 形式，例如 192.168.1.5:9911。';
 }

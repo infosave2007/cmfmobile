@@ -272,7 +272,7 @@
       }
     }
   },
-  "navCompanion": "Companion",
+  "navCompanion": "Split",
   "companionTitle": "Companion",
   "companionSubtitle": "Pair this device with a desktop. A split does not make a model faster — a token walks the layers in order — it makes a model possible that would not fit here.",
   "companionUnsupported": "This build's runtime cannot split; it needs cortiq 0.5.70 or newer.",
@@ -313,5 +313,6 @@
   "companionClockWarning": "The peer is running well below its clock range. A worker that computes briefly and then waits on the socket never convinces the governor to speed up, which measured as about half the throughput.",
   "companionSameModel": "Both devices must hold the same .cmf file. The handshake compares it and refuses a stranger, so a mismatch fails loudly instead of producing nonsense.",
   "companionWireNote": "Both sides must run the same engine version. The handshake compares the wire version and says so when they differ.",
-  "companionTokenClearText": "The token travels in clear text. Use a cable, or a network you trust."
+  "companionTokenClearText": "The token travels in clear text. Use a cable, or a network you trust.",
+  "companionErrorAddress": "The address must be host:port, for example 192.168.1.5:9911."
 }

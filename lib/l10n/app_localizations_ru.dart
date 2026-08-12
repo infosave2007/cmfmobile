@@ -542,7 +542,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get navCompanion => 'Компаньон';
+  String get navCompanion => 'Сплит';
 
   @override
   String get companionTitle => 'Компаньон';
@@ -659,4 +659,8 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get companionTokenClearText =>
       'Токен уходит открытым текстом. Используйте кабель или доверенную сеть.';
+
+  @override
+  String get companionErrorAddress =>
+      'Адрес должен быть в виде host:port, например 192.168.1.5:9911.';
 }

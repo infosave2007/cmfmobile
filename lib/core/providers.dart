@@ -524,6 +524,7 @@ class CompanionState {
     this.role = CompanionRole.local,
     this.busy = false,
     this.error,
+    this.fault,
     this.workerListenAddress,
     this.stats = PeerStats.empty,
     this.lastCheckOk,
@@ -533,7 +534,12 @@ class CompanionState {
   /// settings, which is only a starting point for the screen.
   final CompanionRole role;
   final bool busy;
+
+  /// Verbatim text from the runtime. Not translated on purpose.
   final String? error;
+
+  /// A refusal the app made itself; the screen turns it into words.
+  final CompanionFault? fault;
 
   /// Address the worker listener bound to, or null when it is not running.
   final String? workerListenAddress;
@@ -549,6 +555,7 @@ class CompanionState {
     CompanionRole? role,
     bool? busy,
     String? error,
+    CompanionFault? fault,
     bool clearError = false,
     String? workerListenAddress,
     PeerStats? stats,
@@ -559,6 +566,7 @@ class CompanionState {
         role: role ?? this.role,
         busy: busy ?? this.busy,
         error: clearError ? null : (error ?? this.error),
+        fault: clearError ? null : (fault ?? this.fault),
         workerListenAddress: workerListenAddress ?? this.workerListenAddress,
         stats: stats ?? this.stats,
         lastCheckOk: clearCheck ? null : (lastCheckOk ?? this.lastCheckOk),
@@ -597,7 +605,7 @@ class CompanionController extends Notifier<CompanionState> {
     final settings = ref.read(settingsProvider).value ?? const AppSettings();
     final address = CompanionConfig.validate(settings.companionAddress);
     if (address == null) {
-      state = state.copyWith(error: 'address must be host:port');
+      state = state.copyWith(fault: CompanionFault.addressInvalid);
       return;
     }
     state = state.copyWith(busy: true, clearError: true);
@@ -628,7 +636,8 @@ class CompanionController extends Notifier<CompanionState> {
   /// point: a spinner that never resolves would say none of that.
   Future<void> check() async {
     if (ref.read(engineControllerProvider).loadedModel == null) {
-      state = state.copyWith(error: 'load the model first', lastCheckOk: false);
+      state = state.copyWith(
+          fault: CompanionFault.modelNotLoaded, lastCheckOk: false);
       return;
     }
     state = state.copyWith(busy: true, clearError: true, clearCheck: true);
@@ -666,7 +675,7 @@ class CompanionController extends Notifier<CompanionState> {
     if (!engine.supportsCompanion || state.workerListening) return;
     final model = ref.read(engineControllerProvider).loadedModel;
     if (model == null) {
-      state = state.copyWith(error: 'load the model first');
+      state = state.copyWith(fault: CompanionFault.modelNotLoaded);
       return;
     }
     final settings = ref.read(settingsProvider).value ?? const AppSettings();

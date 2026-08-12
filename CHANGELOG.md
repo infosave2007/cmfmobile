@@ -5,6 +5,34 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
 
+## [1.2.1] - 2026-08-12
+
+Both of these were found by running 1.2.0 on a real phone, and neither is
+visible to the analyzer or to a test that does not render.
+
+### Fixed
+- **The bottom bar broke its own labels.** A fifth destination leaves about
+  78dp a tab, and at the system's 1.25 font scale a nine-letter word wrapped
+  mid-word — "Компаньо/н" stacked over "Настройк/и". The tab is now called
+  Split (Сплит / 拆分 / Bölme), the bar clamps how far it will scale its
+  labels while the rest of the app still follows the user's setting, and
+  German's "Einstellungen" — thirteen letters, which would not have fit at
+  any scale — is "Optionen".
+- **A refusal appeared in English inside a Russian screen.** The companion
+  controller wrote its own error sentences, and a controller has no
+  localizations. It now reports a `CompanionFault`, and the screen turns that
+  into words. Text that comes from the runtime itself (`wire version 4 ≠ 5`,
+  `address in use`) is still shown verbatim: it names the thing that went
+  wrong, and translating it would only make it harder to search for.
+
+### Note
+iOS was not verified at runtime for this release. Flutter's debug launcher
+aborts in `getDebugDylibEntryPoint` before any Dart runs, on both the iOS
+27.0 and 26.5 simulators, after a clean rebuild — a toolchain incompatibility
+with Xcode 26.6, not something in the app. The release path is unaffected and
+was checked: the IPA links, exports all 18 engine entry points, and the
+release workflow's guard passes.
+
 ## [1.2.0] - 2026-08-12
 
 ### Added

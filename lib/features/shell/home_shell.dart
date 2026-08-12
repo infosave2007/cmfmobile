@@ -47,7 +47,13 @@ class HomeShell extends ConsumerWidget {
           SettingsScreen(),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
+      // Five destinations leave ~78dp a tab, and a nine-letter label at the
+      // system's 1.25 font scale wraps mid-word — "Компаньо/н" over
+      // "Настройк/и". The bar clamps what it will scale to; everything else
+      // in the app still follows the user's setting.
+      bottomNavigationBar: MediaQuery.withClampedTextScaling(
+        maxScaleFactor: 1.15,
+        child: NavigationBar(
         selectedIndex: index,
         onDestinationSelected: (i) =>
             ref.read(shellIndexProvider.notifier).select(i),
@@ -97,7 +103,8 @@ class HomeShell extends ConsumerWidget {
             selectedIcon: const Icon(Icons.tune),
             label: l.navSettings,
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

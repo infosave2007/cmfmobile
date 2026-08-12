@@ -165,7 +165,7 @@
   "settingsAbout": "关于",
   "settingsAboutLine": "CMF 协议 v2 · 引擎:{engine}",
   "settingsVersionLine": "Cortiq {version}",
-  "navCompanion": "协同",
+  "navCompanion": "拆分",
   "companionTitle": "协同",
   "companionSubtitle": "将本机与桌面端配对。拆分并不会让模型更快——一个词元要按顺序走完所有层——它让本机放不下的模型成为可能。",
   "companionUnsupported": "此版本的运行时不支持拆分，需要 cortiq 0.5.70 或更新版本。",
@@ -199,5 +199,6 @@
   "companionClockWarning": "对端运行频率远低于其上限。一个只计算几毫秒随后就在套接字上等待的工作进程，永远说服不了调频策略升频——实测约为一半的吞吐量。",
   "companionSameModel": "两台设备必须持有同一个 .cmf 文件。握手会进行比对并拒绝不匹配的文件，因此不一致会明确报错，而不是产生乱码。",
   "companionWireNote": "两端必须运行同一引擎版本。握手会比对协议版本，不一致时会明确说明。",
-  "companionTokenClearText": "令牌以明文传输。请使用数据线或可信网络。"
+  "companionTokenClearText": "令牌以明文传输。请使用数据线或可信网络。",
+  "companionErrorAddress": "地址必须为 host:port 形式，例如 192.168.1.5:9911。"
 }

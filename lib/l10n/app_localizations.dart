@@ -1059,7 +1059,7 @@ abstract class AppLocalizations {
   /// No description provided for @navCompanion.
   ///
   /// In en, this message translates to:
-  /// **'Companion'**
+  /// **'Split'**
   String get navCompanion;
 
   /// No description provided for @companionTitle.
@@ -1265,6 +1265,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The token travels in clear text. Use a cable, or a network you trust.'**
   String get companionTokenClearText;
+
+  /// No description provided for @companionErrorAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'The address must be host:port, for example 192.168.1.5:9911.'**
+  String get companionErrorAddress;
 }
 
 class _AppLocalizationsDelegate
