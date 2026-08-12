@@ -662,4 +662,38 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get companionErrorAddress =>
       'Adres host:port biçiminde olmalıdır, örneğin 192.168.1.5:9911.';
+
+  @override
+  String get companionPeerUnreachable =>
+      'Masaüstü yanıt vermiyor — durdurulmuş ya da kablo veya ağ kopmuş.';
+
+  @override
+  String get companionPeerWireVersion =>
+      'Masaüstünde farklı bir motor sürümü çalışıyor. İki tarafın da güncellenmesi gerekir.';
+
+  @override
+  String get companionPeerModelMismatch =>
+      'Masaüstünde farklı bir model dosyası var. İki tarafta da aynı .cmf gerekir.';
+
+  @override
+  String get companionPeerFailed => 'Masaüstü yanıtı tamamlayamadı.';
+
+  @override
+  String companionStatusActive(String address) {
+    return '$address üzerinde hesaplıyor';
+  }
+
+  @override
+  String companionStatusUnchecked(String address) {
+    return '$address olarak ayarlandı, henüz denetlenmedi';
+  }
+
+  @override
+  String get companionStatusBroken => 'Masaüstü kullanılamıyor';
+
+  @override
+  String get companionDisconnect => 'Bağlantıyı kes';
+
+  @override
+  String get chatComputeHere => 'Burada hesapla';
 }

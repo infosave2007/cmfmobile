@@ -378,6 +378,7 @@ class ChatController extends Notifier<ChatState> {
           }
         },
         onError: (Object e) {
+          _notePeerFailure(e);
           updateLast(ChatMessage(
             role: ChatRole.assistant,
             content: buffer,
@@ -391,6 +392,7 @@ class ChatController extends Notifier<ChatState> {
       );
       await done.future;
     } catch (e) {
+      _notePeerFailure(e);
       updateLast(ChatMessage(
         role: ChatRole.assistant,
         content: buffer,
@@ -406,6 +408,21 @@ class ChatController extends Notifier<ChatState> {
   }
 
   void stop() => ref.read(engineProvider).cancel();
+
+  /// A reply that failed through the desktop is the split's problem, not the
+  /// model's — tell the companion so its screen stops looking healthy.
+  void _notePeerFailure(Object error) {
+    final failure = classifyPeerFailure(error.toString());
+    if (failure == null) return;
+    ref.read(companionControllerProvider.notifier).notePeerFailure(failure);
+  }
+
+  /// Moves the work back to this device and retries the last turn — what the
+  /// chat offers when the desktop has gone away.
+  Future<void> computeHereAndRetry() async {
+    await ref.read(companionControllerProvider.notifier).useLocal();
+    await regenerate();
+  }
 }
 
 final chatControllerProvider =
@@ -528,6 +545,7 @@ class CompanionState {
     this.workerListenAddress,
     this.stats = PeerStats.empty,
     this.lastCheckOk,
+    this.peerFailure,
   });
 
   /// The role currently applied to the engine — not the one saved in
@@ -549,7 +567,15 @@ class CompanionState {
   /// configuration changed.
   final bool? lastCheckOk;
 
+  /// Why the last generation through the peer failed, null while it works.
+  /// Set from the chat as well as from Check, because a desktop that dies
+  /// mid-conversation is exactly the case the user needs told about.
+  final PeerFailure? peerFailure;
+
   bool get workerListening => workerListenAddress != null;
+
+  /// The peer is configured but the last attempt to use it failed.
+  bool get peerBroken => role == CompanionRole.desktop && peerFailure != null;
 
   CompanionState copyWith({
     CompanionRole? role,
@@ -561,6 +587,8 @@ class CompanionState {
     PeerStats? stats,
     bool? lastCheckOk,
     bool clearCheck = false,
+    PeerFailure? peerFailure,
+    bool clearPeerFailure = false,
   }) =>
       CompanionState(
         role: role ?? this.role,
@@ -570,6 +598,8 @@ class CompanionState {
         workerListenAddress: workerListenAddress ?? this.workerListenAddress,
         stats: stats ?? this.stats,
         lastCheckOk: clearCheck ? null : (lastCheckOk ?? this.lastCheckOk),
+        peerFailure:
+            clearPeerFailure ? null : (peerFailure ?? this.peerFailure),
       );
 }
 
@@ -621,7 +651,11 @@ class CompanionController extends Notifier<CompanionState> {
         head: true,
       );
       state = state.copyWith(
-          role: CompanionRole.desktop, busy: false, clearCheck: true);
+        role: CompanionRole.desktop,
+        busy: false,
+        clearCheck: true,
+        clearPeerFailure: true,
+      );
       await _persistRole(CompanionRole.desktop);
     } catch (e) {
       state = state.copyWith(busy: false, error: e.toString());
@@ -649,19 +683,41 @@ class CompanionController extends Notifier<CompanionState> {
       ))) {
         if (event.done) break;
       }
-      state = state.copyWith(busy: false, lastCheckOk: true);
+      state = state.copyWith(
+          busy: false, lastCheckOk: true, clearPeerFailure: true);
       refreshStats();
     } catch (e) {
       state = state.copyWith(
-          busy: false, lastCheckOk: false, error: e.toString());
+        busy: false,
+        lastCheckOk: false,
+        error: e.toString(),
+        peerFailure: state.role == CompanionRole.desktop
+            ? (classifyPeerFailure(e.toString()) ?? PeerFailure.other)
+            : null,
+      );
     }
+  }
+
+  /// Records that a generation elsewhere in the app (the chat, the server)
+  /// failed through the peer, so the Split screen stops claiming everything
+  /// is fine. Does not clear the peer: the user chose the desktop, and
+  /// silently moving the work back here would change both where their data
+  /// goes and how fast it comes back, without asking.
+  void notePeerFailure(PeerFailure failure) {
+    if (state.role != CompanionRole.desktop) return;
+    state = state.copyWith(peerFailure: failure, lastCheckOk: false);
   }
 
   /// Back to computing on this device.
   Future<void> useLocal() async {
     ref.read(engineProvider).clearPeer();
     state = state.copyWith(
-        role: CompanionRole.local, stats: PeerStats.empty, clearError: true);
+      role: CompanionRole.local,
+      stats: PeerStats.empty,
+      clearError: true,
+      clearCheck: true,
+      clearPeerFailure: true,
+    );
     await _persistRole(CompanionRole.local);
   }
 

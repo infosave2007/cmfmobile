@@ -635,4 +635,35 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get companionErrorAddress => '地址必须为 host:port 形式，例如 192.168.1.5:9911。';
+
+  @override
+  String get companionPeerUnreachable => '桌面端没有响应——已停止，或数据线、网络断开。';
+
+  @override
+  String get companionPeerWireVersion => '桌面端的引擎版本不同，两端都需要更新。';
+
+  @override
+  String get companionPeerModelMismatch => '桌面端持有的模型文件不同，两端需要同一个 .cmf。';
+
+  @override
+  String get companionPeerFailed => '桌面端未能完成回复。';
+
+  @override
+  String companionStatusActive(String address) {
+    return '正在 $address 计算';
+  }
+
+  @override
+  String companionStatusUnchecked(String address) {
+    return '已设为 $address，尚未检查';
+  }
+
+  @override
+  String get companionStatusBroken => '桌面端不可用';
+
+  @override
+  String get companionDisconnect => '断开';
+
+  @override
+  String get chatComputeHere => '在本机计算';
 }

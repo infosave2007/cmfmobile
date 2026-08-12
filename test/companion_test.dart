@@ -44,6 +44,82 @@ void main() {
     });
   });
 
+  group('classifyPeerFailure', () {
+    // Both of these were copied off a phone, not invented: the desktop worker
+    // was killed mid-session and then dialled again.
+    const brokenPipe =
+        'Bad state: generate: peer generate: wire write: Broken pipe (os error 32)';
+    const refused =
+        'Bad state: generate: peer generate: connect 127.0.0.1:9911: '
+        'Connection refused (os error 111)';
+
+    test('a desktop that died and one that was never there both read as gone',
+        () {
+      expect(classifyPeerFailure(brokenPipe), PeerFailure.unreachable);
+      expect(classifyPeerFailure(refused), PeerFailure.unreachable);
+      // The runtime does not always hand back an errno: when the far side
+      // closes mid-generation it says this, and the phone read it as an
+      // unknown fault and printed a vaguer sentence than it had to.
+      expect(
+        classifyPeerFailure(
+            'Bad state: generate: peer generate: worker 127.0.0.1:9911 hung up'),
+        PeerFailure.unreachable,
+      );
+    });
+
+    test('the two failures worth a different sentence are separated', () {
+      expect(
+        classifyPeerFailure('peer generate: wire version 4 != 5 — upgrade one side'),
+        PeerFailure.wireVersion,
+      );
+      expect(
+        classifyPeerFailure('peer handshake: dir_hash mismatch'),
+        PeerFailure.modelMismatch,
+      );
+    });
+
+    test('an unrecognised peer failure is still a peer failure', () {
+      expect(classifyPeerFailure('peer generate: something new'),
+          PeerFailure.other);
+    });
+
+    test('a local failure is not blamed on the desktop', () {
+      // The split being on does not make every failure the split's fault.
+      expect(classifyPeerFailure('Bad state: model file is truncated'), isNull);
+      expect(classifyPeerFailure('cortiq_load: no such file'), isNull);
+      expect(classifyPeerFailure(''), isNull);
+    });
+  });
+
+  group('cleanEngineError', () {
+    test('strips the wrappers and keeps the clause that means something', () {
+      expect(
+        cleanEngineError(
+            'Bad state: generate: peer generate: connect 127.0.0.1:9911: '
+            'Connection refused (os error 111)'),
+        'connect 127.0.0.1:9911: Connection refused (os error 111)',
+      );
+      expect(
+        cleanEngineError(
+            'Bad state: generate: peer generate: wire write: Broken pipe (os error 32)'),
+        'wire write: Broken pipe (os error 32)',
+      );
+    });
+
+    test('leaves a message that has no wrappers alone', () {
+      expect(cleanEngineError('cortiq_load: no such file'),
+          'cortiq_load: no such file');
+    });
+
+    test('never hands the UI an empty string', () {
+      // Peeling everything off would leave a bubble with an error icon and no
+      // words; the raw text is worse to read but better than nothing.
+      expect(cleanEngineError('Bad state: '), isNotEmpty);
+      expect(cleanEngineError('generate: '), isNotEmpty);
+      expect(cleanEngineError('   '), isNotEmpty);
+    });
+  });
+
   group('PeerStats', () {
     test('reads the runtime\'s shape', () {
       final stats = PeerStats.fromJson(const {

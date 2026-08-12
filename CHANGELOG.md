@@ -5,6 +5,37 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
 
+## [1.2.3] - 2026-08-12
+
+### Fixed
+- **A desktop that went away turned the chat into a wall of `Bad state`.**
+  Stopping the worker mid-conversation left the split switched on and every
+  later message failing with
+  `Bad state: generate: peer generate: wire write: Broken pipe (os error 32)`
+  — three layers of wrapper around one clause, in English, with no way out of
+  the chat. Now the bubble names the cause in the user's language and carries
+  **Compute here**, which clears the peer and retries the turn. The runtime's
+  own words stay, demoted to a caption: they hold the address and the errno,
+  which is what a bug report needs.
+
+  Three causes are told apart, because the remedy differs: the desktop is not
+  answering (stopped, or the cable went), the two sides run different engine
+  versions, or they hold different model files.
+
+  The fallback is never automatic. The desktop was chosen on purpose — often
+  because the model is only usable that way — so moving a conversation back
+  onto the phone changes both where the data goes and how fast it returns.
+  That is a decision, and it stays the user's.
+
+### Added
+- **The Companion screen says what is happening and offers a plain
+  Disconnect.** Until now the only way out was the role selector, which reads
+  as a preference rather than as the switch deciding where every reply comes
+  from. There is a status line — *Computing on 127.0.0.1:9911*, *set but not
+  checked yet*, or *Desktop unavailable* with the reason — and a Disconnect
+  next to it. A failure anywhere in the app (chat included) marks that state,
+  so the screen stops looking healthy while replies are failing.
+
 ## [1.2.2] - 2026-08-12
 
 ### Fixed

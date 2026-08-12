@@ -663,4 +663,39 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get companionErrorAddress =>
       'Die Adresse muss host:port lauten, zum Beispiel 192.168.1.5:9911.';
+
+  @override
+  String get companionPeerUnreachable =>
+      'Der Desktop antwortet nicht — gestoppt, oder Kabel bzw. Netzwerk sind weg.';
+
+  @override
+  String get companionPeerWireVersion =>
+      'Auf dem Desktop läuft eine andere Engine-Version. Beide Seiten müssen aktualisiert werden.';
+
+  @override
+  String get companionPeerModelMismatch =>
+      'Der Desktop hält eine andere Modelldatei. Beide Seiten brauchen dieselbe .cmf.';
+
+  @override
+  String get companionPeerFailed =>
+      'Der Desktop konnte die Antwort nicht abschließen.';
+
+  @override
+  String companionStatusActive(String address) {
+    return 'Rechnet auf $address';
+  }
+
+  @override
+  String companionStatusUnchecked(String address) {
+    return 'Auf $address gesetzt, noch nicht geprüft';
+  }
+
+  @override
+  String get companionStatusBroken => 'Desktop nicht erreichbar';
+
+  @override
+  String get companionDisconnect => 'Trennen';
+
+  @override
+  String get chatComputeHere => 'Hier rechnen';
 }

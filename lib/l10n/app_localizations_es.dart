@@ -665,4 +665,39 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get companionErrorAddress =>
       'La dirección debe ser host:port, por ejemplo 192.168.1.5:9911.';
+
+  @override
+  String get companionPeerUnreachable =>
+      'El escritorio no responde: detenido, o el cable o la red han desaparecido.';
+
+  @override
+  String get companionPeerWireVersion =>
+      'El escritorio usa otra versión del motor. Hay que actualizar ambos lados.';
+
+  @override
+  String get companionPeerModelMismatch =>
+      'El escritorio tiene otro archivo de modelo. Ambos lados necesitan el mismo .cmf.';
+
+  @override
+  String get companionPeerFailed =>
+      'El escritorio no pudo terminar la respuesta.';
+
+  @override
+  String companionStatusActive(String address) {
+    return 'Calculando en $address';
+  }
+
+  @override
+  String companionStatusUnchecked(String address) {
+    return 'Fijado en $address, sin comprobar';
+  }
+
+  @override
+  String get companionStatusBroken => 'Escritorio no disponible';
+
+  @override
+  String get companionDisconnect => 'Desconectar';
+
+  @override
+  String get chatComputeHere => 'Calcular aquí';
 }

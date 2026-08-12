@@ -200,5 +200,14 @@
   "companionSameModel": "Her iki cihazda da aynı .cmf dosyası bulunmalıdır. El sıkışma bunu karşılaştırır ve yabancı bir dosyayı reddeder; böylece uyuşmazlık saçmalık üretmek yerine açıkça hata verir.",
   "companionWireNote": "Her iki taraf da aynı motor sürümünü çalıştırmalıdır. El sıkışma protokol sürümünü karşılaştırır ve farklıysa bunu söyler.",
   "companionTokenClearText": "Belirteç düz metin olarak iletilir. Kablo ya da güvendiğiniz bir ağ kullanın.",
-  "companionErrorAddress": "Adres host:port biçiminde olmalıdır, örneğin 192.168.1.5:9911."
+  "companionErrorAddress": "Adres host:port biçiminde olmalıdır, örneğin 192.168.1.5:9911.",
+  "companionPeerUnreachable": "Masaüstü yanıt vermiyor — durdurulmuş ya da kablo veya ağ kopmuş.",
+  "companionPeerWireVersion": "Masaüstünde farklı bir motor sürümü çalışıyor. İki tarafın da güncellenmesi gerekir.",
+  "companionPeerModelMismatch": "Masaüstünde farklı bir model dosyası var. İki tarafta da aynı .cmf gerekir.",
+  "companionPeerFailed": "Masaüstü yanıtı tamamlayamadı.",
+  "companionStatusActive": "{address} üzerinde hesaplıyor",
+  "companionStatusUnchecked": "{address} olarak ayarlandı, henüz denetlenmedi",
+  "companionStatusBroken": "Masaüstü kullanılamıyor",
+  "companionDisconnect": "Bağlantıyı kes",
+  "chatComputeHere": "Burada hesapla"
 }

@@ -200,5 +200,14 @@
   "companionSameModel": "На обоих устройствах должен лежать один и тот же файл .cmf. Рукопожатие сверяет его и отвергает чужой, поэтому несовпадение выдаст ошибку, а не бессмыслицу.",
   "companionWireNote": "Обе стороны должны быть на одной версии движка. Рукопожатие сверяет версию протокола и прямо сообщает о расхождении.",
   "companionTokenClearText": "Токен уходит открытым текстом. Используйте кабель или доверенную сеть.",
-  "companionErrorAddress": "Адрес должен быть в виде host:port, например 192.168.1.5:9911."
+  "companionErrorAddress": "Адрес должен быть в виде host:port, например 192.168.1.5:9911.",
+  "companionPeerUnreachable": "Десктоп не отвечает — остановлен, или пропал кабель либо сеть.",
+  "companionPeerWireVersion": "На десктопе другая версия движка. Обновить нужно обе стороны.",
+  "companionPeerModelMismatch": "На десктопе другой файл модели. На обеих сторонах нужен один и тот же .cmf.",
+  "companionPeerFailed": "Десктоп не смог завершить ответ.",
+  "companionStatusActive": "Считает {address}",
+  "companionStatusUnchecked": "Задан {address}, ещё не проверен",
+  "companionStatusBroken": "Десктоп недоступен",
+  "companionDisconnect": "Отключить",
+  "chatComputeHere": "Считать здесь"
 }

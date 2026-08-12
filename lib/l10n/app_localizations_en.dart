@@ -660,4 +660,38 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get companionErrorAddress =>
       'The address must be host:port, for example 192.168.1.5:9911.';
+
+  @override
+  String get companionPeerUnreachable =>
+      'The desktop is not answering — stopped, or the cable or network is gone.';
+
+  @override
+  String get companionPeerWireVersion =>
+      'The desktop runs a different engine version. Both sides have to be updated.';
+
+  @override
+  String get companionPeerModelMismatch =>
+      'The desktop holds a different model file. Both sides need the same .cmf.';
+
+  @override
+  String get companionPeerFailed => 'The desktop could not finish the reply.';
+
+  @override
+  String companionStatusActive(String address) {
+    return 'Computing on $address';
+  }
+
+  @override
+  String companionStatusUnchecked(String address) {
+    return 'Set to $address, not checked yet';
+  }
+
+  @override
+  String get companionStatusBroken => 'Desktop unavailable';
+
+  @override
+  String get companionDisconnect => 'Disconnect';
+
+  @override
+  String get chatComputeHere => 'Compute here';
 }

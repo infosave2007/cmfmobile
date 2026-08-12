@@ -200,5 +200,14 @@
   "companionSameModel": "Auf beiden Geräten muss dieselbe .cmf-Datei liegen. Der Handshake vergleicht sie und weist eine fremde ab, sodass eine Abweichung laut fehlschlägt statt Unsinn zu erzeugen.",
   "companionWireNote": "Beide Seiten müssen dieselbe Engine-Version fahren. Der Handshake vergleicht die Protokollversion und sagt es, wenn sie abweicht.",
   "companionTokenClearText": "Das Token wird im Klartext übertragen. Nutzen Sie ein Kabel oder ein Netz, dem Sie vertrauen.",
-  "companionErrorAddress": "Die Adresse muss host:port lauten, zum Beispiel 192.168.1.5:9911."
+  "companionErrorAddress": "Die Adresse muss host:port lauten, zum Beispiel 192.168.1.5:9911.",
+  "companionPeerUnreachable": "Der Desktop antwortet nicht — gestoppt, oder Kabel bzw. Netzwerk sind weg.",
+  "companionPeerWireVersion": "Auf dem Desktop läuft eine andere Engine-Version. Beide Seiten müssen aktualisiert werden.",
+  "companionPeerModelMismatch": "Der Desktop hält eine andere Modelldatei. Beide Seiten brauchen dieselbe .cmf.",
+  "companionPeerFailed": "Der Desktop konnte die Antwort nicht abschließen.",
+  "companionStatusActive": "Rechnet auf {address}",
+  "companionStatusUnchecked": "Auf {address} gesetzt, noch nicht geprüft",
+  "companionStatusBroken": "Desktop nicht erreichbar",
+  "companionDisconnect": "Trennen",
+  "chatComputeHere": "Hier rechnen"
 }

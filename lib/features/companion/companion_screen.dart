@@ -144,6 +144,34 @@ class _CompanionScreenState extends ConsumerState<CompanionScreen> {
                           fontSize: 12, color: scheme.onSurfaceVariant),
                     ),
 
+                    // What is actually happening right now, and one plain way
+                    // to stop it. Without this the only exit was the segmented
+                    // control, which reads as a preference rather than as the
+                    // switch that decides where every reply comes from.
+                    if (companion.role == CompanionRole.desktop) ...[
+                      const SizedBox(height: 12),
+                      _StatusRow(
+                        broken: companion.peerBroken,
+                        text: companion.peerBroken
+                            ? l.companionStatusBroken
+                            : companion.lastCheckOk == true
+                                ? l.companionStatusActive(_address.text)
+                                : l.companionStatusUnchecked(_address.text),
+                        cause: switch (companion.peerFailure) {
+                          PeerFailure.unreachable => l.companionPeerUnreachable,
+                          PeerFailure.wireVersion => l.companionPeerWireVersion,
+                          PeerFailure.modelMismatch =>
+                            l.companionPeerModelMismatch,
+                          PeerFailure.other => l.companionPeerFailed,
+                          null => null,
+                        },
+                        onDisconnect: companion.busy
+                            ? null
+                            : () => controller.useLocal(),
+                        disconnectLabel: l.companionDisconnect,
+                      ),
+                    ],
+
                     if (_wantDesktop ||
                         companion.role == CompanionRole.desktop ||
                         _address.text.isNotEmpty) ...[
@@ -353,6 +381,67 @@ class _CompanionScreenState extends ConsumerState<CompanionScreen> {
           companionWorkerPort:
               port != null && port > 0 && port < 65536 ? port : s.companionWorkerPort,
         ));
+  }
+}
+
+/// Live state of the split, plus the way out of it.
+class _StatusRow extends StatelessWidget {
+  const _StatusRow({
+    required this.broken,
+    required this.text,
+    required this.cause,
+    required this.onDisconnect,
+    required this.disconnectLabel,
+  });
+
+  final bool broken;
+  final String text;
+  final String? cause;
+  final VoidCallback? onDisconnect;
+  final String disconnectLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tint = broken ? scheme.error : scheme.primary;
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: tint.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(broken ? Icons.link_off : Icons.link, size: 16, color: tint),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(text,
+                    style: TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w600)),
+              ),
+              TextButton(
+                onPressed: onDisconnect,
+                style: TextButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  foregroundColor: tint,
+                ),
+                child: Text(disconnectLabel,
+                    style: const TextStyle(fontSize: 12)),
+              ),
+            ],
+          ),
+          if (cause != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4, left: 24),
+              child: Text(cause!,
+                  style: TextStyle(fontSize: 11, color: scheme.error)),
+            ),
+        ],
+      ),
+    );
   }
 }
 

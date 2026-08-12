@@ -667,4 +667,39 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get companionErrorAddress =>
       'L\'adresse doit être host:port, par exemple 192.168.1.5:9911.';
+
+  @override
+  String get companionPeerUnreachable =>
+      'L\'ordinateur ne répond pas — arrêté, ou le câble ou le réseau a disparu.';
+
+  @override
+  String get companionPeerWireVersion =>
+      'L\'ordinateur utilise une autre version du moteur. Les deux côtés doivent être mis à jour.';
+
+  @override
+  String get companionPeerModelMismatch =>
+      'L\'ordinateur détient un autre fichier de modèle. Les deux côtés ont besoin du même .cmf.';
+
+  @override
+  String get companionPeerFailed =>
+      'L\'ordinateur n\'a pas pu terminer la réponse.';
+
+  @override
+  String companionStatusActive(String address) {
+    return 'Calcule sur $address';
+  }
+
+  @override
+  String companionStatusUnchecked(String address) {
+    return 'Défini sur $address, pas encore vérifié';
+  }
+
+  @override
+  String get companionStatusBroken => 'Ordinateur indisponible';
+
+  @override
+  String get companionDisconnect => 'Déconnecter';
+
+  @override
+  String get chatComputeHere => 'Calculer ici';
 }

@@ -663,4 +663,38 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get companionErrorAddress =>
       'Адрес должен быть в виде host:port, например 192.168.1.5:9911.';
+
+  @override
+  String get companionPeerUnreachable =>
+      'Десктоп не отвечает — остановлен, или пропал кабель либо сеть.';
+
+  @override
+  String get companionPeerWireVersion =>
+      'На десктопе другая версия движка. Обновить нужно обе стороны.';
+
+  @override
+  String get companionPeerModelMismatch =>
+      'На десктопе другой файл модели. На обеих сторонах нужен один и тот же .cmf.';
+
+  @override
+  String get companionPeerFailed => 'Десктоп не смог завершить ответ.';
+
+  @override
+  String companionStatusActive(String address) {
+    return 'Считает $address';
+  }
+
+  @override
+  String companionStatusUnchecked(String address) {
+    return 'Задан $address, ещё не проверен';
+  }
+
+  @override
+  String get companionStatusBroken => 'Десктоп недоступен';
+
+  @override
+  String get companionDisconnect => 'Отключить';
+
+  @override
+  String get chatComputeHere => 'Считать здесь';
 }

@@ -200,5 +200,14 @@
   "companionSameModel": "Les deux appareils doivent détenir le même fichier .cmf. La poignée de main le compare et rejette un fichier étranger : un écart échoue franchement au lieu de produire n'importe quoi.",
   "companionWireNote": "Les deux côtés doivent utiliser la même version du moteur. La poignée de main compare la version du protocole et le signale en cas d'écart.",
   "companionTokenClearText": "Le jeton circule en clair. Utilisez un câble ou un réseau de confiance.",
-  "companionErrorAddress": "L'adresse doit être host:port, par exemple 192.168.1.5:9911."
+  "companionErrorAddress": "L'adresse doit être host:port, par exemple 192.168.1.5:9911.",
+  "companionPeerUnreachable": "L'ordinateur ne répond pas — arrêté, ou le câble ou le réseau a disparu.",
+  "companionPeerWireVersion": "L'ordinateur utilise une autre version du moteur. Les deux côtés doivent être mis à jour.",
+  "companionPeerModelMismatch": "L'ordinateur détient un autre fichier de modèle. Les deux côtés ont besoin du même .cmf.",
+  "companionPeerFailed": "L'ordinateur n'a pas pu terminer la réponse.",
+  "companionStatusActive": "Calcule sur {address}",
+  "companionStatusUnchecked": "Défini sur {address}, pas encore vérifié",
+  "companionStatusBroken": "Ordinateur indisponible",
+  "companionDisconnect": "Déconnecter",
+  "chatComputeHere": "Calculer ici"
 }

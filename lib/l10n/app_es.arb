@@ -200,5 +200,14 @@
   "companionSameModel": "Ambos dispositivos deben tener el mismo archivo .cmf. El apretón de manos lo compara y rechaza uno ajeno, de modo que una discrepancia falla de forma visible en lugar de producir disparates.",
   "companionWireNote": "Ambos lados deben usar la misma versión del motor. El apretón de manos compara la versión del protocolo y lo indica si difiere.",
   "companionTokenClearText": "El token viaja en texto plano. Usa un cable o una red de confianza.",
-  "companionErrorAddress": "La dirección debe ser host:port, por ejemplo 192.168.1.5:9911."
+  "companionErrorAddress": "La dirección debe ser host:port, por ejemplo 192.168.1.5:9911.",
+  "companionPeerUnreachable": "El escritorio no responde: detenido, o el cable o la red han desaparecido.",
+  "companionPeerWireVersion": "El escritorio usa otra versión del motor. Hay que actualizar ambos lados.",
+  "companionPeerModelMismatch": "El escritorio tiene otro archivo de modelo. Ambos lados necesitan el mismo .cmf.",
+  "companionPeerFailed": "El escritorio no pudo terminar la respuesta.",
+  "companionStatusActive": "Calculando en {address}",
+  "companionStatusUnchecked": "Fijado en {address}, sin comprobar",
+  "companionStatusBroken": "Escritorio no disponible",
+  "companionDisconnect": "Desconectar",
+  "chatComputeHere": "Calcular aquí"
 }

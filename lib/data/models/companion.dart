@@ -47,6 +47,87 @@ enum CompanionFault {
   modelNotLoaded,
 }
 
+/// Why a generation through the peer failed.
+///
+/// The runtime says it precisely and in English — `connect 127.0.0.1:9911:
+/// Connection refused (os error 111)` — which is the right text for a log and
+/// the wrong one for a chat bubble. These cases exist so the UI can say what
+/// happened in the user's language and offer the remedy that fits.
+enum PeerFailure {
+  /// The desktop is not answering: stopped, unplugged, or never started.
+  /// Covers both directions of that — refused on the dial, broken pipe when
+  /// it dies mid-session.
+  unreachable,
+
+  /// The two sides are on different engine versions. The handshake compares
+  /// a wire version and says so rather than producing garbage.
+  wireVersion,
+
+  /// The desktop holds a different `.cmf`. Checked by `dir_hash`, so a
+  /// mismatched pair is refused instead of assembling a chimera.
+  modelMismatch,
+
+  /// Something else came back from the peer path.
+  other,
+}
+
+/// Reads the runtime's text and names the cause, or null when the failure has
+/// nothing to do with a peer.
+///
+/// Matching on message text is not lovely, but the C ABI returns a string and
+/// the alternative — treating every failure during a split as a peer failure —
+/// would blame the desktop for a bad model file.
+PeerFailure? classifyPeerFailure(String raw) {
+  final text = raw.toLowerCase();
+  if (!text.contains('peer')) return null;
+  if (text.contains('wire version')) return PeerFailure.wireVersion;
+  if (text.contains('dir_hash') ||
+      text.contains('dir hash') ||
+      text.contains('different model')) {
+    return PeerFailure.modelMismatch;
+  }
+  const unreachable = [
+    'connection refused',
+    'broken pipe',
+    'connection reset',
+    // The runtime's own words when the far side closes mid-generation, which
+    // is the common case: somebody stopped the worker or unplugged the cable.
+    'hung up',
+    'disconnected',
+    'closed',
+    'timed out',
+    'timeout',
+    'no route to host',
+    'network is unreachable',
+    'not connected',
+    'eof',
+  ];
+  for (final marker in unreachable) {
+    if (text.contains(marker)) return PeerFailure.unreachable;
+  }
+  return PeerFailure.other;
+}
+
+/// The runtime's message without Dart's and the ABI's plumbing.
+///
+/// `Bad state: generate: peer generate: connect …` is three layers of wrapper
+/// around the one clause that matters. Shown as-is it reads like a crash.
+String cleanEngineError(String raw) {
+  var text = raw.trim();
+  const noise = ['Bad state: ', 'StateError: ', 'Exception: '];
+  for (final prefix in noise) {
+    if (text.startsWith(prefix)) text = text.substring(prefix.length).trim();
+  }
+  // The ABI nests its own context, one layer per hop it passed through:
+  // "generate: peer generate: <the cause>". Peel every one of them.
+  while (true) {
+    final match = RegExp(r'^[a-z_]*\s*generate:\s*').firstMatch(text);
+    if (match == null || match.end == 0) break;
+    text = text.substring(match.end).trim();
+  }
+  return text.isEmpty ? raw : text;
+}
+
 /// Where the peer lives, and how the phone talks to it.
 class CompanionConfig {
   const CompanionConfig({

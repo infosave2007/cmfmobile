@@ -8,6 +8,7 @@ import '../../core/providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/util/formats.dart';
 import '../../data/models/chat.dart';
+import '../../data/models/companion.dart';
 import '../../l10n/app_localizations.dart';
 import 'model_picker_sheet.dart';
 import 'sessions_sheet.dart';
@@ -418,23 +419,7 @@ class _MessageBubble extends ConsumerWidget {
           else
             MarkdownBody(data: message.content, selectable: true),
           if (message.error != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.error_outline, size: 14, color: scheme.error),
-                  const SizedBox(width: 4),
-                  Flexible(
-                    child: Text(
-                      '${l.chatGenerationError}: ${message.error}',
-                      style:
-                          TextStyle(fontSize: 12, color: scheme.error),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            _ErrorNote(error: message.error!),
         ],
       ),
     );
@@ -477,6 +462,84 @@ class _MessageBubble extends ConsumerWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// A failed reply, said in the user's language.
+///
+/// When the split is on, the interesting failure is not "generation failed"
+/// but "the desktop went away" — and the only thing the user can do about it
+/// from here is move the work back to this device. So that is the button.
+/// It is never done automatically: the desktop was chosen deliberately, and
+/// quietly moving a conversation onto the phone would change both where the
+/// data goes and how fast it comes back.
+class _ErrorNote extends ConsumerWidget {
+  const _ErrorNote({required this.error});
+
+  final String error;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final peerActive = ref.watch(
+        companionControllerProvider.select((s) => s.role == CompanionRole.desktop));
+    final failure = peerActive ? classifyPeerFailure(error) : null;
+
+    final headline = switch (failure) {
+      PeerFailure.unreachable => l.companionPeerUnreachable,
+      PeerFailure.wireVersion => l.companionPeerWireVersion,
+      PeerFailure.modelMismatch => l.companionPeerModelMismatch,
+      PeerFailure.other => l.companionPeerFailed,
+      null => '${l.chatGenerationError}: ${cleanEngineError(error)}',
+    };
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline, size: 14, color: scheme.error),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  headline,
+                  style: TextStyle(fontSize: 12, color: scheme.error),
+                ),
+              ),
+            ],
+          ),
+          if (failure != null) ...[
+            const SizedBox(height: 6),
+            FilledButton.tonalIcon(
+              style: FilledButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                textStyle: const TextStyle(fontSize: 12),
+              ),
+              icon: const Icon(Icons.smartphone, size: 16),
+              label: Text(l.chatComputeHere),
+              onPressed: () => ref
+                  .read(chatControllerProvider.notifier)
+                  .computeHereAndRetry(),
+            ),
+            // The runtime's own words stay available, just demoted: they name
+            // the address and the errno, which is what a bug report needs.
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                cleanEngineError(error),
+                style: TextStyle(
+                    fontSize: 10, color: scheme.onSurfaceVariant),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

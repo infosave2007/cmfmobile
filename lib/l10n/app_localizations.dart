@@ -1271,6 +1271,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The address must be host:port, for example 192.168.1.5:9911.'**
   String get companionErrorAddress;
+
+  /// No description provided for @companionPeerUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'The desktop is not answering — stopped, or the cable or network is gone.'**
+  String get companionPeerUnreachable;
+
+  /// No description provided for @companionPeerWireVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'The desktop runs a different engine version. Both sides have to be updated.'**
+  String get companionPeerWireVersion;
+
+  /// No description provided for @companionPeerModelMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The desktop holds a different model file. Both sides need the same .cmf.'**
+  String get companionPeerModelMismatch;
+
+  /// No description provided for @companionPeerFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The desktop could not finish the reply.'**
+  String get companionPeerFailed;
+
+  /// No description provided for @companionStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Computing on {address}'**
+  String companionStatusActive(String address);
+
+  /// No description provided for @companionStatusUnchecked.
+  ///
+  /// In en, this message translates to:
+  /// **'Set to {address}, not checked yet'**
+  String companionStatusUnchecked(String address);
+
+  /// No description provided for @companionStatusBroken.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop unavailable'**
+  String get companionStatusBroken;
+
+  /// No description provided for @companionDisconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get companionDisconnect;
+
+  /// No description provided for @chatComputeHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Compute here'**
+  String get chatComputeHere;
 }
 
 class _AppLocalizationsDelegate
