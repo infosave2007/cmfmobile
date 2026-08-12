@@ -2,7 +2,7 @@ name: cmf_mobile
 description: "CMF Mobile — run local AI models on your phone, serve them over the CMF protocol, and convert models from Hugging Face."
 publish_to: 'none'
 
-version: 1.1.24+31
+version: 1.1.25+32
 
 environment:
   sdk: ^3.12.1

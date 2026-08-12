@@ -5,6 +5,39 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
 
+## [1.1.25] - 2026-08-12
+
+### Changed
+- Engine updated to **v0.5.45 → v0.5.69** — 24 releases and 402 commits, with
+  no change to the C ABI, so the binding is untouched. The ones that matter on
+  a phone:
+  - **Hybrid GatedDeltaNet models decode about twice as fast on the CPU.** A
+    k=1 MTP speculation was default-on for every CPU decode with an MTP head,
+    and on a GDN hybrid the pair lane cannot parallelize the sequential
+    recurrence while the draft still pays the full-vocab head on top — the
+    engine's bench reads 16.1 tok/s with it against 32.6 without. Every phone
+    on the CPU path paid that tax. The gate is architectural now, and dense
+    models keep their speculation.
+  - **The ARM `q4tp` batch kernel stopped stalling on a cross-lane reduction**
+    once per group per column — 288 stalls a row at the shape it was measured
+    on — and reduces four times a row instead. An Android and Linux-ARM win
+    by scope: iOS takes the Accelerate path for these shapes and never called
+    the kernel.
+  - **2-bit `q2tp` decode gained its NEON integer path**, so ready `.cmf`
+    files in that format stop falling back to the scalar holdout.
+  - **The sampler stopped allocating a second whole-vocab copy every token** —
+    a megabyte a token at a 248k vocabulary, on the decode hot path.
+  - **Chat templates stopped failing silently.** minijinja was built without
+    its `json` feature, so any template branch touching tools errored into a
+    toolless ChatML fallback rather than rendering.
+
+  The release's headline work — speculative decode, the video pipeline, the
+  wgpu and Metal kernels — is GPU-side and desktop-shaped, and the
+  Apple-silicon efficiency-core pool change is `target_os = "macos"` only, so
+  none of it reaches the app.
+- The iOS simulator slice is now built from the same release tag as the device
+  slice instead of lagging it, so the simulator runs the same ABI a phone does.
+
 ## [1.1.24] - 2026-08-11
 
 ### Changed

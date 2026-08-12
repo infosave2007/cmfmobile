@@ -51,7 +51,7 @@ When the library is missing the app falls back to a clearly-labeled
 
 All three ABIs are checked into `android/app/src/main/jniLibs/`
 (arm64-v8a, armeabi-v7a, x86_64), taken from the cmf release
-[v0.5.45](https://github.com/infosave2007/cmf/releases/tag/v0.5.45)
+[v0.5.69](https://github.com/infosave2007/cmf/releases/tag/v0.5.69)
 (`libcortiq-ffi-<target>.tar.gz`) — Vulkan compute on arm64-v8a and x86_64
 (armeabi-v7a stays CPU-only by choice), the 0.5.30 ABI additions above, and
 KV-cache reuse between turns. To update:
@@ -84,14 +84,34 @@ IOSurface, which the runtime's wgpu backend needs; without them the link
 fails on undefined Metal symbols. No Xcode project surgery required; drop in
 a newer `.a` to update.
 
-`libcortiq_ffi_sim.a` (simulator) has no release asset and is built locally,
-so it lags the device slice — the simulator runs whatever ABI that older
-build has, and the optional entry points simply stay absent there.
+`libcortiq_ffi_sim.a` (simulator) has no release asset, so it is built from
+the release tag in a worktree of the cmf checkout — which keeps it level
+with the device slice instead of lagging it:
 
-Apple's `nm` cannot read parts of these archives ("Unknown attribute kind",
-a newer rustc LLVM than Xcode's reader). That is expected and not a broken
-artifact: the linker uses the archive index, which `nm -g <archive>` still
-lists. To check symbols, look there rather than at the members.
+```bash
+git -C <cmf checkout> worktree add --detach /tmp/cmf-<VER> v<VER>
+cd /tmp/cmf-<VER> && cargo build --release -p cortiq-ffi \
+  --target aarch64-apple-ios-sim
+cp target/aarch64-apple-ios-sim/release/libcortiq_ffi.a \
+  ios/Frameworks/libcortiq_ffi_sim.a
+```
+
+Apple's `nm` cannot read these archives ("Unknown attribute kind", a newer
+rustc LLVM than Xcode's reader), and neither can it list the archive index —
+`nm -g` comes back empty on a perfectly good `.a`. To check that the symbols
+the app looks up are really there, link against it instead:
+
+```bash
+xcrun --sdk iphoneos clang -arch arm64 -isysroot "$(xcrun --sdk iphoneos --show-sdk-path)" \
+  -miphoneos-version-min=13.0 probe.c \
+  -Wl,-force_load,ios/Frameworks/libcortiq_ffi.a \
+  -framework Metal -framework Foundation -framework QuartzCore \
+  -framework CoreGraphics -framework IOSurface -o /tmp/probe
+```
+
+where `probe.c` declares the entry points and references them from `main` —
+a missing symbol fails the link, which is the same thing the app's own build
+would hit.
 
 ## Desktop smoke test
 
