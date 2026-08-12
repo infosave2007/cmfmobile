@@ -5,7 +5,29 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
 
-## [1.1.25] - 2026-08-12
+## [1.1.26] - 2026-08-12
+
+(v1.1.25 carries the same engine update but was never shipped — the iOS
+defect below was found while verifying its build, and it made the iOS half of
+that release meaningless.)
+
+### Fixed
+- **On iOS the app was never actually running the engine.** The runtime's code
+  was in the binary; its entry points were not in the export trie, and that is
+  the table `dlsym` reads. `DynamicLibrary.process().lookup('cortiq_load')`
+  therefore returned nothing, `isAvailable` came back false, and the app fell
+  back to the demo engine — silently, because the Dart side looks the ABI up
+  at runtime, so a missing symbol is a fallback and not a build error. The
+  shipped 1.1.24 binary exports five symbols in total, none of them cortiq's.
+  Three things had to change together in `ios/Flutter/Cortiq.xcconfig`:
+  `-force_load` does not export anything, so `-Wl,-exported_symbol,_cortiq_*`
+  now makes the entry points roots; making them roots keeps code that calls
+  `cblas_sgemm` alive, which the link had never needed before and which wants
+  `-framework Accelerate`; and Xcode's default strip style for an app ("all")
+  emptied the trie again on the way into the IPA, so `STRIP_STYLE` is
+  `non-global`. The release workflow now fails if the built binary does not
+  export the ABI, since nothing else reports it. Android was never affected —
+  it `dlopen`s a real `.so`.
 
 ### Changed
 - Engine updated to **v0.5.45 → v0.5.69** — 24 releases and 402 commits, with

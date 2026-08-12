@@ -75,6 +75,21 @@ jobs:
           unzip -o -q *.ipa "Payload/Runner.app/Info.plist"
           plutil -p Payload/Runner.app/Info.plist | grep -E "DTXcode|DTSDK|DTPlatform|BuildMachine|CFBundleVersion"
 
+      # The Dart side looks the engine up at runtime, so a binary that lost
+      # libcortiq_ffi.a to -dead_strip still builds, still installs, and
+      # silently runs the demo engine. Releases 1.1.24 and earlier shipped
+      # that way. Nothing but this check would say so.
+      - name: Verify the engine ABI is actually in the binary
+        run: |
+          cd build/ipa
+          unzip -o -q *.ipa "Payload/Runner.app/Runner"
+          n=$(xcrun dyld_info -exports Payload/Runner.app/Runner | grep -c "_cortiq_" || true)
+          echo "exported cortiq entry points: $n"
+          if [ "$n" -lt 10 ]; then
+            echo "::error::Runner exports $n cortiq symbols — the engine was stripped out; the app would fall back to the demo engine. See ios/Flutter/Cortiq.xcconfig."
+            exit 1
+          fi
+
       - name: Upload to App Store Connect
         run: |
           xcrun altool --upload-app --type ios -f build/ipa/*.ipa \

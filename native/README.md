@@ -77,12 +77,30 @@ llvm-readelf -lW android/app/src/main/jniLibs/*/libcortiq_ffi.so \
 ## iOS
 
 `ios/Frameworks/libcortiq_ffi.a` (arm64, from the same release) is linked
-via `ios/Flutter/Cortiq.xcconfig` — `-force_load` keeps the C ABI symbols
-alive for `DynamicLibrary.process()` despite dead-code stripping. From
-0.5.31 the same xcconfig also links Metal, QuartzCore, CoreGraphics and
-IOSurface, which the runtime's wgpu backend needs; without them the link
-fails on undefined Metal symbols. No Xcode project surgery required; drop in
-a newer `.a` to update.
+via `ios/Flutter/Cortiq.xcconfig`. Getting it into the binary takes three
+settings that all have to hold at once, and losing any one of them puts the
+app back on the demo engine **without failing the build** — the Dart side
+looks the ABI up at runtime, so a missing symbol is a fallback, not an error:
+
+- `-force_load` pulls in every archive member, but it exports nothing: a
+  static library's symbols do not reach an executable's export trie on their
+  own, and that trie is the table `dlsym` reads. Through 1.1.24 the runtime's
+  code sat in the binary with no way to call into it.
+- `-Wl,-exported_symbol,_cortiq_*` puts the entry points in that trie. It also
+  makes them roots, which keeps alive the code behind them — including the
+  `cblas_sgemm` call that makes Accelerate necessary below.
+- `STRIP_STYLE = non-global`, because Xcode's default for an app ("all")
+  empties that trie again when the archive is stripped.
+
+The same xcconfig links Accelerate (the engine's Apple sgemm path calls
+`cblas_sgemm`) and, from 0.5.31, Metal, QuartzCore, CoreGraphics and
+IOSurface for the wgpu backend. No Xcode project surgery required; drop in a
+newer `.a` to update — then check the built binary actually exports the ABI,
+because nothing else will tell you:
+
+```bash
+xcrun dyld_info -exports build/ios/iphoneos/Runner.app/Runner | grep -c cortiq
+```
 
 `libcortiq_ffi_sim.a` (simulator) has no release asset, so it is built from
 the release tag in a worktree of the cmf checkout — which keeps it level

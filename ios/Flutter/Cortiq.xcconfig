@@ -1,14 +1,35 @@
 // Links the cortiq inference runtime (Rust staticlib from the cmf
-// release) into Runner. -force_load keeps the C ABI symbols alive for
-// DynamicLibrary.process() despite dead-code stripping.
+// release) into Runner, so DynamicLibrary.process() can find the C ABI.
+//
+// Three settings are load-bearing, and dropping any one of them puts the
+// app back on the demo engine WITHOUT failing the build:
+//
+//   -force_load pulls every member of the archive in, but on its own it
+//   is not enough: nothing in the Swift/ObjC side references the engine
+//   (the Dart side looks it up at runtime), symbols of a static library
+//   are not exported from an executable by default, and -dead_strip then
+//   removes the whole runtime as unreachable. Measured: a probe linked
+//   this way comes out at 84 KB and dlsym finds nothing.
+//
+//   -exported_symbol _cortiq_* makes those symbols roots, which both
+//   keeps the code and puts it in the export trie dlsym reads.
+//
+//   Accelerate resolves _cblas_sgemm, which the engine's Apple-platform
+//   sgemm path calls. The link only used to succeed without it because
+//   the code that needs it was being stripped away.
 //
 // Metal and friends are what the runtime's wgpu backend needs from
 // cortiq-ffi 0.5.31 on; without them the link fails on undefined Metal
 // symbols. IOSurface and CoreGraphics come in through wgpu's surface
 // support, which is linked in even though inference only ever computes.
-OTHER_LDFLAGS[sdk=iphoneos*] = $(inherited) -force_load $(PROJECT_DIR)/Frameworks/libcortiq_ffi.a -framework Metal -framework Foundation -framework QuartzCore -framework CoreGraphics -framework IOSurface
+OTHER_LDFLAGS[sdk=iphoneos*] = $(inherited) -force_load $(PROJECT_DIR)/Frameworks/libcortiq_ffi.a -Wl,-exported_symbol,_cortiq_* -framework Accelerate -framework Metal -framework Foundation -framework QuartzCore -framework CoreGraphics -framework IOSurface
 // Simulator slice (aarch64-apple-ios-sim), built locally; without it the
 // simulator falls back to the demo engine.
-OTHER_LDFLAGS[sdk=iphonesimulator*] = $(inherited) -force_load $(PROJECT_DIR)/Frameworks/libcortiq_ffi_sim.a -framework Metal -framework Foundation -framework QuartzCore -framework CoreGraphics -framework IOSurface
+OTHER_LDFLAGS[sdk=iphonesimulator*] = $(inherited) -force_load $(PROJECT_DIR)/Frameworks/libcortiq_ffi_sim.a -Wl,-exported_symbol,_cortiq_* -framework Accelerate -framework Metal -framework Foundation -framework QuartzCore -framework CoreGraphics -framework IOSurface
 // The sim slice is arm64-only (Apple Silicon hosts).
 EXCLUDED_ARCHS[sdk=iphonesimulator*] = x86_64 i386
+// The archive is stripped after linking, and Xcode's default style for an
+// app ("all") empties the export trie again — symbols exported above,
+// gone by the time the IPA is written, dlsym back to nothing. Stripping
+// local symbols only keeps the exports and still drops the debug names.
+STRIP_STYLE = non-global
