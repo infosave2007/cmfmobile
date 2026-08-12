@@ -183,6 +183,41 @@ percentage (`docs/MOBILE_SPLIT.ru.md` in the cmf repo):
 - The token travels in clear text and there is no call to stop a started
   worker; the screen says both.
 
+### Running one, end to end
+
+Verified 2026-08-12 on a Xiaomi 12 Lite over USB against a MacBook M4, both
+on engine 0.5.70:
+
+```bash
+# 1. Desktop: serve the model. Same .cmf the phone holds — the handshake
+#    compares dir_hash and refuses a stranger.
+cortiq worker ~/models/bonsai-1.7b-q1.cmf --listen 127.0.0.1:9911 --token cmfsplit
+#    → worker: qwen3 | layers 28 | dir_hash 39f6fdae31ba0fc1 | wire v5 | listening
+
+# 2. Cable: point the phone's loopback at the desktop's. This is why the
+#    address is 127.0.0.1 — no discovery needed, and no Wi-Fi tail.
+adb reverse tcp:9911 tcp:9911
+```
+
+3. Phone: **Split** → *On the desktop* → address `127.0.0.1:9911`, the same
+   token → **Check**. The desktop logs the assignment:
+   `assigned layers 0..=27, wire F16, head mine` — all the layers, the head
+   and the sampler on that side, the tokenizer on this one.
+
+Measured on that run, same model and same phone:
+
+| | tok/s |
+|---|---|
+| phone alone | 12.5 |
+| through the desktop | **30.9** |
+
+The reply text legitimately differs between the two: the sides are on
+different backends (the phone's NEON against the Mac's Metal) and the wire is
+`f16`. Byte-identical output needs the same backend on both sides.
+
+A model must be loaded on the phone even though the desktop does the
+computing — the tokenizer and chat template are read locally.
+
 ## Desktop smoke test
 
 Real end-to-end inference through the same binding the app uses:

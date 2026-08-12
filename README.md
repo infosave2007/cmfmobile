@@ -94,6 +94,11 @@ converter, and an OpenAI-compatible server speaking the CMF protocol.
 - Live peer readout — clock, temperature, free memory, threads — with
   absent fields shown as *not reported* rather than zero
 
+Step-by-step, with the desktop command and the cable setup:
+[native/README.md → Running one, end to end](native/README.md#running-one-end-to-end).
+Measured on a Xiaomi 12 Lite against a MacBook M4 over USB, same 1.7B model:
+**12.5 tok/s on the phone alone, 30.9 through the desktop.**
+
 ### 🌍 Localization
 Seven languages, matching cortiq-gateway: **English, Русский, Deutsch, Français, Español, 中文, Türkçe**.
 
