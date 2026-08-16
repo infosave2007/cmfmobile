@@ -479,7 +479,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsUseGpuHint =>
-      'Aktiviert den dedizierten GPU-Ausführungsgraph (wird beim nächsten Laden des Modells angewendet).';
+      'Diskrete GPU aktivieren (gilt ab dem nächsten Laden des Modells). Die erste GPU-Antwort kompiliert die Shader des Treibers — das kann einmalig mehrere Minuten dauern; das Ergebnis wird zwischengespeichert.';
 
   @override
   String get settingsUseGpuNeedsBackend =>

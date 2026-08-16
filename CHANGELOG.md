@@ -5,6 +5,29 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
 
+## [1.2.5] - 2026-08-16
+
+(1.2.4's Android half never shipped: a leftover `applicationIdSuffix =
+".devtest"` — a deliberately temporary side-by-side test setting, marked
+"revert before committing" and then committed anyway by an undiscriminating
+`git add -A` — renamed the release package, and Play refused the bundle with
+"APK has the wrong package name", twice, because a rerun rebuilds the same
+source. The iOS 1.2.4 build was unaffected and is superseded by this one.)
+
+### Fixed
+- The release build type carries no `applicationIdSuffix` again, with a
+  comment explaining why it must not: the store upload is built from it.
+
+### Changed
+- **The GPU switch says what the first answer will cost.** Enabling it on
+  this app's own test device produced a 204-second first reply — the Vulkan
+  driver compiling every shader, once, while the screen showed nothing but a
+  spinner — and read as "the GPU is broken". It is not: the engine caches
+  the compiled pipelines beside the model (2.1 MB), the arbitration then
+  correctly kept compute on the CPU for this GPU, and the next launch
+  answered in 5 seconds. The toggle's caption now warns about the one-time
+  minutes-long compile in all seven languages.
+
 ## [1.2.4] - 2026-08-16
 
 ### Changed

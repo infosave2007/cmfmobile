@@ -147,7 +147,7 @@
   },
   "settingsThreadsHint": "“Otomatik”, havuzu motorun iş parçacıklarını sabitlediği büyük çekirdek kümesine göre boyutlandırır; fazlası yalnızca bekleme ekler. Bir sonraki model yüklemesinde uygulanır.",
   "settingsUseGpu": "GPU kullan (Vulkan/Metal)",
-  "settingsUseGpuHint": "Ayrık GPU yürütme grafiğini etkinleştirir (bir sonraki model yüklendiğinde uygulanır).",
+  "settingsUseGpuHint": "Ayrık GPU'yu etkinleştir (bir sonraki model yüklemesinde geçerli olur). Cihazdaki ilk GPU yanıtı sürücünün gölgelendiricilerini derler — bu bir kereliğine birkaç dakika sürebilir; sonuç önbelleğe alınır.",
   "settingsUseGpuNeedsBackend": "Vulkan/Metal arka ucuyla derlenmiş bir çalışma zamanı gerektirir — bkz. native/TUNING.md.",
   "settingsDisableThinking": "Düşünmeyi devre dışı bırak",
   "settingsDisableThinkingHint": "Akıl yürüten modeller (Qwen3/3.5) <think> adımı olmadan doğrudan yanıt verir",

@@ -147,7 +147,7 @@
   },
   "settingsThreadsHint": "„Automatisch“ richtet den Pool nach dem Big-Core-Cluster aus, an den die Engine ihre Worker bindet; mehr Threads erzeugen nur Wartezeit. Wird beim nächsten Laden des Modells angewendet.",
   "settingsUseGpu": "GPU verwenden (Vulkan/Metal)",
-  "settingsUseGpuHint": "Aktiviert den dedizierten GPU-Ausführungsgraph (wird beim nächsten Laden des Modells angewendet).",
+  "settingsUseGpuHint": "Diskrete GPU aktivieren (gilt ab dem nächsten Laden des Modells). Die erste GPU-Antwort kompiliert die Shader des Treibers — das kann einmalig mehrere Minuten dauern; das Ergebnis wird zwischengespeichert.",
   "settingsUseGpuNeedsBackend": "Erfordert eine Laufzeit mit Vulkan-/Metal-Backend — siehe native/TUNING.md.",
   "settingsDisableThinking": "Denken deaktivieren",
   "settingsDisableThinkingHint": "Reasoning-Modelle (Qwen3/3.5) antworten direkt, ohne <think>-Schritt",

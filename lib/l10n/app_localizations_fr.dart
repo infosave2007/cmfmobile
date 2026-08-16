@@ -482,7 +482,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsUseGpuHint =>
-      'Active le graphe d\'exécution GPU discret (appliqué au prochain chargement de modèle).';
+      'Activer le GPU discret (appliqué au prochain chargement du modèle). La première réponse GPU compile les shaders du pilote — cela peut prendre plusieurs minutes, une seule fois ; le résultat est mis en cache.';
 
   @override
   String get settingsUseGpuNeedsBackend =>

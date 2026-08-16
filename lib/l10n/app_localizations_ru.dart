@@ -478,7 +478,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsUseGpuHint =>
-      'Включить дискретный GPU (применится при следующей загрузке модели).';
+      'Включить дискретный GPU (применится при следующей загрузке модели). Первый ответ с GPU компилирует шейдеры драйвера — это может занять несколько минут, один раз; результат кешируется.';
 
   @override
   String get settingsUseGpuNeedsBackend =>

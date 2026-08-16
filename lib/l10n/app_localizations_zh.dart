@@ -458,7 +458,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsUseGpu => '使用 GPU (Vulkan/Metal)';
 
   @override
-  String get settingsUseGpuHint => '启用离散 GPU 执行图（在下次加载模型时生效）。';
+  String get settingsUseGpuHint =>
+      '启用独立 GPU（下次加载模型时生效）。设备上首次 GPU 回答需要编译驱动着色器——可能耗时几分钟，仅此一次；结果会被缓存。';
 
   @override
   String get settingsUseGpuNeedsBackend =>

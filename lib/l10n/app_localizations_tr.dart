@@ -477,7 +477,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsUseGpuHint =>
-      'Ayrık GPU yürütme grafiğini etkinleştirir (bir sonraki model yüklendiğinde uygulanır).';
+      'Ayrık GPU\'yu etkinleştir (bir sonraki model yüklemesinde geçerli olur). Cihazdaki ilk GPU yanıtı sürücünün gölgelendiricilerini derler — bu bir kereliğine birkaç dakika sürebilir; sonuç önbelleğe alınır.';
 
   @override
   String get settingsUseGpuNeedsBackend =>

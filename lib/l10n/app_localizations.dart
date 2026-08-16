@@ -951,7 +951,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsUseGpuHint.
   ///
   /// In en, this message translates to:
-  /// **'Enable discrete GPU execution graph (applies on next model load).'**
+  /// **'Enable the discrete GPU (applies at the next model load). The first GPU answer on a device compiles the driver\'s shaders — this can take several minutes, once; the result is cached.'**
   String get settingsUseGpuHint;
 
   /// No description provided for @settingsUseGpuNeedsBackend.

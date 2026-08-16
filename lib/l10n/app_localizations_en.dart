@@ -476,7 +476,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsUseGpuHint =>
-      'Enable discrete GPU execution graph (applies on next model load).';
+      'Enable the discrete GPU (applies at the next model load). The first GPU answer on a device compiles the driver\'s shaders — this can take several minutes, once; the result is cached.';
 
   @override
   String get settingsUseGpuNeedsBackend =>

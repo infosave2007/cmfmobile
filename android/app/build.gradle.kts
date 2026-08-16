@@ -60,8 +60,11 @@ android {
 
     buildTypes {
         release {
-            // TEMPORARY (side-by-side test build) — revert before committing.
-            applicationIdSuffix = ".devtest"
+            // No applicationIdSuffix here, ever: Play rejects the bundle with
+            // "APK has the wrong package name", and the workflow's rerun
+            // rebuilds from the same source, so it fails identically. A
+            // side-by-side test install belongs in the debug type or a
+            // flavor, not in the type the store upload is built from.
             signingConfig = if (hasReleaseSigning) {
                 signingConfigs.getByName("release")
             } else {

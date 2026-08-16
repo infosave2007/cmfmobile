@@ -230,7 +230,7 @@
   },
   "settingsThreadsHint": "Auto sizes the pool to the big-core cluster the engine pins its workers to; more threads than that only add wait time. Applied on next model load.",
   "settingsUseGpu": "Use GPU (Vulkan/Metal)",
-  "settingsUseGpuHint": "Enable discrete GPU execution graph (applies on next model load).",
+  "settingsUseGpuHint": "Enable the discrete GPU (applies at the next model load). The first GPU answer on a device compiles the driver's shaders — this can take several minutes, once; the result is cached.",
   "settingsUseGpuNeedsBackend": "Needs a runtime built with the Vulkan/Metal backend — see native/TUNING.md.",
   "settingsDisableThinking": "Disable thinking",
   "settingsDisableThinkingHint": "Reasoning models (Qwen3/3.5) answer directly, with no <think> step",

@@ -147,7 +147,7 @@
   },
   "settingsThreadsHint": "«Automático» ajusta el grupo al clúster de núcleos grandes al que el motor fija sus workers; más hilos solo añaden espera. Se aplica en la próxima carga del modelo.",
   "settingsUseGpu": "Usar GPU (Vulkan/Metal)",
-  "settingsUseGpuHint": "Habilita el gráfico de ejecución discreta de GPU (se aplica al cargar el siguiente modelo).",
+  "settingsUseGpuHint": "Activar la GPU discreta (se aplica en la próxima carga del modelo). La primera respuesta con GPU compila los sombreadores del controlador: puede tardar varios minutos, una sola vez; el resultado se guarda en caché.",
   "settingsUseGpuNeedsBackend": "Requiere un motor compilado con el backend Vulkan/Metal: consulta native/TUNING.md.",
   "settingsDisableThinking": "Desactivar pensamiento",
   "settingsDisableThinkingHint": "Los modelos de razonamiento (Qwen3/3.5) responden directamente, sin paso <think>",

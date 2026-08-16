@@ -147,7 +147,7 @@
   },
   "settingsThreadsHint": "« Auto » dimensionne le pool sur le cluster de gros cœurs auquel le moteur épingle ses workers ; au-delà, les threads n'ajoutent que de l'attente. Appliqué au prochain chargement du modèle.",
   "settingsUseGpu": "Utiliser le GPU (Vulkan/Metal)",
-  "settingsUseGpuHint": "Active le graphe d'exécution GPU discret (appliqué au prochain chargement de modèle).",
+  "settingsUseGpuHint": "Activer le GPU discret (appliqué au prochain chargement du modèle). La première réponse GPU compile les shaders du pilote — cela peut prendre plusieurs minutes, une seule fois ; le résultat est mis en cache.",
   "settingsUseGpuNeedsBackend": "Nécessite un moteur compilé avec le backend Vulkan/Metal — voir native/TUNING.md.",
   "settingsDisableThinking": "Désactiver la réflexion",
   "settingsDisableThinkingHint": "Les modèles de raisonnement (Qwen3/3.5) répondent directement, sans étape <think>",

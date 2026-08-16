@@ -480,7 +480,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsUseGpuHint =>
-      'Habilita el gráfico de ejecución discreta de GPU (se aplica al cargar el siguiente modelo).';
+      'Activar la GPU discreta (se aplica en la próxima carga del modelo). La primera respuesta con GPU compila los sombreadores del controlador: puede tardar varios minutos, una sola vez; el resultado se guarda en caché.';
 
   @override
   String get settingsUseGpuNeedsBackend =>
