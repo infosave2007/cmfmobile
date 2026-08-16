@@ -5,6 +5,29 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
 
+## [1.2.4] - 2026-08-16
+
+### Changed
+- Engine updated to **v0.5.70 → v0.5.82** — twelve releases, no change to the
+  C ABI, so the binding and the split protocol are untouched. What reaches a
+  phone:
+  - **Enabling the GPU stopped costing three minutes, measured on this app's
+    own test device.** On a Snapdragon 778G the first answer with the GPU
+    switch on took 256.8 s — the Vulkan driver recompiling every shader on
+    every launch — against 10.5 s on the CPU path. The engine now keeps a
+    pipeline cache on disk, and keeps it where an Android app can actually
+    write: both caches silently failed before, because they aimed at a
+    `/tmp` that does not exist inside an app sandbox. First GPU answer in a
+    fresh process: 256.8 → 49 s; steady decode with the switch on matches
+    the CPU path instead of trailing it.
+  - **The KV cache's silent 8192-token default is 32768 now**, and eviction
+    warns instead of quietly wiping half the conversation's context — on
+    long chats that boundary read as a model losing its mind mid-reply.
+  - **Metal correctness fixes** for Apple silicon: a q4tp GEMM read an
+    unbound weight-scale constant (every batched prefill on that path was
+    noise), and the fused RoPE kernel skipped the K heads' norm on models
+    whose head count is not a multiple of 8.
+
 ## [1.2.3] - 2026-08-12
 
 ### Fixed

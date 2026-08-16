@@ -54,7 +54,7 @@ When the library is missing the app falls back to a clearly-labeled
 
 All three ABIs are checked into `android/app/src/main/jniLibs/`
 (arm64-v8a, armeabi-v7a, x86_64), built from the cmf release tag
-[v0.5.70](https://github.com/infosave2007/cmf/releases/tag/v0.5.70).
+[v0.5.82](https://github.com/infosave2007/cmf/releases/tag/v0.5.82).
 
 **The build flags differ per ABI, and neither difference is optional.** The
 64-bit ABIs carry Vulkan compute, which is behind a non-default cargo

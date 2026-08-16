@@ -60,6 +60,8 @@ android {
 
     buildTypes {
         release {
+            // TEMPORARY (side-by-side test build) — revert before committing.
+            applicationIdSuffix = ".devtest"
             signingConfig = if (hasReleaseSigning) {
                 signingConfigs.getByName("release")
             } else {
