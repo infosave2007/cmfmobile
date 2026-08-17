@@ -5,6 +5,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../data/models/chat.dart';
 import '../data/models/companion.dart';
+import '../data/models/conversion.dart';
 import '../data/models/local_model.dart';
 import '../data/models/server.dart';
 import '../data/models/settings.dart';
@@ -97,8 +98,27 @@ final settingsProvider =
 // ---------------------------------------------------------------------------
 
 class ModelsController extends AsyncNotifier<List<LocalModel>> {
+  final Set<String> _seenDoneJobs = {};
+
   @override
-  Future<List<LocalModel>> build() => ref.read(modelRepositoryProvider).list();
+  Future<List<LocalModel>> build() {
+    // A finished download or conversion must land in the library no matter
+    // which screen is open. This used to be the import screen's job — so
+    // navigating away during a minutes-long download orphaned the refresh,
+    // and the finished model stayed invisible until an app restart.
+    final converter = ref.read(converterProvider);
+    final sub = converter.updates.listen((_) {
+      var added = false;
+      for (final job in converter.jobs) {
+        if (job.state == JobState.done && _seenDoneJobs.add(job.id)) {
+          added = true;
+        }
+      }
+      if (added) refresh();
+    });
+    ref.onDispose(sub.cancel);
+    return ref.read(modelRepositoryProvider).list();
+  }
 
   Future<void> refresh() async {
     state = AsyncData(await ref.read(modelRepositoryProvider).list());
