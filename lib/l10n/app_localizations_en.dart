@@ -247,7 +247,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importFeaturedTitle => 'Recommended';
 
   @override
-  String get importReadyCmfBadge => 'ready .cmf — tap to download';
+  String get importReadyCmfBadge => 'READY CMF';
 
   @override
   String get importNoResults => 'No models found.';
@@ -326,7 +326,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quantQ8_2fDesc =>
-      '8-bit two-field (𝒲×θ) — best quality/size. Converts on device.';
+      '8-bit two-field (𝒲×θ) — highest-fidelity quantization; ~2× the size of Q4TP.';
 
   @override
   String get quantQ8RowDesc =>
@@ -694,4 +694,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatComputeHere => 'Compute here';
+
+  @override
+  String get quantQ4tpDesc =>
+      'Recommended: 4-bit tiles on a per-row scale ladder — the best quality/size point, same format the desktop tools produce.';
+
+  @override
+  String get quantQ2tpDesc =>
+      '2/4-bit MoE profile: gate/up experts at 2-bit, everything else q4tp. On a dense model this is plain q4tp.';
+
+  @override
+  String get importCheckingRepo => 'Checking what the repo ships…';
+
+  @override
+  String get importReadyCmfTitle => 'Ready CMF — no conversion';
+
+  @override
+  String get importReadyCmfBody =>
+      'This repo ships a ready .cmf file. It downloads as-is, keeping the quantization it was built with.';
+
+  @override
+  String get importDownloadButton => 'Download';
+
+  @override
+  String importDownloadSize(String size) {
+    return 'Download: $size';
+  }
+
+  @override
+  String importEstimatedOutput(String size) {
+    return '≈ $size';
+  }
+
+  @override
+  String get importEstimateNote =>
+      'Output sizes are estimates: embeddings and norms stay f16 in every profile.';
+
+  @override
+  String get importTooBigBadge => 'larger than device RAM';
+
+  @override
+  String get importTabReady => 'Ready';
+
+  @override
+  String get importTabConvert => 'From HF';
 }

@@ -250,7 +250,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get importFeaturedTitle => 'Recomendados';
 
   @override
-  String get importReadyCmfBadge => '.cmf listo — toca para descargar';
+  String get importReadyCmfBadge => 'CMF LISTO';
 
   @override
   String get importNoResults => 'No se encontraron modelos.';
@@ -329,7 +329,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get quantQ8_2fDesc =>
-      '8 bits, dos campos (𝒲×θ) — mejor calidad/tamaño. Se convierte en el dispositivo.';
+      '8 bits de dos campos (𝒲×θ): la cuantización más fiel; ~2× el tamaño de Q4TP.';
 
   @override
   String get quantQ8RowDesc =>
@@ -700,4 +700,48 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get chatComputeHere => 'Calcular aquí';
+
+  @override
+  String get quantQ4tpDesc =>
+      'Recomendado: mosaicos de 4 bits en una escalera por fila — el mejor punto calidad/tamaño, el mismo formato que producen las herramientas de escritorio.';
+
+  @override
+  String get quantQ2tpDesc =>
+      'Perfil MoE 2/4 bits: expertos gate/up a 2 bits, el resto q4tp. En un modelo denso es q4tp puro.';
+
+  @override
+  String get importCheckingRepo => 'Comprobando qué contiene el repositorio…';
+
+  @override
+  String get importReadyCmfTitle => 'CMF listo — sin conversión';
+
+  @override
+  String get importReadyCmfBody =>
+      'Este repositorio incluye un archivo .cmf listo. Se descarga tal cual, con la cuantización con la que se creó.';
+
+  @override
+  String get importDownloadButton => 'Descargar';
+
+  @override
+  String importDownloadSize(String size) {
+    return 'Descarga: $size';
+  }
+
+  @override
+  String importEstimatedOutput(String size) {
+    return '≈ $size';
+  }
+
+  @override
+  String get importEstimateNote =>
+      'Los tamaños de salida son estimaciones: los embeddings y las normas permanecen en f16 en todos los perfiles.';
+
+  @override
+  String get importTooBigBadge => 'supera la RAM del dispositivo';
+
+  @override
+  String get importTabReady => 'Listos';
+
+  @override
+  String get importTabConvert => 'De HF';
 }

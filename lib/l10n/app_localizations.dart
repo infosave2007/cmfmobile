@@ -531,7 +531,7 @@ abstract class AppLocalizations {
   /// No description provided for @importReadyCmfBadge.
   ///
   /// In en, this message translates to:
-  /// **'ready .cmf — tap to download'**
+  /// **'READY CMF'**
   String get importReadyCmfBadge;
 
   /// No description provided for @importNoResults.
@@ -681,7 +681,7 @@ abstract class AppLocalizations {
   /// No description provided for @quantQ8_2fDesc.
   ///
   /// In en, this message translates to:
-  /// **'8-bit two-field (𝒲×θ) — best quality/size. Converts on device.'**
+  /// **'8-bit two-field (𝒲×θ) — highest-fidelity quantization; ~2× the size of Q4TP.'**
   String get quantQ8_2fDesc;
 
   /// No description provided for @quantQ8RowDesc.
@@ -1325,6 +1325,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Compute here'**
   String get chatComputeHere;
+
+  /// No description provided for @quantQ4tpDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended: 4-bit tiles on a per-row scale ladder — the best quality/size point, same format the desktop tools produce.'**
+  String get quantQ4tpDesc;
+
+  /// No description provided for @quantQ2tpDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'2/4-bit MoE profile: gate/up experts at 2-bit, everything else q4tp. On a dense model this is plain q4tp.'**
+  String get quantQ2tpDesc;
+
+  /// No description provided for @importCheckingRepo.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking what the repo ships…'**
+  String get importCheckingRepo;
+
+  /// No description provided for @importReadyCmfTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready CMF — no conversion'**
+  String get importReadyCmfTitle;
+
+  /// No description provided for @importReadyCmfBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This repo ships a ready .cmf file. It downloads as-is, keeping the quantization it was built with.'**
+  String get importReadyCmfBody;
+
+  /// No description provided for @importDownloadButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get importDownloadButton;
+
+  /// No description provided for @importDownloadSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Download: {size}'**
+  String importDownloadSize(String size);
+
+  /// No description provided for @importEstimatedOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'≈ {size}'**
+  String importEstimatedOutput(String size);
+
+  /// No description provided for @importEstimateNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Output sizes are estimates: embeddings and norms stay f16 in every profile.'**
+  String get importEstimateNote;
+
+  /// No description provided for @importTooBigBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'larger than device RAM'**
+  String get importTooBigBadge;
+
+  /// No description provided for @importTabReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get importTabReady;
+
+  /// No description provided for @importTabConvert.
+  ///
+  /// In en, this message translates to:
+  /// **'From HF'**
+  String get importTabConvert;
 }
 
 class _AppLocalizationsDelegate

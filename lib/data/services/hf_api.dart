@@ -86,6 +86,33 @@ class HfApi {
         .toList();
   }
 
+  /// GET /api/models?author=... → every public repo of one account. Used for
+  /// the featured section, so a newly published .cmf repo appears without an
+  /// app release.
+  Future<List<HfModel>> listAuthorModels(
+    String author, {
+    String? token,
+    int limit = 50,
+  }) async {
+    final uri = Uri.parse('$_base/api/models').replace(
+      queryParameters: {
+        'author': author,
+        'limit': '${limit.clamp(1, 100)}',
+        'full': 'false',
+      },
+    );
+    final res = await _client
+        .get(uri, headers: _headers(token))
+        .timeout(const Duration(seconds: 15));
+    if (res.statusCode != 200) {
+      throw HttpException('HF author listing failed: HTTP ${res.statusCode}');
+    }
+    final list = jsonDecode(res.body) as List;
+    return list
+        .map((m) => HfModel.fromJson(m as Map<String, dynamic>))
+        .toList();
+  }
+
   /// GET /api/models/{repo} → one model card (used for featured models).
   Future<HfModel> fetchModel(String repo, {String? token}) async {
     final uri = Uri.parse('$_base/api/models/$repo');

@@ -17,8 +17,9 @@ import 'model_repository.dart';
 ///  * repos that already publish .cmf files are downloaded directly
 ///    (any quantization);
 ///  * safetensors repos are converted on device by [convertSafetensorsToCmf]
-///    — Q8_ROW, Q8_2F, Q1 and F16 targets on a parallel isolate pool
-///    (Q4/VBIT still need the desktop cortiq toolchain).
+///    — Q4TP (recommended), Q2TP, Q8_ROW, Q8_2F, Q4_BLOCK, Q1T, Q1 and F16
+///    targets on a parallel isolate pool (VBIT still needs the desktop
+///    cortiq toolchain).
 class ConverterService {
   ConverterService({required this.hf, required this.models});
 

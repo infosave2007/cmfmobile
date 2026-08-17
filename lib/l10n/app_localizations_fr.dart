@@ -252,7 +252,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get importFeaturedTitle => 'Recommandés';
 
   @override
-  String get importReadyCmfBadge => '.cmf prêt — touchez pour télécharger';
+  String get importReadyCmfBadge => 'CMF PRÊT';
 
   @override
   String get importNoResults => 'Aucun modèle trouvé.';
@@ -331,7 +331,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get quantQ8_2fDesc =>
-      '8 bits, deux champs (𝒲×θ) — meilleur rapport qualité/taille. Conversion sur l’appareil.';
+      '8 bits à deux champs (𝒲×θ) — la quantification la plus fidèle ; ~2× la taille de Q4TP.';
 
   @override
   String get quantQ8RowDesc =>
@@ -702,4 +702,48 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chatComputeHere => 'Calculer ici';
+
+  @override
+  String get quantQ4tpDesc =>
+      'Recommandé : tuiles 4 bits sur une échelle par ligne — le meilleur rapport qualité/taille, le même format que produisent les outils de bureau.';
+
+  @override
+  String get quantQ2tpDesc =>
+      'Profil MoE 2/4 bits : experts gate/up en 2 bits, le reste en q4tp. Sur un modèle dense, c\'est du q4tp pur.';
+
+  @override
+  String get importCheckingRepo => 'Vérification du contenu du dépôt…';
+
+  @override
+  String get importReadyCmfTitle => 'CMF prêt — pas de conversion';
+
+  @override
+  String get importReadyCmfBody =>
+      'Ce dépôt contient un fichier .cmf prêt. Il se télécharge tel quel, avec sa quantification d\'origine.';
+
+  @override
+  String get importDownloadButton => 'Télécharger';
+
+  @override
+  String importDownloadSize(String size) {
+    return 'Téléchargement : $size';
+  }
+
+  @override
+  String importEstimatedOutput(String size) {
+    return '≈ $size';
+  }
+
+  @override
+  String get importEstimateNote =>
+      'Les tailles de sortie sont des estimations : embeddings et normes restent en f16 dans tous les profils.';
+
+  @override
+  String get importTooBigBadge => 'dépasse la RAM de l\'appareil';
+
+  @override
+  String get importTabReady => 'Prêts';
+
+  @override
+  String get importTabConvert => 'Depuis HF';
 }

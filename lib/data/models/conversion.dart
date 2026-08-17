@@ -1,7 +1,11 @@
 /// Quantization options offered by the converter (same set as
 /// cortiq-gateway's import screen).
 enum QuantType {
+  // Declaration order is presentation order in the converter sheet: the
+  // recommended profile leads.
+  q4tp('Q4TP', 'q4tp'),
   q8_2f('Q8_2F', 'q8_2f'),
+  q2tp('Q2TP', 'q2tp'),
   q8Row('Q8_ROW', 'q8'),
   q1t('Q1T', 'q1t'),
   q4Block('Q4_BLOCK', 'q4'),
@@ -19,12 +23,30 @@ enum QuantType {
   bool get supportedOnDevice => switch (this) {
         QuantType.q8Row ||
         QuantType.q8_2f ||
+        QuantType.q4tp ||
+        QuantType.q2tp ||
         QuantType.q1t ||
         QuantType.q4Block ||
         QuantType.q1 ||
         QuantType.f16 =>
           true,
         _ => false,
+      };
+
+  /// Rough output bytes per source weight, for the pre-conversion estimate.
+  /// The source stores ~2 bytes per weight (bf16/f16); embeddings and norms
+  /// stay f16 in every profile, which is why the estimate is a ≈ and not a
+  /// promise. Q2TP is the mixed 2/4 profile: 2-bit gate/up experts, q4tp
+  /// elsewhere — on a dense model it degenerates to plain q4tp.
+  double get bytesPerWeight => switch (this) {
+        QuantType.q8_2f || QuantType.q8Row => 1.01,
+        QuantType.q4tp => 0.52,
+        QuantType.q2tp => 0.33,
+        QuantType.q4Block => 0.57,
+        QuantType.q1t => 0.36,
+        QuantType.q1 => 0.19,
+        QuantType.vbit => 0.75,
+        QuantType.f16 => 2.0,
       };
 }
 

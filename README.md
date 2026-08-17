@@ -41,17 +41,22 @@ converter, and an OpenAI-compatible server speaking the CMF protocol.
 - **On-device, multi-threaded conversion** of safetensors repos to CMF v2
   (reference-exact encoders, isolate pool sized by the CPU-threads setting):
   - Dense Qwen3.5 GatedDeltaNet and Gemma 1/3/4 architecture descriptors
-  - `Q8_2F` — 8-bit two-field (𝒲×θ), the recommended quality/size point
+  - `Q4TP` — **recommended**: 4-bit tiles on a per-row scale ladder, the same
+    format the desktop tools produce
+  - `Q2TP` — the 2/4 MoE profile: gate/up experts at 2-bit, the rest q4tp
+  - `Q8_2F` — 8-bit two-field (𝒲×θ), highest-fidelity quantization
   - `Q8_ROW` — 8-bit per-row
   - `Q1T` — **training-free ternary** ({−s, 0, +s}, ~2.25–3 bit, below q4) with a
-    per-row f16 outlier overlay; the smallest usable on-device conversion
+    per-row f16 outlier overlay
   - `Q1` — **1.5-bit for 1-bit-trained models** (Bonsai/BitNet: a 27B model fits in ~5 GB)
   - `F16` — no quantization
-- **Featured models** pinned on top — ready `.cmf` repos download in one tap
-  (including the mobile-sized
-  [infosave/Bonsai-1.7Bcmf](https://huggingface.co/infosave/Bonsai-1.7Bcmf)
-  and [infosave/Bonsai-27Bcmf](https://huggingface.co/infosave/Bonsai-27Bcmf))
-- Repos that ship ready `.cmf` files download directly — any quantization
+- **Estimated sizes up front** — the conversion sheet shows the download size
+  and an approximate output size next to every quantization option
+- **Featured models** pinned on top — every ready-`.cmf` repo of
+  [huggingface.co/infosave](https://huggingface.co/infosave) (tag `cmf`),
+  fetched live with file sizes; one tap downloads
+- Repos that ship ready `.cmf` files download directly — the sheet detects
+  them and offers Download instead of quantization options
 - On-device conversion supports canonical Qwen MoE and LFM2-MoE/ShortConv
   checkpoints, including sidecar chat templates
 - **Resilient downloads** — parallel byte-range fetches survive minutes-long

@@ -242,7 +242,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get importFeaturedTitle => '推荐';
 
   @override
-  String get importReadyCmfBadge => '现成 .cmf——点按即可下载';
+  String get importReadyCmfBadge => '现成 CMF';
 
   @override
   String get importNoResults => '未找到模型。';
@@ -318,7 +318,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get importPhaseFinalizing => '正在完成';
 
   @override
-  String get quantQ8_2fDesc => '8 位双字段（𝒲×θ）——质量/体积最佳。可在设备端转换。';
+  String get quantQ8_2fDesc => '8 位双域（𝒲×θ）——保真度最高的量化；体积约为 Q4TP 的 2 倍。';
 
   @override
   String get quantQ8RowDesc => '8 位按行量化——简单可靠。可在设备上转换。';
@@ -667,4 +667,45 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chatComputeHere => '在本机计算';
+
+  @override
+  String get quantQ4tpDesc => '推荐：按行比例阶梯的 4 位分块——质量与体积的最佳平衡，与桌面工具产出的格式相同。';
+
+  @override
+  String get quantQ2tpDesc =>
+      'MoE 2/4 位方案：gate/up 专家用 2 位，其余用 q4tp。稠密模型上等同于纯 q4tp。';
+
+  @override
+  String get importCheckingRepo => '正在检查仓库内容…';
+
+  @override
+  String get importReadyCmfTitle => '现成 CMF——无需转换';
+
+  @override
+  String get importReadyCmfBody => '该仓库提供现成的 .cmf 文件，将按原样下载，保留其构建时的量化。';
+
+  @override
+  String get importDownloadButton => '下载';
+
+  @override
+  String importDownloadSize(String size) {
+    return '下载：$size';
+  }
+
+  @override
+  String importEstimatedOutput(String size) {
+    return '≈ $size';
+  }
+
+  @override
+  String get importEstimateNote => '输出大小为估算值：嵌入层和归一化层在所有方案中都保持 f16。';
+
+  @override
+  String get importTooBigBadge => '超出设备内存';
+
+  @override
+  String get importTabReady => '现成';
+
+  @override
+  String get importTabConvert => '从 HF';
 }

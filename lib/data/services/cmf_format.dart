@@ -40,6 +40,8 @@ abstract final class Cmf {
   static const int dtQ1 = 12;
   static const int dtQ1S = 13;
   static const int dtQ1T = 14;
+  static const int dtQ4TiledP = 15;
+  static const int dtQ2TiledP = 16;
 
   static String dtypeName(int id) => switch (id) {
     dtF32 => 'f32',
@@ -54,6 +56,10 @@ abstract final class Cmf {
     dtQ1 => 'q1',
     dtQ1S => 'q1s',
     dtQ1T => 'q1t',
+    // Without these two, a downloaded ready-CMF file in the current
+    // recommended formats was listed as "dtype#15" in the model library.
+    dtQ4TiledP => 'q4tp',
+    dtQ2TiledP => 'q2tp',
     _ => 'dtype#$id',
   };
 }

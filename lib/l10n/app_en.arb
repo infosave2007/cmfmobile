@@ -153,7 +153,7 @@
   "importSubtitle": "Search Hugging Face, convert to a local .cmf, and run it on this phone.",
   "importSearchPlaceholder": "Search models (e.g. qwen3, llama)…",
   "importFeaturedTitle": "Recommended",
-  "importReadyCmfBadge": "ready .cmf — tap to download",
+  "importReadyCmfBadge": "READY CMF",
   "importNoResults": "No models found.",
   "importGatedBadge": "gated",
   "importGatedHint": "Gated repo — set a Hugging Face token in Settings.",
@@ -178,7 +178,7 @@
   "importPhaseConverting": "converting",
   "importPhaseQuantizing": "quantizing",
   "importPhaseFinalizing": "finalizing",
-  "quantQ8_2fDesc": "8-bit two-field (𝒲×θ) — best quality/size. Converts on device.",
+  "quantQ8_2fDesc": "8-bit two-field (𝒲×θ) — highest-fidelity quantization; ~2× the size of Q4TP.",
   "quantQ8RowDesc": "8-bit per-row — simple, robust. Converts on device.",
   "quantQ1tDesc": "Ternary ~2.25–3 bit with an f16 outlier overlay — below q4, training-free. Smallest usable file, largest quality drop. Converts on device.",
   "quantQ4Desc": "4-bit block — smallest, lower quality. Needs a .cmf repo or the desktop toolchain.",
@@ -337,5 +337,31 @@
   },
   "companionStatusBroken": "Desktop unavailable",
   "companionDisconnect": "Disconnect",
-  "chatComputeHere": "Compute here"
+  "chatComputeHere": "Compute here",
+  "quantQ4tpDesc": "Recommended: 4-bit tiles on a per-row scale ladder — the best quality/size point, same format the desktop tools produce.",
+  "quantQ2tpDesc": "2/4-bit MoE profile: gate/up experts at 2-bit, everything else q4tp. On a dense model this is plain q4tp.",
+  "importCheckingRepo": "Checking what the repo ships…",
+  "importReadyCmfTitle": "Ready CMF — no conversion",
+  "importReadyCmfBody": "This repo ships a ready .cmf file. It downloads as-is, keeping the quantization it was built with.",
+  "importDownloadButton": "Download",
+  "importDownloadSize": "Download: {size}",
+  "@importDownloadSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "importEstimatedOutput": "≈ {size}",
+  "@importEstimatedOutput": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "importEstimateNote": "Output sizes are estimates: embeddings and norms stay f16 in every profile.",
+  "importTooBigBadge": "larger than device RAM",
+  "importTabReady": "Ready",
+  "importTabConvert": "From HF"
 }

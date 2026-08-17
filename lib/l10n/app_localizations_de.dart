@@ -249,7 +249,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get importFeaturedTitle => 'Empfohlen';
 
   @override
-  String get importReadyCmfBadge => 'fertige .cmf — zum Laden antippen';
+  String get importReadyCmfBadge => 'CMF FERTIG';
 
   @override
   String get importNoResults => 'Keine Modelle gefunden.';
@@ -328,7 +328,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get quantQ8_2fDesc =>
-      '8-Bit, zwei Felder (𝒲×θ) — bestes Qualität/Größe-Verhältnis. Konvertiert auf dem Gerät.';
+      '8-Bit-Zweifeld (𝒲×θ) — die genaueste Quantisierung; ~2× so groß wie Q4TP.';
 
   @override
   String get quantQ8RowDesc =>
@@ -698,4 +698,48 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chatComputeHere => 'Hier rechnen';
+
+  @override
+  String get quantQ4tpDesc =>
+      'Empfohlen: 4-Bit-Kacheln auf einer Skalenleiter pro Zeile — bestes Verhältnis von Qualität zu Größe, dasselbe Format wie die Desktop-Werkzeuge.';
+
+  @override
+  String get quantQ2tpDesc =>
+      '2/4-Bit-MoE-Profil: Gate/Up-Experten mit 2 Bit, alles andere q4tp. Bei einem dichten Modell schlicht q4tp.';
+
+  @override
+  String get importCheckingRepo => 'Prüfe, was das Repo enthält…';
+
+  @override
+  String get importReadyCmfTitle => 'Fertiges CMF — keine Konvertierung';
+
+  @override
+  String get importReadyCmfBody =>
+      'Dieses Repo enthält eine fertige .cmf-Datei. Sie wird unverändert heruntergeladen, mit ihrer ursprünglichen Quantisierung.';
+
+  @override
+  String get importDownloadButton => 'Herunterladen';
+
+  @override
+  String importDownloadSize(String size) {
+    return 'Download: $size';
+  }
+
+  @override
+  String importEstimatedOutput(String size) {
+    return '≈ $size';
+  }
+
+  @override
+  String get importEstimateNote =>
+      'Ausgabegrößen sind Schätzungen: Embeddings und Normen bleiben in jedem Profil f16.';
+
+  @override
+  String get importTooBigBadge => 'größer als der Gerätespeicher';
+
+  @override
+  String get importTabReady => 'Fertig';
+
+  @override
+  String get importTabConvert => 'Aus HF';
 }

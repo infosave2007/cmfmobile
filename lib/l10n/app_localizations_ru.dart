@@ -249,7 +249,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get importFeaturedTitle => 'Рекомендуемые';
 
   @override
-  String get importReadyCmfBadge => 'готовый .cmf — нажмите, чтобы скачать';
+  String get importReadyCmfBadge => 'ГОТОВЫЙ CMF';
 
   @override
   String get importNoResults => 'Модели не найдены.';
@@ -328,7 +328,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get quantQ8_2fDesc =>
-      '8 бит, два поля (𝒲×θ) — лучшее качество/размер. Конвертируется на устройстве.';
+      '8 бит, два поля (𝒲×θ) — максимальная точность среди квантизаций; ~2× размера Q4TP.';
 
   @override
   String get quantQ8RowDesc =>
@@ -697,4 +697,48 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chatComputeHere => 'Считать здесь';
+
+  @override
+  String get quantQ4tpDesc =>
+      'Рекомендуется: 4-битные тайлы на построчной лестнице масштабов — лучший баланс качества и размера, тот же формат, что делают десктопные инструменты.';
+
+  @override
+  String get quantQ2tpDesc =>
+      'Профиль 2/4 бита для MoE: эксперты gate/up — 2 бита, остальное q4tp. На плотной модели это обычный q4tp.';
+
+  @override
+  String get importCheckingRepo => 'Проверяем, что лежит в репозитории…';
+
+  @override
+  String get importReadyCmfTitle => 'Готовый CMF — без конвертации';
+
+  @override
+  String get importReadyCmfBody =>
+      'В репозитории лежит готовый файл .cmf. Он скачивается как есть, с той квантизацией, с которой собран.';
+
+  @override
+  String get importDownloadButton => 'Скачать';
+
+  @override
+  String importDownloadSize(String size) {
+    return 'Скачивание: $size';
+  }
+
+  @override
+  String importEstimatedOutput(String size) {
+    return '≈ $size';
+  }
+
+  @override
+  String get importEstimateNote =>
+      'Размеры на выходе приблизительны: эмбеддинги и нормы остаются f16 в любом профиле.';
+
+  @override
+  String get importTooBigBadge => 'больше памяти устройства';
+
+  @override
+  String get importTabReady => 'Готовые';
+
+  @override
+  String get importTabConvert => 'Из HF';
 }

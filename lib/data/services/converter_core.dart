@@ -116,8 +116,19 @@ String headerQuantLabel(QuantType quant) => switch (quant) {
   // VBIT here and the per-tensor directory holds the real dtype.
   QuantType.q1 => 'VBIT',
   QuantType.q1t => 'VBIT',
+  // Reference: tiled-predicted files are labeled Q4_BLOCK at the file level;
+  // the per-tensor directory carries the real q4tp/q2tp dtypes.
+  QuantType.q4tp => 'Q4_BLOCK',
+  QuantType.q2tp => 'Q4_BLOCK',
   QuantType.f16 => 'F16',
 };
+
+/// Gate/up expert projections — the tensors the q2tp PROFILE takes to 2-bit.
+/// Down experts and the whole skeleton stay q4tp (the 2/4 split mirroring
+/// Escha's choice); on a dense model the profile degenerates to plain q4tp.
+bool _q2tpExpertGateUp(String name) =>
+    name.contains('.experts.') &&
+    (name.endsWith('gate_proj.weight') || name.endsWith('up_proj.weight'));
 
 /// q1t outlier budget: fraction of each row kept exact (f16). The on-device
 /// two-field mask reduces to top-|w| per row (no activation Hessian), so this
@@ -158,10 +169,20 @@ int targetDtype(QuantType quant, String name, List<int> shape, int numel) {
       return Cmf.dtF16;
     case QuantType.q4Block:
       return shape[1] % 32 == 0 ? Cmf.dtQ4Block : Cmf.dtQ8_2f;
+    case QuantType.q4tp:
+      // Reference: cols % 32 misfits fall back to the two-field q8_2f.
+      return shape[1] % 32 == 0 ? Cmf.dtQ4TiledP : Cmf.dtQ8_2f;
+    case QuantType.q2tp:
+      if (shape[1] % 32 != 0) return Cmf.dtQ8_2f;
+      return _q2tpExpertGateUp(name) ? Cmf.dtQ2TiledP : Cmf.dtQ4TiledP;
     default:
       return Cmf.dtF16; // vbit needs the desktop toolchain
   }
 }
+
+/// Bytes of 5-bit rung codes per row — rounded up to whole bytes so every
+/// row decodes independently (reference q4tp_code_stride).
+int q4tpCodeStride(int groupsPerRow) => (groupsPerRow * 5 + 7) ~/ 8;
 
 int nbytesFor(int dtype, List<int> shape, int numel) => switch (dtype) {
   Cmf.dtQ8Row => shape[0] * shape[1] + shape[0] * 2,
@@ -173,6 +194,16 @@ int nbytesFor(int dtype, List<int> shape, int numel) => switch (dtype) {
     (shape[0] * shape[1]) ~/ 32 * 9 +
         (shape[0] + 1) * 4 +
         shape[0] * q1tOutliersPerRow(shape[1]) * 4,
+  // [nibbles 16B/group][row params 4B][5-bit rung codes, byte-padded rows]
+  Cmf.dtQ4TiledP =>
+    (shape[0] * shape[1]) ~/ 32 * 16 +
+        shape[0] * 4 +
+        shape[0] * q4tpCodeStride(shape[1] ~/ 32),
+  // Same side planes; the weight plane shrinks to 8 B per 32-weight group.
+  Cmf.dtQ2TiledP =>
+    (shape[0] * shape[1]) ~/ 32 * 8 +
+        shape[0] * 4 +
+        shape[0] * q4tpCodeStride(shape[1] ~/ 32),
   _ => numel * 2,
 };
 
@@ -994,6 +1025,243 @@ Future<int> _processTensor(
       }
       await emit(allPacked.toBytes());
       await emit(allScales.toBytes());
+
+    case Cmf.dtQ4TiledP:
+    case Cmf.dtQ2TiledP:
+      // Tiled-predicted scales (reference encode_q4tp / encode_q2tp): the
+      // per-group f16 scale of q4t collapses into a 5-bit rung on a per-row
+      // geometric ladder s[c] = 2^(lo + c·step), lo/step stored as f16 once
+      // per row. q2tp shares the ladder byte-for-byte, spends rung 0 on the
+      // exact zero (a pruned group must not come back as noise) and packs
+      // 32 weights into 8 bytes of 2-bit fields on the (c − 1.5)·s grid.
+      // Both searches of the reference are kept: the per-group rung probe,
+      // and q2tp's row-level ladder-top search over [1.0, 0.9, 0.8, 0.7] of
+      // the span — absmax pins the worst error, not the mean one.
+      final is2 = task.outDtype == Cmf.dtQ2TiledP;
+      final gpr = cols ~/ 32;
+      final stride = q4tpCodeStride(gpr);
+      final weightPlaneBytes = is2 ? 8 : 16;
+      final allWeights = BytesBuilder(copy: false);
+      final params = Uint8List(rows * 4);
+      final paramsData = ByteData.sublistView(params);
+      final codes = Uint8List(rows * stride);
+      final lg = Float64List(gpr);
+      final dead = List<bool>.filled(gpr, false);
+      final tab = Float64List(32);
+
+      // s[c] = exp2(lo) then 31 multiplies by exp2(step) — the geometric
+      // form is the format's definition (every consumer lands on the same
+      // f32 bits), so the port keeps the exact operation order.
+      void ladderInto(Float64List t, double lo, double st) {
+        final ratio = (math.pow(2.0, (st)).toDouble());
+        t[0] = (math.pow(2.0, (lo)).toDouble());
+        for (var c = 1; c < 32; c++) {
+          t[c] = (t[c - 1] * ratio);
+        }
+        if (is2) {
+          // q2tp: rung 0 is the exact zero; the geometric part shifts up one.
+          for (var c = 31; c >= 1; c--) {
+            t[c] = t[c - 1];
+          }
+          t[0] = 0.0;
+        }
+      }
+
+      void putCode(Uint8List crow, int rowBase, int g, int code) {
+        final bit = g * 5;
+        final b = rowBase + bit ~/ 8;
+        final sh = bit % 8;
+        crow[b] |= (code << sh) & 0xFF;
+        if (sh > 3) crow[b + 1] |= code >> (8 - sh);
+      }
+
+      final lmax = is2 ? 30 : 31; // q2tp spends rung 0 on zero
+      final rowsPerSlab = math.max(1, 8 * 1024 * 1024 ~/ (cols * bpe));
+      await shard.setPosition(srcStart);
+      for (var r0 = 0; r0 < rows; r0 += rowsPerSlab) {
+        final n = math.min(rowsPerSlab, rows - r0);
+        final raw = await shard.read(n * cols * bpe);
+        final values = decodeFloats(raw, task.srcDtype);
+        final weights = Uint8List(n * gpr * weightPlaneBytes);
+        for (var r = 0; r < n; r++) {
+          final rowBase = r * cols;
+          // Group scale exponents; an all-zero group stays out of the range
+          // so f16_scale's floor cannot stretch the ladder for live groups.
+          var lo = double.infinity, hi = double.negativeInfinity;
+          for (var g = 0; g < gpr; g++) {
+            var absMax = 0.0;
+            for (var i = 0; i < 32; i++) {
+              final a = values[rowBase + g * 32 + i].abs();
+              if (a > absMax) absMax = a;
+            }
+            dead[g] = absMax == 0.0;
+            lg[g] = (math.log(f16ScaleOf(absMax / (is2 ? 1.5 : 7.0))) /
+                math.ln2);
+            if (!dead[g]) {
+              if (lg[g] < lo) lo = lg[g];
+              if (lg[g] > hi) hi = lg[g];
+            }
+          }
+          if (!lo.isFinite) {
+            lo = lg[0];
+            hi = lo;
+          }
+          final loH = f32ToF16Bits(lo);
+          final loR = f16BitsToDouble(loH);
+
+          // Fit the f16 step so the top rung provably covers [lo, top]:
+          // round-to-nearest can land short, so walk up single f16 ULPs.
+          int fitStep(double top) {
+            final span = math.max(top - loR, 0.0);
+            var stH = f32ToF16Bits(span / lmax);
+            for (var i = 0; i < 64; i++) {
+              final st = f16BitsToDouble(stH);
+              if (st > 0.0 && loR + lmax * st >= top) break;
+              stH += 1;
+            }
+            return stH;
+          }
+
+          var stH = fitStep(hi);
+          if (is2 && hi > loR) {
+            // Row-level ladder-top search: one loud group stretches the
+            // ladder and coarsens every quiet one. Try shorter ladders and
+            // keep the top whose whole row reconstructs best.
+            var bestErr = double.infinity;
+            var bestStH = stH;
+            for (final frac in const [1.0, 0.9, 0.8, 0.7]) {
+              final top = loR + (hi - loR) * frac;
+              final probeH = fitStep(top);
+              final stc = f16BitsToDouble(probeH);
+              ladderInto(tab, loR, stc);
+              var err = 0.0;
+              for (var g = 0; g < gpr; g++) {
+                if (dead[g]) continue;
+                var nom = stc > 0.0
+                    ? 1 +
+                        roundTiesEven((lg[g] - loR) / stc)
+                            .clamp(0.0, lmax.toDouble())
+                            .toInt()
+                    : 1;
+                var ge = double.infinity;
+                final lo1 = math.max(nom - 2, 1);
+                final hi1 = math.min(nom + 2, lmax + 1);
+                for (var cand = lo1; cand <= hi1; cand++) {
+                  final sc = tab[cand];
+                  if (sc <= 0.0) continue;
+                  final iv = 1.0 / sc;
+                  var e = 0.0;
+                  for (var i = 0; i < 32; i++) {
+                    final wv = values[rowBase + g * 32 + i];
+                    final q = roundTiesEven((wv * iv) + 1.5)
+                        .clamp(0.0, 3.0);
+                    final d = wv - ((q - 1.5) * sc);
+                    e = (e + (d * d));
+                  }
+                  if (e < ge) ge = e;
+                }
+                err = (err + ge);
+              }
+              if (err < bestErr) {
+                bestErr = err;
+                bestStH = probeH;
+              }
+            }
+            stH = bestStH;
+          }
+          paramsData.setUint16((r0 + r) * 4, loH, Endian.little);
+          paramsData.setUint16((r0 + r) * 4 + 2, stH, Endian.little);
+          final st = f16BitsToDouble(stH);
+          ladderInto(tab, loR, st);
+
+          final codeRowBase = (r0 + r) * stride;
+          for (var g = 0; g < gpr; g++) {
+            final int nominal;
+            if (dead[g]) {
+              nominal = is2 ? 0 : 0;
+            } else if (st <= 0.0) {
+              nominal = is2 ? 1 : 0;
+            } else {
+              nominal = (is2 ? 1 : 0) +
+                  roundTiesEven((lg[g] - loR) / st)
+                      .clamp(0.0, lmax.toDouble())
+                      .toInt();
+            }
+            // Per-group rung search around the nominal pick (reference: the
+            // best is always adjacent; scanning the whole ladder buys
+            // nothing). q4tp probes −2..+1; q2tp the same, floored at 1.
+            var c = nominal;
+            final searchable = is2 ? nominal != 0 : !(dead[g] || st <= 0.0);
+            if (searchable) {
+              var bestErr = double.infinity;
+              final lo1 = is2 ? math.max(nominal - 2, 1) : math.max(nominal - 2, 0);
+              final hi1 = is2
+                  ? math.min(nominal + 1, lmax + 1)
+                  : math.min(nominal + 1, lmax);
+              for (var cand = lo1; cand <= hi1; cand++) {
+                final sc = tab[cand];
+                if (sc <= 0.0) continue;
+                final iv = 1.0 / sc;
+                var err = 0.0;
+                for (var i = 0; i < 32; i++) {
+                  final wv = values[rowBase + g * 32 + i];
+                  final double d;
+                  if (is2) {
+                    final q = roundTiesEven((wv * iv) + 1.5)
+                        .clamp(0.0, 3.0);
+                    d = wv - ((q - 1.5) * sc);
+                  } else {
+                    final q = roundTiesEven((wv * iv)).clamp(-8.0, 7.0);
+                    d = wv - (q * sc);
+                  }
+                  err = (err + (d * d));
+                }
+                if (err < bestErr) {
+                  bestErr = err;
+                  c = cand;
+                }
+              }
+            }
+            putCode(codes, codeRowBase, g, c);
+            final sc = tab[c];
+            final inv = sc > 0.0 ? 1.0 / sc : 0.0;
+            final dst = (r * gpr + g) * weightPlaneBytes;
+            if (is2) {
+              for (var k = 0; k < 8; k++) {
+                var b = 0;
+                for (var j = 0; j < 4; j++) {
+                  final q = roundTiesEven(
+                          (values[rowBase + g * 32 + k * 4 + j] * inv) +
+                              1.5)
+                      .clamp(0.0, 3.0)
+                      .toInt();
+                  b |= q << (2 * j);
+                }
+                weights[dst + k] = b;
+              }
+            } else {
+              for (var k = 0; k < 16; k++) {
+                final q0 = roundTiesEven(
+                            (values[rowBase + g * 32 + k * 2] * inv))
+                        .clamp(-8.0, 7.0)
+                        .toInt() +
+                    8;
+                final q1 = roundTiesEven(
+                            (values[rowBase + g * 32 + k * 2 + 1] * inv))
+                        .clamp(-8.0, 7.0)
+                        .toInt() +
+                    8;
+                weights[dst + k] = (q0 & 0x0F) | (q1 << 4);
+              }
+            }
+          }
+        }
+        allWeights.add(weights);
+        onBytes(raw.length);
+      }
+      await emit(allWeights.toBytes());
+      await emit(params);
+      await emit(codes);
 
     case Cmf.dtQ1T:
       // Training-free ternary {−s,0,+s}: per 32-group `[f16 scale][7B base-3

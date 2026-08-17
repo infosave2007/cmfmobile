@@ -248,7 +248,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get importFeaturedTitle => 'Önerilenler';
 
   @override
-  String get importReadyCmfBadge => 'hazır .cmf — indirmek için dokunun';
+  String get importReadyCmfBadge => 'HAZIR CMF';
 
   @override
   String get importNoResults => 'Model bulunamadı.';
@@ -327,7 +327,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get quantQ8_2fDesc =>
-      '8 bit, iki alan (𝒲×θ) — en iyi kalite/boyut. Cihazda dönüştürülür.';
+      '8 bit çift alan (𝒲×θ) — en yüksek doğruluklu nicemleme; Q4TP\'nin ~2 katı boyut.';
 
   @override
   String get quantQ8RowDesc =>
@@ -696,4 +696,48 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatComputeHere => 'Burada hesapla';
+
+  @override
+  String get quantQ4tpDesc =>
+      'Önerilen: satır başına ölçek merdiveninde 4 bit döşemeler — en iyi kalite/boyut dengesi; masaüstü araçlarının ürettiği formatın aynısı.';
+
+  @override
+  String get quantQ2tpDesc =>
+      '2/4 bit MoE profili: gate/up uzmanları 2 bit, geri kalanı q4tp. Yoğun bir modelde düz q4tp olur.';
+
+  @override
+  String get importCheckingRepo => 'Depoda ne olduğu denetleniyor…';
+
+  @override
+  String get importReadyCmfTitle => 'Hazır CMF — dönüştürme yok';
+
+  @override
+  String get importReadyCmfBody =>
+      'Bu depo hazır bir .cmf dosyası içeriyor. Olduğu gibi, oluşturulduğu nicemlemeyle indirilir.';
+
+  @override
+  String get importDownloadButton => 'İndir';
+
+  @override
+  String importDownloadSize(String size) {
+    return 'İndirme: $size';
+  }
+
+  @override
+  String importEstimatedOutput(String size) {
+    return '≈ $size';
+  }
+
+  @override
+  String get importEstimateNote =>
+      'Çıktı boyutları tahminidir: gömmeler ve normlar her profilde f16 kalır.';
+
+  @override
+  String get importTooBigBadge => 'cihaz belleğinden büyük';
+
+  @override
+  String get importTabReady => 'Hazır';
+
+  @override
+  String get importTabConvert => 'HF\'den';
 }

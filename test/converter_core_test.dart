@@ -114,6 +114,231 @@ void main() {
     });
   });
 
+  group('q4tp / q2tp', () {
+    test('targetDtype follows the reference dispatch and the 2/4 profile', () {
+      expect(
+        targetDtype(QuantType.q4tp, 'a.weight', [64, 64], 4096),
+        Cmf.dtQ4TiledP,
+      );
+      // cols % 32 misfits fall back to the two-field q8_2f.
+      expect(
+        targetDtype(QuantType.q4tp, 'a.weight', [64, 63], 4032),
+        Cmf.dtQ8_2f,
+      );
+      // The q2tp PROFILE: 2-bit only for gate/up experts; down experts and
+      // the skeleton stay q4tp. A dense model degenerates to plain q4tp.
+      expect(
+        targetDtype(
+          QuantType.q2tp,
+          'model.layers.0.mlp.experts.3.gate_proj.weight',
+          [64, 64],
+          4096,
+        ),
+        Cmf.dtQ2TiledP,
+      );
+      expect(
+        targetDtype(
+          QuantType.q2tp,
+          'model.layers.0.mlp.experts.3.up_proj.weight',
+          [64, 64],
+          4096,
+        ),
+        Cmf.dtQ2TiledP,
+      );
+      expect(
+        targetDtype(
+          QuantType.q2tp,
+          'model.layers.0.mlp.experts.3.down_proj.weight',
+          [64, 64],
+          4096,
+        ),
+        Cmf.dtQ4TiledP,
+      );
+      expect(
+        targetDtype(
+          QuantType.q2tp,
+          'model.layers.0.self_attn.q_proj.weight',
+          [64, 64],
+          4096,
+        ),
+        Cmf.dtQ4TiledP,
+      );
+    });
+
+    test('nbytesFor matches the three-plane layout', () {
+      // 64×64: 128 groups ×16B + 64 rows ×4B params + 64 × ceil(2·5/8) codes.
+      expect(nbytesFor(Cmf.dtQ4TiledP, [64, 64], 4096), 2048 + 256 + 128);
+      expect(nbytesFor(Cmf.dtQ2TiledP, [64, 64], 4096), 1024 + 256 + 128);
+    });
+
+    test('encoded q4tp reconstructs within format error, zeros exact',
+        () async {
+      final dir = await Directory.systemTemp.createTemp('cmf_q4tp_test');
+      addTearDown(() => dir.delete(recursive: true));
+      const rows = 8, cols = 64;
+      final values = _patternTensor(rows, cols);
+      final shard = '${dir.path}/model.safetensors';
+      final output = '${dir.path}/model.cmf';
+      await _writeF32SafetensorsData(shard, {
+        'model.layers.0.self_attn.q_proj.weight': ([rows, cols], values),
+        ..._denseScaffold(cols),
+      });
+      await File('${dir.path}/tokenizer.json').writeAsString('{}');
+      await convertSafetensorsToCmf(
+        ConvertInput(
+          shardPaths: [shard],
+          config: _denseConfig(cols),
+          vocabPath: '${dir.path}/tokenizer.json',
+          outputPath: output,
+          quant: QuantType.q4tp,
+          sourceRepo: 'test/q4tp',
+          threads: 2,
+        ),
+      );
+      expect(await CmfValidator.validate(output), isEmpty);
+
+      final (dtype, shape, bytes) = await _readCmfTensorBytes(
+        output,
+        'model.layers.0.self_attn.q_proj.weight',
+      );
+      expect(dtype, Cmf.dtQ4TiledP);
+      expect(shape, [rows, cols]);
+      expect(bytes.length, nbytesFor(Cmf.dtQ4TiledP, [rows, cols], rows * cols));
+
+      final decoded = _dequantQ4tp(bytes, rows, cols);
+      for (var r = 0; r < rows; r++) {
+        for (var g = 0; g < cols ~/ 32; g++) {
+          var absMax = 0.0, err = 0.0;
+          for (var i = 0; i < 32; i++) {
+            final v = values[r * cols + g * 32 + i];
+            final d = decoded[r * cols + g * 32 + i];
+            if (v.abs() > absMax) absMax = v.abs();
+            err = math.max(err, (v - d).abs());
+          }
+          if (absMax == 0.0) {
+            // A dead group must reconstruct to exact zeros.
+            expect(err, 0.0, reason: 'row $r group $g');
+          } else {
+            // Within a step of the 16-level grid on this group's scale, with
+            // headroom for the shared-ladder rounding of the scale itself.
+            expect(err, lessThan(absMax / 7.0 * 1.2),
+                reason: 'row $r group $g absMax=$absMax err=$err');
+          }
+        }
+      }
+    });
+
+    test('q2tp profile: experts 2-bit with exact-zero groups, skeleton q4tp',
+        () async {
+      final dir = await Directory.systemTemp.createTemp('cmf_q2tp_test');
+      addTearDown(() => dir.delete(recursive: true));
+      const hidden = 32, inter = 64;
+      final gateValues = _patternTensor(inter, hidden);
+      final shard = '${dir.path}/model.safetensors';
+      final output = '${dir.path}/model.cmf';
+      await _writeF32SafetensorsData(shard, {
+        'model.embed_tokens.weight': (
+          [4, hidden],
+          _patternTensor(4, hidden),
+        ),
+        'model.norm.weight': ([hidden], Float32List(hidden)),
+        'model.layers.0.input_layernorm.weight': (
+          [hidden],
+          Float32List(hidden),
+        ),
+        'model.layers.0.post_attention_layernorm.weight': (
+          [hidden],
+          Float32List(hidden),
+        ),
+        for (final p in ['q_proj', 'k_proj', 'v_proj', 'o_proj'])
+          'model.layers.0.self_attn.$p.weight': (
+            [hidden, hidden],
+            _patternTensor(hidden, hidden),
+          ),
+        'model.layers.0.mlp.gate.weight': ([2, hidden], Float32List(2 * hidden)),
+        for (var e = 0; e < 2; e++) ...{
+          'model.layers.0.mlp.experts.$e.gate_proj.weight': (
+            [inter, hidden],
+            gateValues,
+          ),
+          'model.layers.0.mlp.experts.$e.up_proj.weight': (
+            [inter, hidden],
+            _patternTensor(inter, hidden),
+          ),
+          'model.layers.0.mlp.experts.$e.down_proj.weight': (
+            [hidden, inter],
+            _patternTensor(hidden, inter),
+          ),
+        },
+      });
+      await File('${dir.path}/tokenizer.json').writeAsString('{}');
+      await convertSafetensorsToCmf(
+        ConvertInput(
+          shardPaths: [shard],
+          config: <String, dynamic>{
+            'model_type': 'qwen3_moe',
+            'hidden_size': hidden,
+            'intermediate_size': inter,
+            'num_hidden_layers': 1,
+            'num_attention_heads': 1,
+            'num_key_value_heads': 1,
+            'vocab_size': 4,
+            'num_experts': 2,
+            'num_experts_per_tok': 1,
+            'moe_intermediate_size': inter,
+            'norm_topk_prob': true,
+            'tie_word_embeddings': true,
+          },
+          vocabPath: '${dir.path}/tokenizer.json',
+          outputPath: output,
+          quant: QuantType.q2tp,
+          sourceRepo: 'test/q2tp',
+          threads: 2,
+        ),
+      );
+      expect(await CmfValidator.validate(output), isEmpty);
+
+      final (gDtype, _, gBytes) = await _readCmfTensorBytes(
+        output,
+        'model.layers.0.mlp.experts.0.gate_proj.weight',
+      );
+      expect(gDtype, Cmf.dtQ2TiledP);
+      final (dDtype, _, _) = await _readCmfTensorBytes(
+        output,
+        'model.layers.0.mlp.experts.0.down_proj.weight',
+      );
+      expect(dDtype, Cmf.dtQ4TiledP);
+      final (aDtype, _, _) = await _readCmfTensorBytes(
+        output,
+        'model.layers.0.self_attn.q_proj.weight',
+      );
+      expect(aDtype, Cmf.dtQ4TiledP);
+
+      final decoded = _dequantQ2tp(gBytes, inter, hidden);
+      for (var r = 0; r < inter; r++) {
+        for (var g = 0; g < hidden ~/ 32; g++) {
+          var absMax = 0.0, err = 0.0;
+          for (var i = 0; i < 32; i++) {
+            final v = gateValues[r * hidden + g * 32 + i];
+            final d = decoded[r * hidden + g * 32 + i];
+            if (v.abs() > absMax) absMax = v.abs();
+            err = math.max(err, (v - d).abs());
+          }
+          if (absMax == 0.0) {
+            // Rung 0 exists exactly so a pruned group cannot come back as
+            // noise — the four-level grid alone cannot spell zero.
+            expect(err, 0.0, reason: 'row $r group $g');
+          } else {
+            // Four levels: worst case half a step on the group's scale, with
+            // ladder-quantization headroom on top.
+            expect(err, lessThan(absMax * 0.8),
+                reason: 'row $r group $g absMax=$absMax err=$err');
+          }
+        }
+      }
+    });
+  });
+
   group('header', () {
     test('merges sidecar chat template and keeps tokenizer fields', () {
       final merged =
@@ -883,6 +1108,141 @@ Future<void> _writeF32Safetensors(
     ..add(headerBytes)
     ..add(Uint8List(offset));
   await File(path).writeAsBytes(bytes.takeBytes());
+}
+
+/// Deterministic values that exercise the tiled-predicted encoders' edges:
+/// group 0 of every row is all zeros (the dead-group path), the last group
+/// carries a 40× outlier (stretches the row ladder), the rest is a mixed-sign
+/// wave with magnitudes spanning two decades.
+Float32List _patternTensor(int rows, int cols) {
+  final values = Float32List(rows * cols);
+  for (var r = 0; r < rows; r++) {
+    for (var c = 32; c < cols; c++) {
+      final t = (r * 31 + c * 17) % 97;
+      final magnitude = 0.001 + 0.05 * (t % 10) + 0.002 * (t % 7);
+      values[r * cols + c] = (t.isEven ? 1 : -1) * magnitude;
+    }
+    if (cols >= 64) {
+      values[r * cols + cols - 1] = r.isEven ? 2.0 : -2.0; // the outlier
+    }
+  }
+  return values;
+}
+
+/// Dense scaffold tensors so the tiny test config converts end to end.
+Map<String, (List<int>, Float32List)> _denseScaffold(int hidden) => {
+      'model.embed_tokens.weight': ([4, hidden], _patternTensor(4, hidden)),
+      'model.norm.weight': ([hidden], Float32List(hidden)),
+      'model.layers.0.input_layernorm.weight': ([hidden], Float32List(hidden)),
+      'model.layers.0.post_attention_layernorm.weight': (
+        [hidden],
+        Float32List(hidden),
+      ),
+      for (final p in ['k_proj', 'v_proj', 'o_proj'])
+        'model.layers.0.self_attn.$p.weight': (
+          [hidden, hidden],
+          _patternTensor(hidden, hidden),
+        ),
+      'model.layers.0.mlp.gate_proj.weight': (
+        [hidden, hidden],
+        _patternTensor(hidden, hidden),
+      ),
+      'model.layers.0.mlp.up_proj.weight': (
+        [hidden, hidden],
+        _patternTensor(hidden, hidden),
+      ),
+      'model.layers.0.mlp.down_proj.weight': (
+        [hidden, hidden],
+        _patternTensor(hidden, hidden),
+      ),
+    };
+
+Map<String, dynamic> _denseConfig(int hidden) => <String, dynamic>{
+      'model_type': 'qwen3',
+      'hidden_size': hidden,
+      'intermediate_size': hidden,
+      'num_hidden_layers': 1,
+      'num_attention_heads': 1,
+      'num_key_value_heads': 1,
+      'vocab_size': 4,
+      'tie_word_embeddings': true,
+    };
+
+/// Reference q4tp dequantizer, written from the format definition
+/// (cortiq-core quant.rs): ladder s[c] = 2^(lo + c·step) as exp2 plus
+/// multiplies, nibbles low-then-high, value (n − 8)·s.
+Float32List _dequantQ4tp(Uint8List bytes, int rows, int cols) {
+  final gpr = cols ~/ 32;
+  final stride = q4tpCodeStride(gpr);
+  final paramsOff = rows * gpr * 16;
+  final codesOff = paramsOff + rows * 4;
+  final data = ByteData.sublistView(bytes);
+  final out = Float32List(rows * cols);
+  for (var r = 0; r < rows; r++) {
+    final lo = f16BitsToDouble(data.getUint16(paramsOff + r * 4, Endian.little));
+    final st =
+        f16BitsToDouble(data.getUint16(paramsOff + r * 4 + 2, Endian.little));
+    final tab = Float64List(32);
+    final ratio = math.pow(2.0, st).toDouble();
+    tab[0] = math.pow(2.0, lo).toDouble();
+    for (var c = 1; c < 32; c++) {
+      tab[c] = tab[c - 1] * ratio;
+    }
+    for (var g = 0; g < gpr; g++) {
+      final bit = g * 5;
+      final b = codesOff + r * stride + bit ~/ 8;
+      final sh = bit % 8;
+      var code = bytes[b] >> sh;
+      if (sh > 3) code |= bytes[b + 1] << (8 - sh);
+      final s = tab[code & 0x1F];
+      for (var k = 0; k < 16; k++) {
+        final byte = bytes[(r * gpr + g) * 16 + k];
+        out[r * cols + g * 32 + k * 2] = ((byte & 0x0F) - 8) * s;
+        out[r * cols + g * 32 + k * 2 + 1] = (((byte >> 4) & 0x0F) - 8) * s;
+      }
+    }
+  }
+  return out;
+}
+
+/// Reference q2tp dequantizer: the q4tp ladder shifted one rung (rung 0 is
+/// the exact zero), 2-bit fields LSB-first, value (c − 1.5)·s.
+Float32List _dequantQ2tp(Uint8List bytes, int rows, int cols) {
+  final gpr = cols ~/ 32;
+  final stride = q4tpCodeStride(gpr);
+  final paramsOff = rows * gpr * 8;
+  final codesOff = paramsOff + rows * 4;
+  final data = ByteData.sublistView(bytes);
+  final out = Float32List(rows * cols);
+  for (var r = 0; r < rows; r++) {
+    final lo = f16BitsToDouble(data.getUint16(paramsOff + r * 4, Endian.little));
+    final st =
+        f16BitsToDouble(data.getUint16(paramsOff + r * 4 + 2, Endian.little));
+    final tab = Float64List(32);
+    final ratio = math.pow(2.0, st).toDouble();
+    var v = math.pow(2.0, lo).toDouble();
+    tab[0] = 0.0;
+    for (var c = 1; c < 32; c++) {
+      tab[c] = v;
+      v *= ratio;
+    }
+    for (var g = 0; g < gpr; g++) {
+      final bit = g * 5;
+      final b = codesOff + r * stride + bit ~/ 8;
+      final sh = bit % 8;
+      var code = bytes[b] >> sh;
+      if (sh > 3) code |= bytes[b + 1] << (8 - sh);
+      final s = tab[code & 0x1F];
+      for (var k = 0; k < 8; k++) {
+        final byte = bytes[(r * gpr + g) * 8 + k];
+        for (var j = 0; j < 4; j++) {
+          final q = (byte >> (2 * j)) & 0x3;
+          out[r * cols + g * 32 + k * 4 + j] = (q - 1.5) * s;
+        }
+      }
+    }
+  }
+  return out;
 }
 
 /// Like [_writeF32Safetensors] but writes real tensor data (not zeros), so

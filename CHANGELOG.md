@@ -5,6 +5,38 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
 
+## [1.2.6] - 2026-08-17
+
+### Added
+- **On-device conversion to `q4tp` and `q2tp`** — the formats the engine's
+  current work actually targets, ported bit-faithfully from the reference
+  converter: three-plane layout, per-row f16 scale ladder, round-half-to-even,
+  and both encoder searches (the per-group rung probe, and q2tp's row-level
+  ladder-top search). Q4TP leads the list as the recommended profile; Q2TP is
+  the 2/4 MoE split — gate/up experts at 2-bit, everything else q4tp — and
+  degenerates to plain q4tp on a dense model, which its description says.
+  Acceptance was the runtime itself: a Dart-converted q4tp file loads and
+  generates through the real engine.
+- **Estimated sizes before anything downloads.** The conversion sheet shows
+  the download size and, next to every quantization option, the approximate
+  output size — the number that used to be discoverable only by running the
+  whole job. Marked ≈, because embeddings and norms stay f16 in every
+  profile.
+- **The featured list is the account, not a snapshot of it.** Every repo
+  tagged `cmf` on huggingface.co/infosave appears with its file size —
+  fifteen today where the hardcoded list showed three — and publishing a new
+  one needs no app release. Search results carry a READY CMF badge on
+  cmf-tagged repos.
+
+### Fixed
+- **Ready .cmf repos are downloads, not conversions.** Tapping one used to
+  open the quantization sheet — offering to convert a file that needs no
+  conversion (the job would have downloaded directly anyway, but nothing on
+  screen said so). The sheet now checks what the repo ships first and offers
+  a plain Download with the file's name and size.
+- Downloaded `q4tp`/`q2tp` files showed as `dtype#15`/`dtype#16` in the model
+  library — the dtype table stopped at 14.
+
 ## [1.2.5] - 2026-08-16
 
 (1.2.4's Android half never shipped: a leftover `applicationIdSuffix =

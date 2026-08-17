@@ -7,21 +7,77 @@ import '../../core/providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/util/formats.dart';
 import '../../data/models/conversion.dart';
+import '../../data/services/hf_api.dart';
 import '../../data/services/inference/engine_tuning.dart';
 import '../../l10n/app_localizations.dart';
 
-/// Ready-to-run .cmf repos pinned above the search results — one tap to
-/// download, no conversion needed.
-const featuredRepos = [
-  'infosave/Bonsai-1.7Bcmf',
-  'infosave/Bonsai-8B_2bit_cmf',
-  'infosave/Bonsai-27Bcmf',
-];
+/// The account whose ready-to-run .cmf repos are pinned above the search
+/// results. The list itself is fetched live — every repo there tagged `cmf`
+/// appears, so publishing a new one needs no app release. (The old approach
+/// hardcoded three repo ids and silently ignored the rest of the account.)
+const featuredAuthor = 'infosave';
+
+/// A repo whose tags say it ships ready .cmf files. Cheap (tags come with
+/// the search response); the authoritative check — listing the actual files —
+/// happens when the repo is tapped.
+bool looksLikeCmfRepo(HfModel model) => model.tags.contains('cmf');
+
+/// Modalities this app cannot run: it is a text chat, so image, video and
+/// music CMFs — valid files for the desktop tools — would only dead-end
+/// here. They stay reachable through search; they are just not recommended.
+const _nonTextTags = {
+  'text-to-image',
+  'text-to-video',
+  'text-to-audio',
+  'image-to-video',
+  'diffusion',
+  'video',
+  'music',
+  'audio',
+};
+
+bool isTextGenerationRepo(HfModel model) =>
+    model.tags.toSet().intersection(_nonTextTags).isEmpty;
+
+/// The quantization a ready-CMF repo carries, best effort: the file name is
+/// authoritative when it says (bonsai-1.7b-q1.cmf), repo tags fall back
+/// (q4tp / 2-bit / bitnet …). Empty when neither speaks.
+String quantLabelFor(String? largestCmfName, List<String> tags) {
+  const known = ['q8_2f', 'q4tp', 'q2tp', 'q1t', 'vbit', 'f16'];
+  final name = (largestCmfName ?? '').toLowerCase();
+  for (final q in known) {
+    if (name.contains(q)) return q.toUpperCase();
+  }
+  // Plain q1/q8/q4 only match as a delimited token: "q1" inside "q1t" or a
+  // hash must not count.
+  final short = RegExp(r'(?:^|[-_.])(q[148])(?:[-_.]|$)').firstMatch(name);
+  if (short != null) return short.group(1)!.toUpperCase();
+  for (final q in known) {
+    if (tags.contains(q)) return q.toUpperCase();
+  }
+  if (tags.contains('bitnet') || tags.contains('1-bit')) return 'Q1';
+  if (tags.contains('2-bit')) return '2-BIT';
+  if (tags.contains('4-bit')) return '4-BIT';
+  return '';
+}
 
 class _FeaturedEntry {
-  const _FeaturedEntry(this.model, this.cmfSizeBytes);
+  const _FeaturedEntry(
+    this.model,
+    this.cmfSizeBytes, {
+    this.tooBig = false,
+    this.quant = '',
+  });
   final HfModel model;
   final int cmfSizeBytes;
+
+  /// The file is bigger than this device can realistically hold in memory —
+  /// still downloadable (the split needs the same file on both sides), but
+  /// the card says so instead of letting a 12 GB download end in an OOM.
+  final bool tooBig;
+
+  /// Quantization shown as a chip; empty when unknown.
+  final String quant;
 }
 
 /// HuggingFace import: search → configure quantization → conversion jobs
@@ -35,7 +91,10 @@ class ImportScreen extends ConsumerStatefulWidget {
 
 class _ImportScreenState extends ConsumerState<ImportScreen>
     with SingleTickerProviderStateMixin {
-  late final TabController _tabs = TabController(length: 2, vsync: this);
+  // Ready CMF | Convert from HF | Jobs. Two separate entry points, as asked:
+  // the ready catalog is a place of its own, and typing in search shows
+  // results immediately instead of scrolling past the catalog first.
+  late final TabController _tabs = TabController(length: 3, vsync: this);
   final _search = TextEditingController();
   Timer? _debounce;
   List<HfModel>? _results;
@@ -49,20 +108,45 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
   Future<void> _loadFeatured() async {
     final hf = ref.read(hfApiProvider);
     final token = ref.read(settingsProvider).value?.hfToken;
-    final entries = <_FeaturedEntry>[];
-    for (final repo in featuredRepos) {
-      try {
-        final model = await hf.fetchModel(repo, token: token);
-        final files = await hf.listFiles(repo, token: token);
-        final size = files
-            .where((f) => f.path.toLowerCase().endsWith('.cmf'))
-            .fold<int>(0, (s, f) => s + f.size);
-        entries.add(_FeaturedEntry(model, size));
-      } catch (_) {
-        // Featured cards are best-effort; search still works offline.
-      }
+    try {
+      final repos = await hf.listAuthorModels(featuredAuthor, token: token);
+      // Text-generation CMF repos only: this app cannot run image, video or
+      // music models, and a toolkit repo tagged cmf ships no model at all.
+      final cmfRepos =
+          repos.where(looksLikeCmfRepo).where(isTextGenerationRepo).toList();
+      final totalRam =
+          await ref.read(deviceResourcesProvider).totalRamBytes();
+      // Sizes come from per-repo file listings — fetched in parallel.
+      final entries = await Future.wait(cmfRepos.map((model) async {
+        var size = 0;
+        String? largestName;
+        try {
+          final files = await hf.listFiles(model.id, token: token);
+          final cmf = files
+              .where((f) => f.path.toLowerCase().endsWith('.cmf'))
+              .toList()
+            ..sort((a, b) => b.size.compareTo(a.size));
+          size = cmf.fold<int>(0, (s, f) => s + f.size);
+          if (cmf.isNotEmpty) largestName = cmf.first.path;
+        } catch (_) {}
+        return _FeaturedEntry(
+          model,
+          size,
+          // Weights alone nearly filling RAM means decode would page — the
+          // same judgement the load-time check makes, applied before a
+          // multi-gigabyte download instead of after it.
+          tooBig: totalRam > 0 && size > totalRam * 0.7,
+          quant: quantLabelFor(largestName, model.tags),
+        );
+      }));
+      // Phone-sized first: sort by what actually fits, small to large. Repos
+      // with no .cmf file at all are dropped, not shown empty.
+      final withFiles = entries.where((e) => e.cmfSizeBytes > 0).toList()
+        ..sort((a, b) => a.cmfSizeBytes.compareTo(b.cmfSizeBytes));
+      if (mounted) setState(() => _featured = withFiles);
+    } catch (_) {
+      // Featured cards are best-effort; search still works offline.
     }
-    if (mounted) setState(() => _featured = entries);
   }
 
   @override
@@ -118,13 +202,23 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
   }
 
   void _configure(HfModel model) {
+    // The sheet resolves the repo's contents FIRST. A repo that ships ready
+    // .cmf files gets a download panel — never the quantization list, which
+    // used to offer to "convert" a file that needs no conversion.
+    final token = ref.read(settingsProvider).value?.hfToken;
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
-      builder: (sheetContext) => _ConfigureSheet(
+      builder: (sheetContext) => _RepoSheet(
         model: model,
-        onStart: (quant, name) async {
+        resolveFiles: () =>
+            ref.read(hfApiProvider).listFiles(model.id, token: token),
+        onDownloadReady: () {
+          Navigator.pop(sheetContext);
+          _startDirect(model);
+        },
+        onStartConvert: (quant, name) async {
           Navigator.pop(sheetContext);
           final settings = ref.read(settingsProvider).value;
           await ref.read(converterProvider).start(
@@ -138,7 +232,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content:
                   Text(AppLocalizations.of(context).importStartedSnack)));
-          _tabs.animateTo(1);
+          _tabs.animateTo(2);
         },
       ),
     );
@@ -156,7 +250,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
         bottom: TabBar(
           controller: _tabs,
           tabs: [
-            Tab(text: l.importTitle),
+            Tab(text: l.importTabReady),
+            Tab(text: l.importTabConvert),
             Tab(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -179,10 +274,26 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
       body: TabBarView(
         controller: _tabs,
         children: [
+          _buildReadyTab(l),
           _buildSearchTab(l),
           _JobsTab(jobs: jobs),
         ],
       ),
+    );
+  }
+
+  /// The ready-CMF catalog: every text model of the account, smallest first,
+  /// one tap to download. No search box in the way and nothing to configure.
+  Widget _buildReadyTab(AppLocalizations l) {
+    if (_featured.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      children: [
+        for (final entry in _featured)
+          _FeaturedCard(entry: entry, onTap: () => _startDirect(entry.model)),
+      ],
     );
   }
 
@@ -199,35 +310,19 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(AppLocalizations.of(context).importStartedSnack)));
-    _tabs.animateTo(1);
+    _tabs.animateTo(2);
   }
 
   Widget _buildResultsList(AppLocalizations l) {
-    final results = _results!
-        .where((m) => !featuredRepos.contains(m.id))
-        .toList();
-    final showFeatured = _featured.isNotEmpty;
-    if (!showFeatured && results.isEmpty) {
+    final results = _results!;
+    if (results.isEmpty) {
       return Center(child: Text(l.importNoResults));
     }
+    // Results only — the ready catalog lives on its own tab, so the first
+    // typed letters show matches immediately instead of the same pinned list.
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
       children: [
-        if (showFeatured) ...[
-          Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Text(
-              l.importFeaturedTitle,
-              style: Theme.of(context)
-                  .textTheme
-                  .labelLarge
-                  ?.copyWith(color: Theme.of(context).colorScheme.primary),
-            ),
-          ),
-          for (final entry in _featured)
-            _FeaturedCard(entry: entry, onTap: () => _startDirect(entry.model)),
-          const SizedBox(height: 10),
-        ],
         for (final model in results)
           _HfModelCard(model: model, onTap: () => _configure(model)),
       ],
@@ -331,7 +426,13 @@ class _FeaturedCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    Row(
+                    // Wrap, not Row: the badge is a sentence in some locales
+                    // and was pushing the size off the card's edge — clipped
+                    // text where the one number the user needs should be.
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -348,13 +449,45 @@ class _FeaturedCard extends StatelessWidget {
                                 color: scheme.primary),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        if (entry.quant.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: scheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              entry.quant,
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: scheme.onSurfaceVariant),
+                            ),
+                          ),
                         if (entry.cmfSizeBytes > 0)
                           Text(
                             formatBytes(entry.cmfSizeBytes),
                             style: TextStyle(
                                 fontSize: 12,
+                                fontWeight: FontWeight.w600,
                                 color: scheme.onSurfaceVariant),
+                          ),
+                        if (entry.tooBig)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color:
+                                  scheme.errorContainer.withValues(alpha: 0.6),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              l.importTooBigBadge,
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  color: scheme.onErrorContainer),
+                            ),
                           ),
                       ],
                     ),
@@ -403,6 +536,25 @@ class _HfModelCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  // A repo tagged `cmf` will download directly — say so in
+                  // the list, before the tap.
+                  if (looksLikeCmfRepo(model))
+                    Container(
+                      margin: const EdgeInsets.only(left: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: scheme.primary.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        l.importReadyCmfBadge,
+                        style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: scheme.primary),
+                      ),
+                    ),
                   if (model.gated)
                     Tooltip(
                       message: l.importGatedHint,
@@ -430,10 +582,15 @@ class _HfModelCard extends StatelessWidget {
                     Icon(Icons.category_outlined,
                         size: 13, color: scheme.onSurfaceVariant),
                     const SizedBox(width: 3),
-                    Text(model.pipelineTag!,
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: scheme.onSurfaceVariant)),
+                    // Flexible: "automatic-speech-recognition" was pushing
+                    // the download/like counters off the card.
+                    Flexible(
+                      child: Text(model.pipelineTag!,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: scheme.onSurfaceVariant)),
+                    ),
                     const SizedBox(width: 12),
                   ],
                   Icon(Icons.download_outlined,
@@ -459,23 +616,76 @@ class _HfModelCard extends StatelessWidget {
   }
 }
 
-class _ConfigureSheet extends StatefulWidget {
-  const _ConfigureSheet({required this.model, required this.onStart});
+/// Resolves what a repo actually ships before offering anything: ready .cmf
+/// files download as-is; safetensors repos get the quantization list, each
+/// option carrying an estimated output size so the choice is informed before
+/// a multi-gigabyte download starts.
+class _RepoSheet extends StatefulWidget {
+  const _RepoSheet({
+    required this.model,
+    required this.resolveFiles,
+    required this.onDownloadReady,
+    required this.onStartConvert,
+  });
 
   final HfModel model;
-  final void Function(QuantType quant, String name) onStart;
+  final Future<List<HfFileEntry>> Function() resolveFiles;
+  final VoidCallback onDownloadReady;
+  final void Function(QuantType quant, String name) onStartConvert;
 
   @override
-  State<_ConfigureSheet> createState() => _ConfigureSheetState();
+  State<_RepoSheet> createState() => _RepoSheetState();
 }
 
-class _ConfigureSheetState extends State<_ConfigureSheet> {
+class _RepoSheetState extends State<_RepoSheet> {
   late final TextEditingController _name = TextEditingController(
       text: widget.model.id.split('/').last.toLowerCase());
-  QuantType _quant = QuantType.q8Row;
+  QuantType _quant = QuantType.q4tp;
+
+  List<HfFileEntry>? _files;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.resolveFiles().then((files) {
+      if (mounted) setState(() => _files = files);
+    }).catchError((Object e) {
+      if (mounted) setState(() => _error = e.toString());
+    });
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
+
+  HfFileEntry? get _readyCmf {
+    final cmf = _files
+        ?.where((f) => f.path.toLowerCase().endsWith('.cmf'))
+        .toList();
+    if (cmf == null || cmf.isEmpty) return null;
+    cmf.sort((a, b) => b.size.compareTo(a.size));
+    return cmf.first;
+  }
+
+  /// Source weight bytes = every safetensors shard in the repo root.
+  int get _weightBytes => _files == null
+      ? 0
+      : _files!
+          .where((f) =>
+              f.path.endsWith('.safetensors') && !f.path.contains('/'))
+          .fold(0, (s, f) => s + f.size);
+
+  /// Estimated .cmf size for [q]: source stores ~2 bytes per weight, so
+  /// weights ≈ bytes/2, times the profile's bytes-per-weight.
+  int _estimate(QuantType q) => (_weightBytes / 2 * q.bytesPerWeight).round();
 
   String _quantDescription(AppLocalizations l, QuantType q) => switch (q) {
         QuantType.q8_2f => l.quantQ8_2fDesc,
+        QuantType.q4tp => l.quantQ4tpDesc,
+        QuantType.q2tp => l.quantQ2tpDesc,
         QuantType.q8Row => l.quantQ8RowDesc,
         QuantType.q1t => l.quantQ1tDesc,
         QuantType.q4Block => l.quantQ4Desc,
@@ -485,14 +695,9 @@ class _ConfigureSheetState extends State<_ConfigureSheet> {
       };
 
   @override
-  void dispose() {
-    _name.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.only(
@@ -503,95 +708,174 @@ class _ConfigureSheetState extends State<_ConfigureSheet> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(l.importConfigureTitle,
-                  style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                _readyCmf != null
+                    ? l.importReadyCmfTitle
+                    : l.importConfigureTitle,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 4),
               Text(widget.model.id,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant)),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant)),
               const SizedBox(height: 16),
-              TextField(
-                controller: _name,
-                decoration: InputDecoration(
-                  labelText: l.importOutputName,
-                  helperText: l.importOutputNameHint,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(l.importQuantization,
-                  style: Theme.of(context).textTheme.labelLarge),
-              const SizedBox(height: 4),
-              // On-device-only quants that would fail for a safetensors repo
-              // are disabled — a repo that ships .cmf downloads directly with
-              // any of the enabled ones (the quant is ignored there).
-              for (final q in QuantType.values)
-                RadioListTile<QuantType>(
-                  value: q,
-                  // ignore: deprecated_member_use
-                  groupValue: _quant,
-                  // ignore: deprecated_member_use
-                  onChanged: q.supportedOnDevice
-                      ? (v) => setState(() => _quant = v!)
-                      : null,
-                  dense: true,
-                  title: Row(
-                    children: [
-                      Text(q.label),
-                      if (!q.supportedOnDevice) ...[
-                        const SizedBox(width: 8),
-                        Text(
-                          l.quantDesktopOnly,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  subtitle: Text(_quantDescription(l, q),
-                      style: const TextStyle(fontSize: 11)),
-                ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .surfaceContainerHigh,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
+              if (_error != null)
+                Text(_error!,
+                    style: TextStyle(color: scheme.error, fontSize: 12))
+              else if (_files == null)
+                Row(
                   children: [
-                    const Icon(Icons.info_outline, size: 16),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(l.importOnDeviceNote,
-                          style: const TextStyle(fontSize: 12)),
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     ),
+                    const SizedBox(width: 10),
+                    Text(l.importCheckingRepo,
+                        style: const TextStyle(fontSize: 13)),
                   ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  icon: const Icon(Icons.bolt),
-                  label: Text(l.importStartConvert),
-                  onPressed: () =>
-                      widget.onStart(_quant, _name.text.trim()),
-                ),
-              ),
+                )
+              else if (_readyCmf != null)
+                ..._buildReadyPanel(l, scheme)
+              else
+                ..._buildConvertPanel(l, scheme),
             ],
           ),
         ),
       ),
     );
+  }
+
+  List<Widget> _buildReadyPanel(AppLocalizations l, ColorScheme scheme) {
+    final file = _readyCmf!;
+    return [
+      Text(l.importReadyCmfBody, style: const TextStyle(fontSize: 13)),
+      const SizedBox(height: 12),
+      Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: scheme.primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.insert_drive_file_outlined,
+                size: 18, color: scheme.primary),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(file.path,
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600),
+                  overflow: TextOverflow.ellipsis),
+            ),
+            if (file.size > 0)
+              Text(formatBytes(file.size),
+                  style:
+                      TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+          ],
+        ),
+      ),
+      const SizedBox(height: 16),
+      SizedBox(
+        width: double.infinity,
+        child: FilledButton.icon(
+          icon: const Icon(Icons.download_for_offline_outlined),
+          label: Text(l.importDownloadButton),
+          onPressed: widget.onDownloadReady,
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _buildConvertPanel(AppLocalizations l, ColorScheme scheme) {
+    return [
+      TextField(
+        controller: _name,
+        decoration: InputDecoration(
+          labelText: l.importOutputName,
+          helperText: l.importOutputNameHint,
+        ),
+      ),
+      const SizedBox(height: 12),
+      if (_weightBytes > 0)
+        Text(l.importDownloadSize(formatBytes(_weightBytes)),
+            style:
+                TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+      const SizedBox(height: 12),
+      Text(l.importQuantization,
+          style: Theme.of(context).textTheme.labelLarge),
+      const SizedBox(height: 4),
+      for (final q in QuantType.values)
+        RadioListTile<QuantType>(
+          value: q,
+          // ignore: deprecated_member_use
+          groupValue: _quant,
+          // ignore: deprecated_member_use
+          onChanged: q.supportedOnDevice
+              ? (v) => setState(() => _quant = v!)
+              : null,
+          dense: true,
+          title: Row(
+            children: [
+              Text(q.label),
+              if (!q.supportedOnDevice) ...[
+                const SizedBox(width: 8),
+                Text(
+                  l.quantDesktopOnly,
+                  style: TextStyle(
+                      fontSize: 10, color: scheme.onSurfaceVariant),
+                ),
+              ],
+              const Spacer(),
+              // The number that used to be discoverable only by running the
+              // whole conversion: what this choice costs on disk.
+              if (_weightBytes > 0 && q.supportedOnDevice)
+                Text(
+                  l.importEstimatedOutput(formatBytes(_estimate(q))),
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: q == _quant
+                          ? scheme.primary
+                          : scheme.onSurfaceVariant),
+                ),
+            ],
+          ),
+          subtitle: Text(_quantDescription(l, q),
+              style: const TextStyle(fontSize: 11)),
+        ),
+      const SizedBox(height: 4),
+      if (_weightBytes > 0)
+        Text(l.importEstimateNote,
+            style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant)),
+      const SizedBox(height: 8),
+      Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.info_outline, size: 16),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(l.importOnDeviceNote,
+                  style: const TextStyle(fontSize: 12)),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 16),
+      SizedBox(
+        width: double.infinity,
+        child: FilledButton.icon(
+          icon: const Icon(Icons.bolt),
+          label: Text(l.importStartConvert),
+          onPressed: () =>
+              widget.onStartConvert(_quant, _name.text.trim()),
+        ),
+      ),
+    ];
   }
 }
 
