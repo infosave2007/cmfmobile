@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Without this an app gets a per-process jetsam budget far below the
+	     device's RAM: measured on an 8 GB iPhone 16, os_proc_available_memory
+	     reported ~3 GB, so the load dialog offered ~2.5 GB usable and every
+	     model past that was unloadable no matter how much of the phone was
+	     free. Weights are mmapped, so the ceiling is what decides which CMF
+	     files this app can run at all. -->
+	<key>com.apple.developer.kernel.increased-memory-limit</key>
+	<true/>
+</dict>
+</plist>

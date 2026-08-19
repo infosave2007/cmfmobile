@@ -165,6 +165,7 @@
   "importStartedSnack": "Conversion started",
   "importJobsTitle": "Conversions",
   "importNoJobs": "No conversions yet.",
+  "importKeepAwakeNote": "The screen stays awake while a conversion is running.",
   "importDeleteConfirm": "Delete this conversion and its .cmf file from disk?",
   "importShowLog": "Show log",
   "importOnDeviceNote": "On-device conversion supports Q8_ROW, Q8_2F, Q1T, Q1 and F16 (multi-threaded). Repos that already ship .cmf files are downloaded directly — any quantization.",

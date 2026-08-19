@@ -289,6 +289,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get importNoJobs => 'Aucune conversion pour l\'instant.';
 
   @override
+  String get importKeepAwakeNote =>
+      'L\'écran reste allumé tant qu\'une conversion est en cours.';
+
+  @override
   String get importDeleteConfirm =>
       'Supprimer cette conversion et son fichier .cmf du stockage ?';
 

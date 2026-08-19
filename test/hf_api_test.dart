@@ -6,6 +6,52 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 void main() {
+  test('a starved range is finished sequentially, not thrown away', () async {
+    // One worker stalls after a few bytes and burns its outage window while
+    // the other completes. The transfer must survive that: the leftover is
+    // fetched afterwards, resuming at the byte it stopped on rather than
+    // rewriting the range from its start.
+    final data = List<int>.generate(24, (i) => i);
+    var starved = false;
+    final ranges = <String>[];
+    final api = HfApi(
+      // Give up on the first stall instead of retrying for five minutes.
+      outageWindow: Duration.zero,
+      client: MockClient((request) async {
+        final range = request.headers['range'];
+        if (range == 'bytes=0-0') {
+          return http.Response.bytes([data.first], 206);
+        }
+        ranges.add(range!);
+        final match = RegExp(r'bytes=(\d+)-(\d+)').firstMatch(range);
+        final start = int.parse(match!.group(1)!);
+        final end = int.parse(match.group(2)!);
+        if (start == 12 && !starved) {
+          starved = true;
+          // Three bytes, then the socket goes quiet.
+          return http.Response.bytes(data.sublist(12, 15), 206);
+        }
+        return http.Response.bytes(data.sublist(start, end + 1), 206);
+      }),
+    );
+    final dir = await Directory.systemTemp.createTemp('cmf-starved-test');
+    final output = '${dir.path}/model.cmf';
+    addTearDown(() => dir.delete(recursive: true));
+
+    await api.downloadParallel(
+      'owner/repo',
+      'model.cmf',
+      output,
+      totalSize: data.length,
+      parallelism: 2,
+    );
+
+    expect(await File(output).readAsBytes(), data,
+        reason: 'resumed bytes must land at the offset they stopped on');
+    expect(ranges, contains('bytes=15-23'),
+        reason: 'the leftover is resumed, not restarted from 12');
+  });
+
   test('parallel download joins byte ranges in order', () async {
     final data = List<int>.generate(24, (i) => i);
     final ranges = <String>[];

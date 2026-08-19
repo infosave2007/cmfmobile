@@ -82,6 +82,7 @@
   "importStartedSnack": "Conversión iniciada",
   "importJobsTitle": "Conversiones",
   "importNoJobs": "Aún no hay conversiones.",
+  "importKeepAwakeNote": "La pantalla permanece encendida mientras hay una conversión en curso.",
   "importDeleteConfirm": "¿Eliminar esta conversión y su archivo .cmf del almacenamiento?",
   "importShowLog": "Ver registro",
   "importOnDeviceNote": "La conversión en el dispositivo admite Q8_ROW, Q8_2F, Q1T, Q1 y F16 (multihilo). Los repositorios con .cmf listos se descargan directamente — en cualquier cuantización.",

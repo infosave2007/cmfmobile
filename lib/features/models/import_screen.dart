@@ -104,6 +104,11 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
   StreamSubscription<void>? _jobsSub;
   final Set<String> _seenDone = {};
   List<_FeaturedEntry> _featured = const [];
+  // The catalog is one shot from initState. Without these two the tab could
+  // only ever show a spinner: a failed call and an empty account looked
+  // exactly like "still loading", forever.
+  bool _featuredLoading = true;
+  String? _featuredError;
 
   Future<void> _loadFeatured() async {
     final hf = ref.read(hfApiProvider);
@@ -114,8 +119,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
       // music models, and a toolkit repo tagged cmf ships no model at all.
       final cmfRepos =
           repos.where(looksLikeCmfRepo).where(isTextGenerationRepo).toList();
-      final totalRam =
-          await ref.read(deviceResourcesProvider).totalRamBytes();
+      final resources = ref.read(deviceResourcesProvider);
       // Sizes come from per-repo file listings — fetched in parallel.
       final entries = await Future.wait(cmfRepos.map((model) async {
         var size = 0;
@@ -132,10 +136,11 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
         return _FeaturedEntry(
           model,
           size,
-          // Weights alone nearly filling RAM means decode would page — the
-          // same judgement the load-time check makes, applied before a
-          // multi-gigabyte download instead of after it.
-          tooBig: totalRam > 0 && size > totalRam * 0.7,
+          // Measured against the per-process budget the loader uses, not the
+          // device's total RAM: iOS hands one app a few GB out of 8, so a
+          // total-RAM yardstick waved through 4.8 GB downloads that the load
+          // dialog then refused.
+          tooBig: await resources.weightsExceedBudget(size),
           quant: quantLabelFor(largestName, model.tags),
         );
       }));
@@ -144,9 +149,21 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
       final withFiles = entries.where((e) => e.cmfSizeBytes > 0).toList()
         ..sort((a, b) => a.cmfSizeBytes.compareTo(b.cmfSizeBytes));
       if (mounted) setState(() => _featured = withFiles);
-    } catch (_) {
-      // Featured cards are best-effort; search still works offline.
+    } catch (e) {
+      // Best-effort still, but silently: search keeps working, and the tab
+      // now says why it is empty instead of spinning.
+      if (mounted) setState(() => _featuredError = e.toString());
+    } finally {
+      if (mounted) setState(() => _featuredLoading = false);
     }
+  }
+
+  void _retryFeatured() {
+    setState(() {
+      _featuredLoading = true;
+      _featuredError = null;
+    });
+    _loadFeatured();
   }
 
   @override
@@ -285,8 +302,33 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
   /// The ready-CMF catalog: every text model of the account, smallest first,
   /// one tap to download. No search box in the way and nothing to configure.
   Widget _buildReadyTab(AppLocalizations l) {
-    if (_featured.isEmpty) {
+    if (_featuredError != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _featuredError!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: _retryFeatured,
+                child: Text(l.actionRetry),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (_featuredLoading) {
       return const Center(child: CircularProgressIndicator());
+    }
+    if (_featured.isEmpty) {
+      return Center(child: Text(l.importNoResults));
     }
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -905,6 +947,32 @@ class _JobsTab extends ConsumerWidget {
     if (jobs.isEmpty) {
       return Center(child: Text(l.importNoJobs));
     }
+    final running = jobs.any((j) => j.state == JobState.running);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Only while something is actually running: the phone deliberately
+        // refusing to sleep needs explaining, and claiming it when no job
+        // holds the screen would be a lie.
+        if (running)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Text(
+              l.importKeepAwakeNote,
+              style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
+            ),
+          ),
+        Expanded(child: _jobList(context, ref, l, scheme)),
+      ],
+    );
+  }
+
+  Widget _jobList(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l,
+    ColorScheme scheme,
+  ) {
     return ListView.separated(
       padding: const EdgeInsets.all(16),
       itemCount: jobs.length,

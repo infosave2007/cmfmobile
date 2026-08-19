@@ -600,6 +600,12 @@ abstract class AppLocalizations {
   /// **'No conversions yet.'**
   String get importNoJobs;
 
+  /// No description provided for @importKeepAwakeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The screen stays awake while a conversion is running.'**
+  String get importKeepAwakeNote;
+
   /// No description provided for @importDeleteConfirm.
   ///
   /// In en, this message translates to:

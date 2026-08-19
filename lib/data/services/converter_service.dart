@@ -4,6 +4,8 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
+import '../../core/util/foreground_task.dart';
+import '../../core/util/keep_awake.dart';
 import '../models/conversion.dart';
 import 'cmf_format.dart';
 import 'converter_core.dart';
@@ -97,8 +99,30 @@ class ConverterService {
     _notify();
   }
 
+  /// Jobs run concurrently, so the screen and the scheduling priority are
+  /// held by count: the first job takes them, the last one to finish gives
+  /// them back.
+  int _activeJobs = 0;
+
+  Future<void> _holdDevice() async {
+    if (_activeJobs++ > 0) return;
+    await KeepAwake.acquire(KeepAwake.conversion);
+    await ForegroundTask.acquire(ForegroundTask.conversion);
+  }
+
+  Future<void> _releaseDevice() async {
+    if (_activeJobs > 0) _activeJobs--;
+    if (_activeJobs > 0) return;
+    await KeepAwake.release(KeepAwake.conversion);
+    await ForegroundTask.release(ForegroundTask.conversion);
+  }
+
   Future<void> _run(ConversionJob job, String? hfToken, int threads) async {
     Directory? tempDir;
+    // A download of several gigabytes outlives any screen timeout. Without
+    // this the display sleeps, iOS backgrounds and then suspends the app, and
+    // the transfer simply stops part-way through.
+    await _holdDevice();
     try {
       // A featured ready-CMF repo receives a placeholder quant value. Do not
       // present it as the downloaded file's actual quantization.
@@ -156,6 +180,7 @@ class ConverterService {
       job.addLog('✗ error: $e');
       await _cleanupOutputs(job);
     } finally {
+      await _releaseDevice();
       _cancelRequested.remove(job.id);
       if (tempDir != null) {
         try {

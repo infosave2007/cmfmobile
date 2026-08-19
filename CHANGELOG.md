@@ -5,6 +5,45 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
 
+## [1.2.8] - 2026-08-19
+
+### Added
+- **Increased memory limit entitlement.** The app never asked iOS for more than
+  a default process budget, so on an 8 GB iPhone `os_proc_available_memory`
+  reported about 3 GB and the load dialog offered ~2.5 GB usable — every model
+  above that was unloadable no matter how empty the phone was. Weights are
+  mmapped, so that ceiling is what decides which CMF files can run at all.
+- **The conversion tab says why the phone will not sleep**, matching the note
+  the server screen already carried, and only while a job is actually running.
+
+### Fixed
+- **A conversion no longer dies when the screen goes dark.** The server, a
+  companion worker and reply generation each held the screen and foreground
+  scheduling priority; an import job held neither, so iOS backgrounded and then
+  suspended the app and a multi-gigabyte download simply stopped part-way. Note
+  the remaining iOS limit: this covers the automatic screen timeout, not a
+  manual side-button lock, which suspends the app regardless.
+- **Keep-awake is reference-counted.** Stopping the server used to switch the
+  screen off under a conversion that was still downloading.
+- **One starved connection no longer throws away the whole download.** Hugging
+  Face throttles concurrent ranges, and a worker that sat at zero bytes past
+  the outage window aborted every sibling — discarding gigabytes already on
+  disk. Leftover ranges are now finished one connection at a time, which is the
+  shape that survives throttling. A resumed range also writes at the offset it
+  stopped on rather than at the range start.
+- **The ready-CMF catalog can report a failure.** It keyed on an empty list, so
+  a failed load, an empty account and "still loading" all rendered the same
+  spinner, forever, with no retry — the load runs once from initState.
+- **The catalog measures against the memory a process may actually use**, not
+  the device's total RAM. The two disagreed by more than a factor of two, so it
+  offered a 4.75 GB model that the load dialog then refused — after the
+  download had finished.
+- **Debug builds run on a physical device again.** Xcode 16+ moves the code of
+  a debug device build into `Runner.debug.dylib` and leaves a stub that looks
+  up the entry point in it; the linker flags that export the engine's C ABI are
+  an allow-list, so the entry point was filtered out and the stub aborted
+  before the first frame — which looked like the app hanging on the splash.
+
 ## [1.2.6] - 2026-08-17
 
 ### Added

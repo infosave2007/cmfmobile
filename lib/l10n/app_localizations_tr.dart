@@ -285,6 +285,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get importNoJobs => 'Henüz dönüştürme yok.';
 
   @override
+  String get importKeepAwakeNote => 'Dönüştürme sürerken ekran açık kalır.';
+
+  @override
   String get importDeleteConfirm =>
       'Bu dönüştürme ve .cmf dosyası diskten silinsin mi?';
 

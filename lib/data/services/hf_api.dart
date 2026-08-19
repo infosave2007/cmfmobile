@@ -9,9 +9,14 @@ import '../models/conversion.dart';
 
 /// HuggingFace Hub API client (same endpoints as cortiq-gateway's importer).
 class HfApi {
-  HfApi({http.Client? client}) : _client = client ?? http.Client();
+  HfApi({http.Client? client, Duration? outageWindow})
+      : _client = client ?? http.Client(),
+        _outageWindow = outageWindow ?? _defaultOutageWindow;
 
   final http.Client _client;
+
+  /// Overridable so tests can reach the give-up path without waiting minutes.
+  final Duration _outageWindow;
   static const _base = 'https://huggingface.co';
 
   Map<String, String> _headers(String? token) => {
@@ -34,7 +39,7 @@ class HfApi {
   /// Keep retrying transient failures until this much time has passed with
   /// *no* forward progress. Any received byte resets the clock, so a slow but
   /// alive link never trips it; a genuine outage longer than this gives up.
-  static const _outageWindow = Duration(minutes: 5);
+  static const _defaultOutageWindow = Duration(minutes: 5);
 
   /// Permanent failures — retrying cannot help, so surface them immediately.
   /// Everything else (host lookup, connection reset, TLS, timeout, early EOF,
@@ -247,6 +252,7 @@ class HfApi {
     await out.truncate(totalSize);
 
     final received = List<int>.filled(workers, 0);
+    final rangeErrors = List<Object?>.filled(workers, null);
     var aborted = false;
     Object? firstError;
     var writeTail = Future<void>.value();
@@ -256,7 +262,10 @@ class HfApi {
       final end = totalSize * (index + 1) ~/ workers - 1;
       final expected = end - start + 1;
       final uri = Uri.parse('$_base/$repo/resolve/main/$path');
-      var writeOffset = start;
+      // Where the next byte belongs, not where the range begins: the
+      // sequential pass below re-enters this function for a part that already
+      // holds bytes, and starting at [start] would overwrite them.
+      var writeOffset = start + received[index];
       try {
         Object? lastError;
         var lastProgress = DateTime.now();
@@ -351,19 +360,44 @@ class HfApi {
           );
         }
       } catch (e) {
-        aborted = true;
-        firstError ??= e;
+        if (e is CancelledException || _isFatal(e)) {
+          aborted = true;
+          firstError ??= e;
+        } else {
+          // Everything else is transient by definition (see [_isFatal]).
+          // Killing the other workers here threw away gigabytes that were
+          // already on disk; record the gap and let the sequential pass
+          // below close it.
+          rangeErrors[index] = e;
+        }
       }
     }
 
     try {
       await Future.wait(List.generate(workers, fetchPart));
+      // Hugging Face throttles concurrent ranges from one client, so a single
+      // worker can sit at zero bytes past the outage window while its siblings
+      // stream fine — and the whole multi-gigabyte transfer used to die with
+      // it. Finish the leftovers one connection at a time, which is exactly
+      // the shape that survives throttling, keeping every byte already
+      // written. Each part gets a fresh outage window here.
+      for (var index = 0; index < workers; index++) {
+        if (aborted || isCancelled?.call() == true) break;
+        final start = totalSize * index ~/ workers;
+        final end = totalSize * (index + 1) ~/ workers - 1;
+        if (received[index] >= end - start + 1) continue;
+        rangeErrors[index] = null;
+        await fetchPart(index);
+      }
       await writeTail;
     } finally {
       await out.close();
     }
     if (firstError != null) throw firstError!;
     if (isCancelled?.call() == true) throw const CancelledException();
+    for (final error in rangeErrors) {
+      if (error != null) throw error;
+    }
   }
 
   Future<bool> _supportsRanges(

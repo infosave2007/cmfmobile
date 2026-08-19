@@ -286,6 +286,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get importNoJobs => 'Конвертаций пока не было.';
 
   @override
+  String get importKeepAwakeNote => 'Пока идёт конвертация, экран не гаснет.';
+
+  @override
   String get importDeleteConfirm =>
       'Удалить эту конвертацию и её файл .cmf с диска?';
 

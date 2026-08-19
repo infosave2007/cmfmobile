@@ -278,6 +278,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get importNoJobs => '暂无转换任务。';
 
   @override
+  String get importKeepAwakeNote => '转换期间屏幕保持常亮。';
+
+  @override
   String get importDeleteConfirm => '删除此转换任务及其磁盘上的 .cmf 文件?';
 
   @override

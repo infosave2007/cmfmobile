@@ -1,2 +1,14 @@
 #include "Generated.xcconfig"
 #include "Cortiq.xcconfig"
+
+// Xcode 16+ splits a Debug device build in two: the real code goes into
+// Runner.debug.dylib and Runner itself becomes a ~90 KB stub that dlsym's
+// the entry point out of that dylib. Cortiq.xcconfig's
+// -Wl,-exported_symbol,_cortiq_* is an ALLOW-LIST, so the dylib ends up
+// exporting those 19 symbols and nothing else — the entry point included.
+// The stub then aborts in abort_could_not_find_entry_point___debug_dylib
+// before the first Flutter frame, which looks like the app hanging on the
+// launch storyboard. Release is unaffected (no split, code is in Runner).
+// Turning the split off keeps the export flags — which are load-bearing
+// for reaching the engine via DynamicLibrary.process() — untouched.
+ENABLE_DEBUG_DYLIB = NO

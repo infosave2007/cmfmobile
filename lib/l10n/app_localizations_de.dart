@@ -286,6 +286,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get importNoJobs => 'Noch keine Konvertierungen.';
 
   @override
+  String get importKeepAwakeNote =>
+      'Der Bildschirm bleibt an, solange eine Konvertierung läuft.';
+
+  @override
   String get importDeleteConfirm =>
       'Diese Konvertierung und ihre .cmf-Datei vom Speicher löschen?';
 

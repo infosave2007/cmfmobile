@@ -27,6 +27,11 @@ abstract final class ForegroundTask {
   /// throughput.
   static const companion = 'companion';
 
+  /// One import job: the multi-gigabyte download and the conversion that
+  /// follows it. Without this the job is throttled to the little cores the
+  /// moment the user leaves the app or the screen goes dark.
+  static const conversion = 'conversion';
+
   static final Set<String> _holders = {};
 
   static Future<void> acquire(String reason) async {

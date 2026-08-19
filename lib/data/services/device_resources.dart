@@ -56,9 +56,11 @@ class DeviceResources {
       final ctx = min(meta.contextLength > 0 ? meta.contextLength : 4096, 4096);
       kvCache = perToken * ctx;
     }
-    const runtimeOverhead = 384 * 1024 * 1024;
-    return model.sizeBytes + kvCache + runtimeOverhead;
+    return model.sizeBytes + kvCache + kRuntimeOverheadBytes;
   }
+
+  /// Engine, framework and scratch buffers on top of weights and KV cache.
+  static const int kRuntimeOverheadBytes = 384 * 1024 * 1024;
 
   static const _memoryChannel = MethodChannel('cmf/device_memory');
 
@@ -74,21 +76,39 @@ class DeviceResources {
     }
   }
 
-  /// Prefers the platform's live available-memory figure (with 20%
-  /// headroom for the OS watermark); falls back to the "roughly half of
-  /// physical RAM" heuristic when the channel is unavailable.
-  Future<MemoryCheck> checkFit(LocalModel model) async {
-    final total = await totalRamBytes();
+  /// What this process may actually use. On iOS that is
+  /// os_proc_available_memory — the per-process jetsam budget, which on an
+  /// 8 GB phone is a few GB, not 8. Every "will it fit" judgement in the app
+  /// must come through here: measuring against the device's total RAM
+  /// instead promises models the loader then refuses.
+  ///
+  /// Prefers the platform's live figure (with 20% headroom for the OS
+  /// watermark); falls back to the "roughly half of physical RAM" heuristic
+  /// when the channel is unavailable.
+  Future<int> usableRamBytes() async {
     final available = await availableRamBytes();
-    final usable = available > 0
-        ? (available * 0.8).round()
-        : total > 0
-            ? (total * 0.55).round()
-            : 1 << 62;
+    if (available > 0) return (available * 0.8).round();
+    final total = await totalRamBytes();
+    return total > 0 ? (total * 0.55).round() : 1 << 62;
+  }
+
+  /// Pre-download check. A Hugging Face repo listing carries file sizes but
+  /// no layer or context metadata, so the KV cache cannot be estimated the
+  /// way [estimateRequiredBytes] does. Weights plus runtime overhead is a
+  /// strict LOWER bound on what loading will need: whatever fails this can
+  /// never load, and nothing loadable is wrongly rejected — the right bias
+  /// for a warning shown before a multi-gigabyte download.
+  Future<bool> weightsExceedBudget(int weightsBytes) async {
+    if (weightsBytes <= 0) return false;
+    final usable = await usableRamBytes();
+    return usable > 0 && weightsBytes + kRuntimeOverheadBytes > usable;
+  }
+
+  Future<MemoryCheck> checkFit(LocalModel model) async {
     return MemoryCheck(
       requiredBytes: estimateRequiredBytes(model),
-      totalRamBytes: total,
-      usableRamBytes: usable,
+      totalRamBytes: await totalRamBytes(),
+      usableRamBytes: await usableRamBytes(),
     );
   }
 }

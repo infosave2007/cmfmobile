@@ -82,6 +82,7 @@
   "importStartedSnack": "Dönüştürme başlatıldı",
   "importJobsTitle": "Dönüştürmeler",
   "importNoJobs": "Henüz dönüştürme yok.",
+  "importKeepAwakeNote": "Dönüştürme sürerken ekran açık kalır.",
   "importDeleteConfirm": "Bu dönüştürme ve .cmf dosyası diskten silinsin mi?",
   "importShowLog": "Günlüğü göster",
   "importOnDeviceNote": "Cihaz üzerinde dönüştürme Q8_ROW, Q8_2F, Q1T, Q1 ve F16 destekler (çok iş parçacıklı). Hazır .cmf içeren depolar doğrudan indirilir — her nicemlemede.",

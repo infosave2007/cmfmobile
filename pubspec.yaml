@@ -2,7 +2,7 @@ name: cmf_mobile
 description: "CMF Mobile — run local AI models on your phone, serve them over the CMF protocol, and convert models from Hugging Face."
 publish_to: 'none'
 
-version: 1.2.7+41
+version: 1.2.8+42
 
 environment:
   sdk: ^3.12.1
@@ -29,6 +29,8 @@ dependencies:
 
 dev_dependencies:
   flutter_test:
+    sdk: flutter
+  integration_test:
     sdk: flutter
   flutter_lints: ^6.0.0
   path_provider_platform_interface: ^2.1.2

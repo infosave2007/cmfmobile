@@ -489,7 +489,7 @@ class ServerController extends Notifier<ServerState> {
   ServerState build() {
     ref.onDispose(() {
       _sub?.cancel();
-      KeepAwake.disable();
+      KeepAwake.release(KeepAwake.server);
       ForegroundTask.release(ForegroundTask.server);
     });
     return const ServerState();
@@ -505,7 +505,7 @@ class ServerController extends Notifier<ServerState> {
         port: settings.serverPort,
         token: settings.serverAuthEnabled ? settings.serverToken : null,
       );
-      await KeepAwake.enable(); // generation must survive screen-off
+      await KeepAwake.acquire(KeepAwake.server); // must survive screen-off
       // Without this the process drops to the background cpuset (little
       // cores) as soon as the user leaves the app — for a server that is the
       // normal case, not the exception.
@@ -527,7 +527,7 @@ class ServerController extends Notifier<ServerState> {
     await _sub?.cancel();
     _sub = null;
     await ref.read(cmfServerProvider).stop();
-    await KeepAwake.disable();
+    await KeepAwake.release(KeepAwake.server);
     await ForegroundTask.release(ForegroundTask.server);
     state = ServerState(port: state.port);
   }
@@ -635,7 +635,7 @@ class CompanionController extends Notifier<CompanionState> {
       // is watching.
       engine.clearPeer();
       ForegroundTask.release(ForegroundTask.companion);
-      KeepAwake.disable();
+      KeepAwake.release(KeepAwake.companion);
     });
     return const CompanionState();
   }
@@ -766,7 +766,7 @@ class CompanionController extends Notifier<CompanionState> {
       // Same reasoning as the server: a background process is confined to the
       // little-core cpuset, and the governor already under-clocks a worker
       // that computes briefly and then blocks on a socket.
-      await KeepAwake.enable();
+      await KeepAwake.acquire(KeepAwake.companion);
       await ForegroundTask.acquire(ForegroundTask.companion);
       state = state.copyWith(
         role: CompanionRole.worker,

@@ -82,6 +82,7 @@
   "importStartedSnack": "Конвертация запущена",
   "importJobsTitle": "Задачи",
   "importNoJobs": "Конвертаций пока не было.",
+  "importKeepAwakeNote": "Пока идёт конвертация, экран не гаснет.",
   "importDeleteConfirm": "Удалить эту конвертацию и её файл .cmf с диска?",
   "importShowLog": "Показать лог",
   "importOnDeviceNote": "На устройстве доступны Q8_ROW, Q8_2F, Q1T, Q1 и F16 (многопоточно). Репозитории с готовыми .cmf скачиваются напрямую — в любой квантизации.",

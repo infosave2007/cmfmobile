@@ -82,6 +82,7 @@
   "importStartedSnack": "转换已开始",
   "importJobsTitle": "转换任务",
   "importNoJobs": "暂无转换任务。",
+  "importKeepAwakeNote": "转换期间屏幕保持常亮。",
   "importDeleteConfirm": "删除此转换任务及其磁盘上的 .cmf 文件?",
   "importShowLog": "查看日志",
   "importOnDeviceNote": "设备端转换支持 Q8_ROW、Q8_2F、Q1T、Q1 和 F16（多线程）。已包含 .cmf 文件的仓库将直接下载——任何量化格式均可。",
