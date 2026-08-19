@@ -44,6 +44,16 @@ versions follow [SemVer](https://semver.org/).
   an allow-list, so the entry point was filtered out and the stub aborted
   before the first frame — which looked like the app hanging on the splash.
 
+## [1.2.7] - 2026-08-17
+
+### Fixed
+- **A finished download lands in the library even after you walk away.** The
+  refresh listener lived in the import screen's own state, so closing that
+  screen mid-download orphaned it: the model arrived on disk but stayed
+  invisible until the app was restarted. The library owns the subscription
+  now — the models controller watches converter updates and refreshes on every
+  job-done transition, for the whole life of the app.
+
 ## [1.2.6] - 2026-08-17
 
 ### Added
