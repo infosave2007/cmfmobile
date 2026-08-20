@@ -47,3 +47,6 @@ app.*.map.json
 # iCloud workaround: build dirs are symlinks out of the synced folder
 /build
 .dart_tool
+
+# Ответы App Review: черновики переписки с ревьюером, не для публичного репозитория
+/store_assets/app_review_notes.md
