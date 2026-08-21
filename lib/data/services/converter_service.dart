@@ -53,6 +53,7 @@ class ConverterService {
     required QuantType quant,
     String? name,
     String? hfToken,
+    String? cmfPath,
     int threads = 4,
   }) async {
     final dir = await models.modelsDir();
@@ -66,6 +67,7 @@ class ConverterService {
       name: outName,
       outputPath: '${dir.path}/$outName.cmf',
       started: DateTime.now(),
+      cmfPath: cmfPath,
     );
     jobs.insert(0, job);
     if (jobs.length > 20) jobs.removeLast();
@@ -218,8 +220,16 @@ class ConverterService {
     String? hfToken,
     int threads,
   ) async {
-    cmfFiles.sort((a, b) => b.size.compareTo(a.size));
-    final src = cmfFiles.first;
+    // The catalog lists every .cmf a repo ships, so the job names the exact
+    // one the user picked. Largest-wins stays only as the fallback for callers
+    // that cannot offer a choice — before this, picking a 2-bit variant in the
+    // catalog still downloaded the repo's heaviest file.
+    HfFileEntry largest() =>
+        (cmfFiles..sort((a, b) => b.size.compareTo(a.size))).first;
+    final wanted = job.cmfPath;
+    final src = wanted == null
+        ? largest()
+        : cmfFiles.firstWhere((f) => f.path == wanted, orElse: largest);
     final parallelism = threads.clamp(2, 8);
     job.addLog(
       'repo ships ${src.path} — downloading directly '

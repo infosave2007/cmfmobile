@@ -67,9 +67,14 @@ class _FeaturedEntry {
     this.cmfSizeBytes, {
     this.tooBig = false,
     this.quant = '',
+    this.cmfPath = '',
   });
   final HfModel model;
   final int cmfSizeBytes;
+
+  /// The one .cmf this card stands for. A repo shipping three quantizations
+  /// produces three cards, each with its own size and its own download.
+  final String cmfPath;
 
   /// The file is bigger than this device can realistically hold in memory —
   /// still downloadable (the split needs the same file on both sides), but
@@ -120,35 +125,45 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
       final cmfRepos =
           repos.where(looksLikeCmfRepo).where(isTextGenerationRepo).toList();
       final resources = ref.read(deviceResourcesProvider);
-      // Sizes come from per-repo file listings — fetched in parallel.
-      final entries = await Future.wait(cmfRepos.map((model) async {
-        var size = 0;
-        String? largestName;
+      // File listings per repo, fetched in parallel.
+      final listings = await Future.wait(cmfRepos.map((model) async {
         try {
           final files = await hf.listFiles(model.id, token: token);
-          final cmf = files
-              .where((f) => f.path.toLowerCase().endsWith('.cmf'))
-              .toList()
-            ..sort((a, b) => b.size.compareTo(a.size));
-          size = cmf.fold<int>(0, (s, f) => s + f.size);
-          if (cmf.isNotEmpty) largestName = cmf.first.path;
-        } catch (_) {}
-        return _FeaturedEntry(
-          model,
-          size,
-          // Measured against the per-process budget the loader uses, not the
-          // device's total RAM: iOS hands one app a few GB out of 8, so a
-          // total-RAM yardstick waved through 4.8 GB downloads that the load
-          // dialog then refused.
-          tooBig: await resources.weightsExceedBudget(size),
-          quant: quantLabelFor(largestName, model.tags),
-        );
+          return MapEntry(
+            model,
+            files
+                .where((f) => f.path.toLowerCase().endsWith('.cmf'))
+                .where((f) => f.size > 0)
+                .toList(),
+          );
+        } catch (_) {
+          return MapEntry(model, const <HfFileEntry>[]);
+        }
       }));
-      // Phone-sized first: sort by what actually fits, small to large. Repos
-      // with no .cmf file at all are dropped, not shown empty.
-      final withFiles = entries.where((e) => e.cmfSizeBytes > 0).toList()
-        ..sort((a, b) => a.cmfSizeBytes.compareTo(b.cmfSizeBytes));
-      if (mounted) setState(() => _featured = withFiles);
+      // One card per .cmf, not per repo. Several repos ship the same model in
+      // two or three quantizations; folding them into one card hid the choice
+      // and — worse — showed the SUM of their sizes as if it were a single
+      // download, so a repo whose largest file is 24 GB advertised 57.
+      final entries = <_FeaturedEntry>[];
+      for (final listing in listings) {
+        for (final file in listing.value) {
+          entries.add(_FeaturedEntry(
+            listing.key,
+            file.size,
+            // Measured against the per-process budget the loader uses, not the
+            // device's total RAM: iOS hands one app a few GB out of 8, so a
+            // total-RAM yardstick waved through 4.8 GB downloads that the load
+            // dialog then refused.
+            tooBig: await resources.weightsExceedBudget(file.size),
+            quant: quantLabelFor(file.path, listing.key.tags),
+            cmfPath: file.path,
+          ));
+        }
+      }
+      // Smallest first: the variants a phone can actually run come first, and
+      // the ordering is now over real per-file sizes.
+      entries.sort((a, b) => a.cmfSizeBytes.compareTo(b.cmfSizeBytes));
+      if (mounted) setState(() => _featured = entries);
     } catch (e) {
       // Best-effort still, but silently: search keeps working, and the tab
       // now says why it is empty instead of spinning.
@@ -334,18 +349,29 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
         for (final entry in _featured)
-          _FeaturedCard(entry: entry, onTap: () => _startDirect(entry.model)),
+          _FeaturedCard(
+            entry: entry,
+            onTap: () => _startDirect(entry.model, cmfPath: entry.cmfPath),
+          ),
       ],
     );
   }
 
   /// One tap on a featured .cmf repo starts the direct download — no
   /// conversion, nothing to configure.
-  Future<void> _startDirect(HfModel model) async {
+  Future<void> _startDirect(HfModel model, {String cmfPath = ''}) async {
     final settings = ref.read(settingsProvider).value;
+    // Name the output after the file, not the repo: two quantizations of one
+    // repo would otherwise both land on <repo>.cmf and overwrite each other.
+    final fileName = cmfPath.split('/').last;
     await ref.read(converterProvider).start(
           repo: model.id,
           quant: QuantType.q8_2f, // ignored: the repo ships .cmf
+          name: fileName.isEmpty
+              ? null
+              : fileName.replaceAll(
+                  RegExp(r'\.cmf$', caseSensitive: false), ''),
+          cmfPath: cmfPath.isEmpty ? null : cmfPath,
           hfToken: settings?.hfToken,
           threads: EngineTuning.resolveThreads(settings?.threads ?? 0),
         );
@@ -467,6 +493,15 @@ class _FeaturedCard extends StatelessWidget {
                           ?.copyWith(fontWeight: FontWeight.w700),
                       overflow: TextOverflow.ellipsis,
                     ),
+                    // Which file this card is: two quantizations of one repo
+                    // are otherwise the same title twice.
+                    if (entry.cmfPath.isNotEmpty)
+                      Text(
+                        entry.cmfPath.split('/').last,
+                        style: TextStyle(
+                            fontSize: 11, color: scheme.onSurfaceVariant),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     const SizedBox(height: 4),
                     // Wrap, not Row: the badge is a sentence in some locales
                     // and was pushing the size off the card's edge — clipped

@@ -5,6 +5,26 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
 
+## [1.2.9] - 2026-08-21
+
+### Fixed
+- **The ready-CMF catalog shows every quantization a repo ships, not one card
+  per repo.** Several featured repos carry the same model in two or three
+  quantizations. Folding them into a single card hid the choice, and the size
+  on that card was the SUM of all of them — a repo whose largest file is 24 GB
+  advertised 57. Each `.cmf` is now its own card, with its own size, its own
+  quantization chip and the file name under the title, and the list is ordered
+  by real file size, smallest first.
+- **Tapping a card downloads that file.** The direct-download path sorted a
+  repo's `.cmf` files by size and always took the largest, so choosing a 2-bit
+  variant still fetched the heaviest one. The job now carries the exact path
+  the user picked; largest-wins remains only as the fallback for callers that
+  cannot offer a choice.
+- **Two quantizations of one repo no longer overwrite each other.** The output
+  file was named after the repository, so a second variant landed on the same
+  `<repo>.cmf` and replaced the first. The name now comes from the downloaded
+  file.
+
 ## [1.2.8] - 2026-08-19
 
 ### Added

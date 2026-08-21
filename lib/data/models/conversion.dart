@@ -89,6 +89,7 @@ class ConversionJob {
     required this.name,
     required this.outputPath,
     required this.started,
+    this.cmfPath,
     this.state = JobState.running,
     this.progress = 0,
     this.phase = 'starting',
@@ -104,6 +105,10 @@ class ConversionJob {
   final String name;
   final String outputPath;
   final DateTime started;
+
+  /// Which .cmf inside the repo to fetch. A repo may ship the same model in
+  /// several quantizations; null means "caller had no choice to offer".
+  final String? cmfPath;
 
   JobState state;
   double progress;
