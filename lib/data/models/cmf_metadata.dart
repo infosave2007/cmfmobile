@@ -19,6 +19,7 @@ class CmfMetadata {
     required this.eosTokenIds,
     required this.tasks,
     required this.requiredFeatures,
+    this.skills = const [],
   });
 
   final int version;
@@ -37,7 +38,14 @@ class CmfMetadata {
 
   /// Task-mask names baked into the file (virtual sparsity skills).
   final List<String> tasks;
+
+  /// Skills this file *is*, as declared in its header. Non-empty means the
+  /// file is a skill cut from a base model, not a model that can run alone.
+  final List<String> skills;
   final int requiredFeatures;
+
+  /// A skill plugs into a base model; it cannot be loaded and chatted with.
+  bool get isSkill => skills.isNotEmpty;
 
   /// Text attachments are inlined into the prompt, so any chat model with a
   /// template and a reasonable context window can accept them.
@@ -59,6 +67,7 @@ class CmfMetadata {
         'eosTokenIds': eosTokenIds,
         'tasks': tasks,
         'requiredFeatures': requiredFeatures,
+        'skills': skills,
       };
 
   factory CmfMetadata.fromJson(Map<String, dynamic> json) => CmfMetadata(
@@ -78,5 +87,6 @@ class CmfMetadata {
             (json['eosTokenIds'] as List?)?.cast<int>() ?? const [],
         tasks: (json['tasks'] as List?)?.cast<String>() ?? const [],
         requiredFeatures: json['requiredFeatures'] as int? ?? 1,
+        skills: (json['skills'] as List?)?.cast<String>() ?? const [],
       );
 }

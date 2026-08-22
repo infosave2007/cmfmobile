@@ -7,6 +7,7 @@ import '../../core/providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/util/formats.dart';
 import '../../data/models/conversion.dart';
+import '../../data/services/cmf_format.dart';
 import '../../data/services/hf_api.dart';
 import '../../data/services/inference/engine_tuning.dart';
 import '../../l10n/app_localizations.dart';
@@ -144,9 +145,29 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
       // two or three quantizations; folding them into one card hid the choice
       // and — worse — showed the SUM of their sizes as if it were a single
       // download, so a repo whose largest file is 24 GB advertised 57.
+      // Skills are not runnable models — they are task-mask files cut from a
+      // base model — and offering one here sends the user to download
+      // something that cannot chat. The file listing does not say which is
+      // which, so ask each file's header; it declares it. Headers are a few
+      // kilobytes, fetched in parallel.
+      final skillPaths = <String>{};
+      await Future.wait([
+        for (final listing in listings)
+          if (listing.value.length > 1)
+            for (final file in listing.value)
+              hf.fetchCmfHeader(listing.key.id, file.path, token: token).then(
+                (header) {
+                  if (header != null && cmfHeaderSkills(header).isNotEmpty) {
+                    skillPaths.add('${listing.key.id}/${file.path}');
+                  }
+                },
+              ),
+      ]);
+
       final entries = <_FeaturedEntry>[];
       for (final listing in listings) {
         for (final file in listing.value) {
+          if (skillPaths.contains('${listing.key.id}/${file.path}')) continue;
           entries.add(_FeaturedEntry(
             listing.key,
             file.size,

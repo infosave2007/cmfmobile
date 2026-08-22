@@ -5,6 +5,27 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [SemVer](https://semver.org/).
 
 
+## [1.2.10] - 2026-08-22
+
+### Fixed
+- **Skills no longer appear in the ready-CMF catalog as if they were models.**
+  A skill is a task-mask file cut from a base model: it plugs into that model
+  and cannot chat on its own. Repos ship skills next to the model, and listing
+  each `.cmf` separately — new in 1.2.9 — surfaced four of them in
+  Nanbeige4.2 alone. Nothing in a Hub file listing says which is which, and
+  neither name nor size can be trusted: a skill carries the base model's full
+  `arch`, and in that repo the model and one of its skills are both 2.36 GB.
+  The header declares it (`"skills": [{"id": "code", …}]`), so the catalog now
+  reads each candidate's header over two ranged requests — a few kilobytes,
+  not gigabytes — and keeps only real models. A header that cannot be read
+  leaves the file listed, so a hiccup never hides a model.
+- **The direct download prefers a model over a skill** when the caller had no
+  file to name, for the same reason and by the same declaration.
+
+### Added
+- `CmfMetadata.isSkill`, so a skill that reaches the library can be recognised
+  instead of failing at load time.
+
 ## [1.2.9] - 2026-08-21
 
 ### Fixed

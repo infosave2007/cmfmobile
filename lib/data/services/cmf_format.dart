@@ -4,6 +4,24 @@ import 'dart:typed_data';
 
 import '../models/cmf_metadata.dart';
 
+/// Names of the skills a CMF header declares, empty for a plain model.
+///
+/// A skill is a task-mask file cut from a base model: it plugs into that
+/// model instead of running on its own. The header says so outright —
+/// `"skills": [{"id": "code", "base_arch": "nanbeige", ...}]` — and nothing
+/// else separates the two: a skill carries the base model's full `arch`, and
+/// in Nanbeige4.2 a skill and the model are both 2.36 GB. Judging by file
+/// name would be guesswork; this is the declaration.
+List<String> cmfHeaderSkills(Map<String, dynamic> header) {
+  final raw = header['skills'];
+  if (raw is! List) return const [];
+  return raw
+      .whereType<Map>()
+      .map((s) => (s['name'] ?? s['id'] ?? '').toString())
+      .where((s) => s.isNotEmpty)
+      .toList();
+}
+
 /// CMF v2 binary format (see cmfpublic/docs/CMF_V2_SPEC.md).
 ///
 /// Envelope: 128 bytes fixed.
@@ -293,6 +311,7 @@ class CmfReader {
         eosTokenIds: eos,
         tasks: tasks,
         requiredFeatures: env.requiredFeatures,
+        skills: cmfHeaderSkills(header),
       );
     } finally {
       await raf.close();

@@ -224,12 +224,26 @@ class ConverterService {
     // one the user picked. Largest-wins stays only as the fallback for callers
     // that cannot offer a choice — before this, picking a 2-bit variant in the
     // catalog still downloaded the repo's heaviest file.
-    HfFileEntry largest() =>
-        (cmfFiles..sort((a, b) => b.size.compareTo(a.size))).first;
+    // Prefer a real model over a skill. Size cannot tell them apart — in
+    // Nanbeige4.2 the model and one of its skills are both 2.36 GB — so ask
+    // the headers, which declare it. Only needed when the caller had nothing
+    // to choose from; the catalog always names the file.
     final wanted = job.cmfPath;
+    Future<HfFileEntry> largest() async {
+      final sorted = cmfFiles.toList()
+        ..sort((a, b) => b.size.compareTo(a.size));
+      for (final f in sorted) {
+        final header = await hf.fetchCmfHeader(job.repo, f.path,
+            token: hfToken);
+        if (header == null || cmfHeaderSkills(header).isEmpty) return f;
+      }
+      return sorted.first;
+    }
+
     final src = wanted == null
-        ? largest()
-        : cmfFiles.firstWhere((f) => f.path == wanted, orElse: largest);
+        ? await largest()
+        : cmfFiles.firstWhere((f) => f.path == wanted,
+            orElse: () => cmfFiles.reduce((a, b) => a.size >= b.size ? a : b));
     final parallelism = threads.clamp(2, 8);
     job.addLog(
       'repo ships ${src.path} — downloading directly '

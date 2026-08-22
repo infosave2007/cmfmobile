@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
@@ -150,6 +151,53 @@ class HfApi {
           ),
         )
         .toList();
+  }
+
+  /// Reads a remote .cmf file's JSON header with two ranged GETs — 128 bytes
+  /// of envelope, then the header itself. That is how the catalog tells a
+  /// model from a skill without pulling gigabytes: the answer is declared in
+  /// the header, and nothing in the file listing carries it.
+  ///
+  /// Returns null when the range is refused, the magic is wrong, or the JSON
+  /// does not parse — callers then treat the file as an ordinary model rather
+  /// than hide something that might be one.
+  Future<Map<String, dynamic>?> fetchCmfHeader(
+    String repo,
+    String path, {
+    String? token,
+  }) async {
+    final uri = Uri.parse('$_base/$repo/resolve/main/$path');
+    try {
+      Future<List<int>?> range(int start, int end) async {
+        final req = http.Request('GET', uri)
+          ..headers.addAll(_headers(token))
+          ..headers['Range'] = 'bytes=$start-$end';
+        final res = await _send(req);
+        if (res.statusCode != 206) return null;
+        return res.stream.toBytes().timeout(_idleTimeout);
+      }
+
+      final envelope = await range(0, 127);
+      if (envelope == null || envelope.length < 32) return null;
+      final env = ByteData.sublistView(Uint8List.fromList(envelope));
+      // "CMF\x01"
+      if (envelope[0] != 0x43 ||
+          envelope[1] != 0x4D ||
+          envelope[2] != 0x46 ||
+          envelope[3] != 0x01) {
+        return null;
+      }
+      final headerOff = env.getUint64(16, Endian.little);
+      final headerLen = env.getUint64(24, Endian.little);
+      if (headerLen == 0 || headerLen > 8 * 1024 * 1024) return null;
+      final headerBytes =
+          await range(headerOff, headerOff + headerLen - 1);
+      if (headerBytes == null) return null;
+      final decoded = jsonDecode(utf8.decode(headerBytes));
+      return decoded is Map<String, dynamic> ? decoded : null;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Streams {repo}/resolve/main/{path} to [destPath].

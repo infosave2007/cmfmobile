@@ -6,6 +6,55 @@ import 'package:cmf_mobile/data/services/safetensors.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  group('skill declaration in the header', () {
+    test('a skill header names its skills', () {
+      // Shape taken from infosave/Nanbeige4.2-3Bcmf, experiments/
+      // nanbeige42-code.skill.cmf — the file the catalog used to offer as if
+      // it were a model.
+      final header = <String, dynamic>{
+        'version': 2,
+        'format': 'cmf',
+        'arch': {'arch_name': 'nanbeige', 'num_layers': 22},
+        'skills': [
+          {
+            'id': 'code',
+            'name': 'Coding specialist (Python/JS/systems)',
+            'base_arch': 'nanbeige',
+            'task': 'specialist',
+          }
+        ],
+      };
+      expect(cmfHeaderSkills(header), ['Coding specialist (Python/JS/systems)']);
+    });
+
+    test('a model header declares none', () {
+      // A skill carries the base model's full arch, so arch cannot separate
+      // them; only the declaration can.
+      final header = <String, dynamic>{
+        'version': 2,
+        'format': 'cmf',
+        'arch': {'arch_name': 'nanbeige', 'num_layers': 22},
+        'quant_type': 'q4tp',
+      };
+      expect(cmfHeaderSkills(header), isEmpty);
+    });
+
+    test('falls back to the id when a skill has no name', () {
+      final header = <String, dynamic>{
+        'skills': [
+          {'id': 'gfx'}
+        ],
+      };
+      expect(cmfHeaderSkills(header), ['gfx']);
+    });
+
+    test('a malformed skills value is not a skill', () {
+      expect(cmfHeaderSkills(<String, dynamic>{'skills': 'code'}), isEmpty);
+      expect(cmfHeaderSkills(<String, dynamic>{'skills': []}), isEmpty);
+      expect(cmfHeaderSkills(<String, dynamic>{}), isEmpty);
+    });
+  });
+
   group('f16 conversion', () {
     test('round-trips common values', () {
       for (final v in [0.0, 1.0, -1.0, 0.5, 2.75, -100.25, 65504.0]) {
