@@ -182,7 +182,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get modelsUnload => 'Bellekten çıkar';
 
   @override
-  String get modelsUnloadHint => 'Belleği boşaltır, pil tasarrufu sağlar';
+  String get modelsUnloadHint => 'Modelin kullandığı belleği boşaltır';
 
   @override
   String get modelsDeleteTitle => 'Modeli sil';
@@ -254,11 +254,11 @@ class AppLocalizationsTr extends AppLocalizations {
   String get importNoResults => 'Model bulunamadı.';
 
   @override
-  String get importGatedBadge => 'gated';
+  String get importGatedBadge => 'kısıtlı erişim';
 
   @override
   String get importGatedHint =>
-      'Gated depo — Ayarlar\'da bir Hugging Face tokenı girin.';
+      'Kısıtlı erişimli depo: Hugging Face üzerinden erişim alın, ardından Ayarlar’a belirtecinizi ekleyin.';
 
   @override
   String get importConfigureTitle => 'Dönüştürmeyi yapılandır';
@@ -361,7 +361,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get serverSubtitle =>
-      'Yüklü modeli CMF protokolüyle (OpenAI uyumlu API) ağınıza sunun.';
+      'Yüklü modeli ağınızda paylaşın: modele göre sohbet veya karar API’si.';
 
   @override
   String get serverStart => 'Sunucuyu başlat';
@@ -380,7 +380,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get serverNoModelWarning =>
-      'Yüklü model yok — Modeller sekmesinden bir model yükleyene kadar API istekleri 503 döndürecek.';
+      'Yüklü model yok. İstek göndermeden önce Modeller’i açıp bir sohbet veya karar modeli yükleyin.';
 
   @override
   String get serverAddresses => 'Adresler';
@@ -419,7 +419,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get serverNoRequestsYet =>
-      'Henüz istek yok. OpenAI uyumlu herhangi bir istemciyi bu telefona yönlendirin.';
+      'Henüz istek yok. Aşağıdaki uç noktalar üzerinden bir istemci bağlayın.';
 
   @override
   String get serverKeepAwakeNote => 'Sunucu çalışırken ekran açık kalır.';
@@ -480,7 +480,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsUseGpuHint =>
-      'Ayrık GPU\'yu etkinleştir (bir sonraki model yüklemesinde geçerli olur). Cihazdaki ilk GPU yanıtı sürücünün gölgelendiricilerini derler — bu bir kereliğine birkaç dakika sürebilir; sonuç önbelleğe alınır.';
+      'Sohbet modelleri için cihazın GPU’sunu kullanın (sonraki yüklemede uygulanır). İlk çalıştırmada gölgelendiricilerin derlenip önbelleğe alınması birkaç dakika sürebilir. CMF Decision şu anda telefonlarda CPU kullanır.';
 
   @override
   String get settingsUseGpuNeedsBackend =>
@@ -501,7 +501,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsEngineFlagsHint =>
-      'Her satırda bir CMF_ANAHTAR=değer, model yüklenirken çalışma zamanına aktarılır. Boş = varsayılanlar.';
+      'Her satıra bir CMF_KEY=value yazın. Model yüklenirken uygulanır. Boş = varsayılanlar.';
 
   @override
   String get settingsServerSection => 'Sunucu';
@@ -520,7 +520,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsHfToken => 'Erişim tokenı';
 
   @override
-  String get settingsHfTokenHint => 'hf_… (gated modeller için gerekli)';
+  String get settingsHfTokenHint => 'hf_… (kısıtlı erişimli modeller için)';
 
   @override
   String get settingsStorage => 'Depolama';
@@ -743,4 +743,178 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get importTabConvert => 'HF\'den';
+
+  @override
+  String get decisionTitle => 'Kararlar';
+
+  @override
+  String get decisionSubtitle =>
+      'Bir beceri seçin, isteği açıklayın: üretilmiş metin değil, bir karar alın.';
+
+  @override
+  String get decisionSkill => 'Beceri';
+
+  @override
+  String get decisionInput => 'İstek metni';
+
+  @override
+  String get decisionExample => 'Örneği kullan';
+
+  @override
+  String get decisionPolicy => 'Karar politikası';
+
+  @override
+  String get decisionBalanced => 'Dengeli';
+
+  @override
+  String get decisionCareful => 'Belirsizlikte karar verme';
+
+  @override
+  String get decisionBestEffort => 'Belirsizliğe izin ver';
+
+  @override
+  String get decisionRun => 'Karar ver';
+
+  @override
+  String get decisionAccepted => 'Karar kabul edildi';
+
+  @override
+  String get decisionAbstained => 'Yeterince emin değil';
+
+  @override
+  String get decisionAbstainBody =>
+      'Güvenilir karar yok. İsteği netleştirin veya başka bir beceri seçin.';
+
+  @override
+  String get decisionConfidence => 'Güven puanı';
+
+  @override
+  String get decisionTotal => 'Toplam süre';
+
+  @override
+  String get decisionResonance => 'Rezonans süresi';
+
+  @override
+  String get decisionExplain => 'Neden bu karar?';
+
+  @override
+  String get decisionErrorHelp =>
+      'Daha düşük yeniden yapılandırma hatası daha yakın eşleşme demektir. Güven puanı ölçülmüş doğruluk değildir.';
+
+  @override
+  String get decisionCopy => 'JSON kopyala';
+
+  @override
+  String get decisionOffline =>
+      'Yerel kararlar telefonda kalır. Yalnızca onaylı oracle isteği metni sağlayıcıya gönderir. Kendi becerilerinizi Cortiq 0.8+ ile oluşturulan CMF Decision dosyası olarak içe aktarın.';
+
+  @override
+  String get oracleTitle => 'Oracle';
+
+  @override
+  String get oracleDescription =>
+      'Belirsiz yerel kararlar için isteğe bağlı OpenAI uyumlu API. Her istek onayınızı gerektirir.';
+
+  @override
+  String get oracleEnabled => 'Manuel oracle etkinleştir';
+
+  @override
+  String get oracleModel => 'Model kimliği';
+
+  @override
+  String get oracleKeyHelp =>
+      'Anahtar cihazın şifreli deposunda kalır, telefon API’si üzerinden paylaşılmaz.';
+
+  @override
+  String get oracleSave => 'Kaydet';
+
+  @override
+  String get oracleDelete => 'Anahtarı sil ve sıfırla';
+
+  @override
+  String get oracleAsk => 'Oracle’a sor';
+
+  @override
+  String get oracleConfirm =>
+      'İstek ve beceri ölçütleri sağlayıcıya gönderilsin mi? API ücreti oluşabilir.';
+
+  @override
+  String get oracleAnswer => 'Oracle yanıtı';
+
+  @override
+  String get oracleNotTraining =>
+      'Harici yanıt, yerel karar değil. Modeli yeniden eğitmez.';
+
+  @override
+  String get oracleManual => 'Varsayılan olarak kapalı · her istekte onay';
+
+  @override
+  String get modelKindDecision => 'Kararlar';
+
+  @override
+  String get modelKindChat => 'Sohbet';
+
+  @override
+  String get modelDecisionHelp =>
+      'Bir seçenek seçer veya karar vermez. Sohbet yanıtı yazmaz.';
+
+  @override
+  String get modelChatHelp => 'Metin üretir ve mesajları yanıtlar.';
+
+  @override
+  String get modelOpenDecisions => 'Kararları aç';
+
+  @override
+  String get skillBanking => 'Banka desteği';
+
+  @override
+  String get skillAssistant => 'Asistan istekleri';
+
+  @override
+  String get skillCommands => 'Cihaz komutları';
+
+  @override
+  String get oracleApiUrl => 'API temel URL’si';
+
+  @override
+  String get oracleApiKey => 'API anahtarı';
+
+  @override
+  String get oracleStorageError =>
+      'Güvenli depolama kullanılamıyor. Yeniden deneyin.';
+
+  @override
+  String get oracleUrlError =>
+      'Kimlik bilgisi, sorgu parametresi veya parça içermeyen bir HTTPS temel URL’si kullanın.';
+
+  @override
+  String get oracleModelError =>
+      'En fazla 200 karakterden oluşan bir model kimliği girin.';
+
+  @override
+  String get oracleKeyError => 'Boşluk içermeyen bir API anahtarı girin.';
+
+  @override
+  String get oracleRequestError =>
+      'Oracle yanıtı alınamadı. Bağlantınızı ve API ayarlarını kontrol edin.';
+
+  @override
+  String oracleHttpError(int status) {
+    return 'Sağlayıcı HTTP $status döndürdü. API anahtarını, model kimliğini ve bakiyeyi kontrol edin.';
+  }
+
+  @override
+  String get oracleInvalidResponse =>
+      'Oracle yanıtı becerinin izin verdiği sonuçlara uymadığı için kabul edilmedi.';
+
+  @override
+  String get decisionFailed =>
+      'Yerel karar alınamadı. Bir CMF Decision modeli ve beceri yüklendiğinden emin olun.';
+
+  @override
+  String get modelKindSkill => 'Beceri eklentisi';
+
+  @override
+  String get modelSkillHelp =>
+      'Temel sohbet modeli için bir eklentidir; bağımsız model değildir. Sohbet veya karar modeli olarak açılamaz.';
 }

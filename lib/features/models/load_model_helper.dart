@@ -9,7 +9,10 @@ import '../../l10n/app_localizations.dart';
 /// Loads [model] into the engine, first checking the device has enough RAM;
 /// if it likely doesn't, asks the user to confirm.
 Future<void> loadModelWithMemoryCheck(
-    BuildContext context, WidgetRef ref, LocalModel model) async {
+  BuildContext context,
+  WidgetRef ref,
+  LocalModel model,
+) async {
   final check = await ref.read(deviceResourcesProvider).checkFit(model);
   if (!context.mounted) return;
 
@@ -20,10 +23,12 @@ Future<void> loadModelWithMemoryCheck(
       builder: (context) => AlertDialog(
         icon: const Icon(Icons.memory),
         title: Text(l.memoryWarnTitle),
-        content: Text(l.memoryWarnBody(
-          formatBytes(check.requiredBytes),
-          formatBytes(check.usableRamBytes),
-        )),
+        content: Text(
+          l.memoryWarnBody(
+            formatBytes(check.requiredBytes),
+            formatBytes(check.usableRamBytes),
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -38,5 +43,13 @@ Future<void> loadModelWithMemoryCheck(
     );
     if (proceed != true) return;
   }
-  await ref.read(engineControllerProvider.notifier).loadModel(model);
+  if (!context.mounted) return;
+  // Loading can replace ChatScreen with DecisionScreen (and dispose this
+  // widget). Capture controllers before awaiting; never reuse a disposed ref.
+  final engine = ref.read(engineControllerProvider.notifier);
+  final shell = ref.read(shellIndexProvider.notifier);
+  final loaded = await engine.loadModel(model);
+  if (loaded && model.meta?.isDecision == true) {
+    shell.select(0);
+  }
 }

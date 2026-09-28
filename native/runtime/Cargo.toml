@@ -1,0 +1,28 @@
+[package]
+name = "cmf-mobile-runtime"
+version = "0.8.0"
+edition = "2024"
+rust-version = "1.88"
+license = "Apache-2.0"
+publish = false
+
+[lib]
+name = "cortiq_ffi"
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[features]
+gpu = ["cortiq-engine/gpu"]
+
+[dependencies]
+cortiq-core = "=0.8.0"
+cortiq-engine = "=0.8.0"
+cortiq-net = "=0.8.0"
+cortiq-decision = "=0.8.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+debug = 0
+strip = "debuginfo"
+lto = "thin"
+codegen-units = 1

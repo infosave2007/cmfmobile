@@ -14,7 +14,7 @@
 
 CMF Mobile is the mobile companion of the [CMF ecosystem](https://github.com/infosave2007/cmf)
 (Cortiq Model Format): a Flutter app that turns an Android or iOS device into a
-fully local AI workstation — chat, model library, on-device Hugging Face
+local-first AI workstation — chat, model library, on-device Hugging Face
 converter, and an OpenAI-compatible server speaking the CMF protocol.
 
 *Читайте также: [README.ru.md](README.ru.md) — документация на русском.*
@@ -22,6 +22,20 @@ converter, and an OpenAI-compatible server speaking the CMF protocol.
 ---
 
 ## Features
+
+### Decisions and an optional oracle
+
+Cortiq Mobile 1.3 supports **CMF Decision / Cortiq 0.8.0** alongside chat models.
+The library labels **Chat**, **Decisions** and non-standalone **Skill add-ons**.
+Loading a decision model opens its skills instead of a chat input.
+
+- Local decisions use reconstruction error, with a visible abstention when uncertain.
+- **Settings → Oracle**: optional HTTPS provider, model ID and securely stored API key.
+  Off by default; every external request requires confirmation and may incur charges.
+- Phone API: `/v1/decide`, `/v1/decisions` and `/v1/skills`.
+- Seven UI languages; API identifiers are unchanged.
+
+[Quickstart, API and oracle guide](docs/mobile-decision.md) · [Privacy](PRIVACY.md)
 
 ### 💬 Chat
 - Streaming replies with **per-message token statistics**: latency, prompt/completion tokens, tok/s
@@ -33,7 +47,7 @@ converter, and an OpenAI-compatible server speaking the CMF protocol.
 ### 📦 Models
 - Local `.cmf` library with parsed metadata: architecture, quantization, layers, context, task masks
 - **RAM fit check** before loading — a warning instead of an OOM kill
-- One-tap load / **unload** (frees memory and battery)
+- One-tap load / **unload** (frees model memory)
 - Import `.cmf` files from device storage
 
 ### ⬇️ Hugging Face converter (like cortiq-gateway, but on the phone)

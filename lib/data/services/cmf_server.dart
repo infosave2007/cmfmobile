@@ -36,6 +36,7 @@ class CmfServer {
   // Decodes are serialized, like `cortiq serve --slots 1`.
   Future<void> _decodeQueue = Future.value();
   int _queuedDecodes = 0;
+  int _queuedDecisions = 0;
 
   /// Cap on requests waiting for the single decode slot; beyond it clients
   /// get 429 instead of an unbounded queue on a phone.
@@ -136,6 +137,15 @@ class CmfServer {
         }
       }
 
+      if (path == '/v1/decide' ||
+          path == '/v1/decisions' ||
+          path == '/api/alpha/decisions' ||
+          path == '/v1/skills' ||
+          path.startsWith('/v1/skills/')) {
+        await _handleDecision(req);
+        status = req.response.statusCode;
+        return;
+      }
       switch ((req.method, path)) {
         case ('GET', '/healthz'):
           await _json(req, 200, {'status': 'ok'});
@@ -276,7 +286,42 @@ class CmfServer {
     }
   }
 
+  Future<void> _handleDecision(HttpRequest req) async {
+    if (!engine.isDecisionModel) {
+      throw const _ApiException(
+        409,
+        'Load a CMF Decision model first',
+        code: 'decision_model_required',
+      );
+    }
+    if (_queuedDecisions >= 8) {
+      throw const _ApiException(
+        429,
+        'Decision queue is full',
+        code: 'server_busy',
+      );
+    }
+    _queuedDecisions++;
+    try {
+      final body = req.method == 'POST'
+          ? await _readJsonObject(req)
+          : <String, dynamic>{};
+      final result = await engine.decisionRequest(
+        req.method,
+        req.uri.path,
+        body,
+      );
+      await _json(req, result['status'] as int, result['body'] as Object);
+    } finally {
+      _queuedDecisions--;
+    }
+  }
+
   Future<void> _handleModels(HttpRequest req) async {
+    if (engine.isDecisionModel) {
+      await _handleDecision(req);
+      return;
+    }
     final model = engine.loadedModel;
     await _json(req, 200, {
       'object': 'list',
@@ -377,6 +422,13 @@ class CmfServer {
     HttpRequest req, {
     required bool chatMode,
   }) async {
+    if (engine.isDecisionModel) {
+      throw const _ApiException(
+        409,
+        'Use /v1/decide or /v1/decisions for this model',
+        code: 'decision_model_loaded',
+      );
+    }
     final model = engine.loadedModel;
     if (model == null) {
       throw const _ApiException(
@@ -582,10 +634,15 @@ class CmfServer {
       try {
         completer.complete(
           stream
-              ? await _streamResponse(req, request, stops, id, created,
-                  chatMode)
-              : await _fullResponse(req, request, stops, id, created,
-                  chatMode),
+              ? await _streamResponse(
+                  req,
+                  request,
+                  stops,
+                  id,
+                  created,
+                  chatMode,
+                )
+              : await _fullResponse(req, request, stops, id, created, chatMode),
         );
       } catch (e) {
         completer.completeError(e);
@@ -636,13 +693,15 @@ class CmfServer {
     }
 
     GenerationStats? stats0;
-    final events = engine.generate(request).timeout(
-      _generationStallTimeout,
-      onTimeout: (sink) {
-        engine.cancel();
-        sink.close();
-      },
-    );
+    final events = engine
+        .generate(request)
+        .timeout(
+          _generationStallTimeout,
+          onTimeout: (sink) {
+            engine.cancel();
+            sink.close();
+          },
+        );
     await for (final ev in events) {
       if (ev.done) {
         stats0 = ev.stats;
@@ -685,7 +744,8 @@ class CmfServer {
       // Flush the held-back tail: generation ended without a stop match.
       await forward(acc.substring(emitted));
     }
-    final s = stats0 ??
+    final s =
+        stats0 ??
         const GenerationStats(
           promptTokens: 0,
           completionTokens: 0,

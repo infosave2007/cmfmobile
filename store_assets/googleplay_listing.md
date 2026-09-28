@@ -19,16 +19,16 @@ Cortiq: Local AI Models
 
 **Short description (80):**
 ```
-Private AI chat on your phone. Runs fully offline — no cloud, no account.
+Local AI chat and CMF decisions, with an optional oracle you control.
 ```
 
 **Full description (4000):**
 ```
-Cortiq turns your phone into a fully local AI workstation. Chat with large language models that run entirely on your device — no cloud, no account, no data collection. Your conversations never leave your phone.
+Cortiq runs chat and decision models on your phone. Local processing is the default: download a model, then use it offline. Network sharing, desktop pairing and an external oracle are optional features you control.
 
 WHY CORTIQ
 
-• 100% private — models run on-device, works completely offline
+• Local by default — downloaded models work offline
 • Free and open source, no subscriptions, no tracking
 • Powered by CMF (Cortiq Model Format), an efficient format for mobile AI
 
@@ -40,11 +40,19 @@ CHAT
 • Markdown rendering, copy, regenerate, stop
 • "Disable thinking" mode — reasoning models answer directly
 
+DECISIONS
+
+• Choose a skill and get a structured decision, not generated chat text
+• Clear abstention when the local model is uncertain
+• Optional oracle: your HTTPS provider, model and securely stored API key
+• Every external request requires confirmation and may incur API charges
+• Chat, Decision models and skill add-ons are clearly distinguished
+
 MODEL LIBRARY
 
 • Local model library with full metadata: architecture, quantization, context size
 • RAM fit check before loading — a warning instead of a crash
-• One-tap load and unload to free memory and battery
+• One-tap load and unload to free model memory
 • Import .cmf files from device storage
 
 HUGGING FACE CONVERTER
@@ -57,7 +65,7 @@ HUGGING FACE CONVERTER
 
 LOCAL AI SERVER
 
-• Serve loaded models to your network over an OpenAI-compatible API
+• Serve chat models over an OpenAI-compatible API, or Decision models over the CMF decision API
 • Use your phone as an AI backend for laptops and other devices
 • QR code for instant connection setup
 
@@ -99,9 +107,12 @@ https://github.com/infosave2007/cmfmobile/blob/master/PRIVACY.md
 **News app:** No. **COVID-19 apps:** No.
 
 **Data safety (Безопасность данных):**
-- «Does your app collect or share any of the required user data types?» — **No**
-- «Is all of the user data collected by your app encrypted in transit?» — вопрос не появится после «No»
-- Комментарий на случай ревью: приложение не собирает и не передаёт данные; запросы к huggingface.co идут напрямую с устройства и не содержат личных данных; аналитики и аккаунтов нет.
+- Перед публичной отправкой 1.3 проверьте ответы с учётом оракула:
+  подтверждённый вызов передаёт текст и критерии выбранному API-провайдеру.
+  Нельзя переносить прежнее утверждение «данные никогда не передаются».
+  Оракул использует HTTPS; API телефона и сетевой компаньон — доверенную сеть,
+  а не обещание шифрования всего трафика. Подробности: `PRIVACY.md`.
+  Загрузка сборки во внутренний трек не обновляет эту анкету автоматически.
 
 **Government apps:** No. **Financial features:** None of these / No.
 **Health apps:** No health features.

@@ -1,0 +1,21 @@
+name: Native CMF runtime
+description: Build the pinned CMF 0.8.0 runtime with decision and chat ABIs
+inputs:
+  platform:
+    description: android, android-arm64, ios or ios-sim
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: dtolnay/rust-toolchain@1.96.0
+    - uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: native/runtime
+        key: mobile-${{ inputs.platform }}
+    - if: startsWith(inputs.platform, 'android')
+      shell: bash
+      run: |
+        "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'ndk;28.2.13676358'
+        echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/28.2.13676358" >> "$GITHUB_ENV"
+    - shell: bash
+      run: scripts/build_native.sh '${{ inputs.platform }}'

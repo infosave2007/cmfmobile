@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [master]
 
+concurrency:
+  group: ci-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     name: Analyze & test
@@ -15,6 +19,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: "3.44.1"
           channel: stable
           cache: true
 
@@ -22,6 +27,16 @@ jobs:
       - run: flutter gen-l10n
       - run: flutter analyze
       - run: flutter test
+      - uses: dtolnay/rust-toolchain@1.96.0
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: native/runtime
+      - run: cargo test --manifest-path native/runtime/Cargo.toml --locked --lib
+      - name: Native CMF Decision contract smoke test
+        run: |
+          curl -fL --retry 3 https://huggingface.co/infosave/cmf-decision/resolve/9f83ef9a3222df8c1dd30bec8958d7cecfb79eaa/cortiq-decision.cmf -o "$RUNNER_TEMP/decision.cmf"
+          echo "ed9b8ec2bbfe9e9fd30f14a5eaf82314f38bc7e7510a39772baa2de3801d79b1  $RUNNER_TEMP/decision.cmf" | sha256sum -c -
+          CMF_TEST_MODEL="$RUNNER_TEMP/decision.cmf" cargo test --manifest-path native/runtime/Cargo.toml --locked --lib decision::tests::actual_model -- --ignored
 
   build-android:
     name: Build Android (debug)
@@ -37,14 +52,42 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: "3.44.1"
           channel: stable
           cache: true
 
       - run: flutter pub get
-      - run: flutter build apk --debug
+      - uses: ./.github/actions/native-runtime
+        with:
+          platform: android-arm64
+      - run: flutter build apk --debug --target-platform android-arm64
 
       - uses: actions/upload-artifact@v4
         with:
           name: app-debug-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 7
+
+  build-ios:
+    name: Build iOS + verify Decision ABI
+    runs-on: macos-latest
+    needs: check
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.1'
+          channel: stable
+          cache: true
+      - uses: ./.github/actions/native-runtime
+        with:
+          platform: ios
+      - run: flutter pub get
+      - run: flutter build ios --release --no-codesign
+      - name: Verify exported decision ABI
+        run: |
+          xcrun dyld_info -exports build/ios/iphoneos/Runner.app/Runner > /tmp/exports.txt
+          for symbol in cortiq_load cortiq_decision_load cortiq_decision_request cortiq_decision_free; do
+            grep -q "_$symbol" /tmp/exports.txt || { echo "::error::Missing $symbol"; exit 1; }
+          done

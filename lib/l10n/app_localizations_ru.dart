@@ -114,7 +114,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String chatSessionTokens(String prompt, String completion) {
-    return '$prompt промпт · $completion ответ токенов';
+    return 'Токены: $prompt на входе · $completion на выходе';
   }
 
   @override
@@ -182,7 +182,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get modelsUnload => 'Выгрузить';
 
   @override
-  String get modelsUnloadHint => 'Освобождает память и батарею';
+  String get modelsUnloadHint => 'Освобождает память модели';
 
   @override
   String get modelsDeleteTitle => 'Удалить модель';
@@ -255,11 +255,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get importNoResults => 'Модели не найдены.';
 
   @override
-  String get importGatedBadge => 'gated';
+  String get importGatedBadge => 'ограниченный доступ';
 
   @override
   String get importGatedHint =>
-      'Закрытый репозиторий — укажите токен Hugging Face в настройках.';
+      'Репозиторий с ограниченным доступом: получите доступ на Hugging Face и добавьте токен в настройках.';
 
   @override
   String get importConfigureTitle => 'Настройка конвертации';
@@ -362,7 +362,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get serverSubtitle =>
-      'Раздавайте загруженную модель в сеть по протоколу CMF (OpenAI-совместимый API).';
+      'Предоставьте доступ к модели по сети: API чата или решений — в зависимости от модели.';
 
   @override
   String get serverStart => 'Запустить сервер';
@@ -381,7 +381,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get serverNoModelWarning =>
-      'Модель не загружена — запросы к API будут получать 503, пока вы не загрузите её на вкладке «Модели».';
+      'Модель не загружена. Откройте «Модели» и загрузите модель чата или решений перед отправкой запросов.';
 
   @override
   String get serverAddresses => 'Адреса';
@@ -420,7 +420,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get serverNoRequestsYet =>
-      'Запросов ещё не было. Направьте сюда любой OpenAI-совместимый клиент.';
+      'Запросов пока нет. Подключите клиент через указанные ниже эндпоинты.';
 
   @override
   String get serverKeepAwakeNote => 'Пока сервер работает, экран не гаснет.';
@@ -481,7 +481,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsUseGpuHint =>
-      'Включить дискретный GPU (применится при следующей загрузке модели). Первый ответ с GPU компилирует шейдеры драйвера — это может занять несколько минут, один раз; результат кешируется.';
+      'Использовать GPU телефона для чат-моделей — после следующей загрузки. Первый запуск может занять несколько минут для компиляции и кеширования шейдеров. CMF Decision на телефоне пока работает на CPU.';
 
   @override
   String get settingsUseGpuNeedsBackend =>
@@ -502,7 +502,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsEngineFlagsHint =>
-      'По одному CMF_КЛЮЧ=значение в строке, передаются движку при загрузке модели. Пусто — значения по умолчанию.';
+      'По одному CMF_KEY=value в строке. Параметры применятся при загрузке модели. Пусто — значения по умолчанию.';
 
   @override
   String get settingsServerSection => 'Сервер';
@@ -521,7 +521,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsHfToken => 'Токен доступа';
 
   @override
-  String get settingsHfTokenHint => 'hf_… (нужен для gated-моделей)';
+  String get settingsHfTokenHint =>
+      'hf_… (для моделей с ограниченным доступом)';
 
   @override
   String get settingsStorage => 'Хранилище';
@@ -602,7 +603,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get companionCheck => 'Проверить';
 
   @override
-  String get companionCheckOk => 'Пир ответил.';
+  String get companionCheckOk => 'Удалённое устройство ответило.';
 
   @override
   String get companionNeedsModel =>
@@ -624,10 +625,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get companionWorkerOneWay =>
-      'Остановить слушателя рантайм не умеет — он живёт до закрытия приложения.';
+      'Сервис работает до закрытия приложения: движок пока не поддерживает его отдельную остановку.';
 
   @override
-  String get companionStatsTitle => 'Пир сейчас';
+  String get companionStatsTitle => 'Удалённое устройство';
 
   @override
   String get companionStatClock => 'Частота CPU';
@@ -649,15 +650,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get companionClockWarning =>
-      'Пир работает сильно ниже своего диапазона частот. Воркер, который считает несколько миллисекунд и потом ждёт на сокете, не убеждает губернатор разогнаться, — это измерено примерно как половина пропускной способности.';
+      'Удалённое устройство работает на пониженной частоте. Короткие вычисления с ожиданием сети могут мешать автоматическому повышению частоты и снижать производительность.';
 
   @override
   String get companionSameModel =>
-      'На обоих устройствах должен лежать один и тот же файл .cmf. Рукопожатие сверяет его и отвергает чужой, поэтому несовпадение выдаст ошибку, а не бессмыслицу.';
+      'На обоих устройствах должен быть одинаковый файл .cmf. При подключении файлы проверяются; при несовпадении появится ошибка.';
 
   @override
   String get companionWireNote =>
-      'Обе стороны должны быть на одной версии движка. Рукопожатие сверяет версию протокола и прямо сообщает о расхождении.';
+      'Используйте одинаковую версию движка на обоих устройствах. Совместимость протокола проверяется при подключении.';
 
   @override
   String get companionTokenClearText =>
@@ -744,4 +745,178 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get importTabConvert => 'Из HF';
+
+  @override
+  String get decisionTitle => 'Решения';
+
+  @override
+  String get decisionSubtitle =>
+      'Выберите навык, опишите запрос — получите решение, а не сгенерированный ответ.';
+
+  @override
+  String get decisionSkill => 'Навык';
+
+  @override
+  String get decisionInput => 'Текст запроса';
+
+  @override
+  String get decisionExample => 'Подставить пример';
+
+  @override
+  String get decisionPolicy => 'Режим решения';
+
+  @override
+  String get decisionBalanced => 'Сбалансированный';
+
+  @override
+  String get decisionCareful => 'Отказ при сомнении';
+
+  @override
+  String get decisionBestEffort => 'Допускать неопределённость';
+
+  @override
+  String get decisionRun => 'Принять решение';
+
+  @override
+  String get decisionAccepted => 'Решение принято';
+
+  @override
+  String get decisionAbstained => 'Недостаточно уверенности';
+
+  @override
+  String get decisionAbstainBody =>
+      'Надёжного решения нет. Уточните запрос или выберите другой навык.';
+
+  @override
+  String get decisionConfidence => 'Оценка уверенности';
+
+  @override
+  String get decisionTotal => 'Общее время';
+
+  @override
+  String get decisionResonance => 'Время резонанса';
+
+  @override
+  String get decisionExplain => 'Почему это решение?';
+
+  @override
+  String get decisionErrorHelp =>
+      'Чем меньше ошибка реконструкции, тем ближе соответствие. Оценка уверенности не равна измеренной точности.';
+
+  @override
+  String get decisionCopy => 'Копировать JSON';
+
+  @override
+  String get decisionOffline =>
+      'Локальные решения остаются на телефоне. Только подтверждённый вызов оракула отправляет текст провайдеру. Свои навыки импортируйте как CMF Decision, созданный в Cortiq 0.8+.';
+
+  @override
+  String get oracleTitle => 'Оракул';
+
+  @override
+  String get oracleDescription =>
+      'Необязательный OpenAI-совместимый API для случаев, когда локальному навыку не хватает уверенности. Каждый запрос требует подтверждения.';
+
+  @override
+  String get oracleEnabled => 'Включить ручной вызов оракула';
+
+  @override
+  String get oracleModel => 'ID модели';
+
+  @override
+  String get oracleKeyHelp =>
+      'Ключ хранится в защищённом хранилище телефона и не передаётся через API телефона.';
+
+  @override
+  String get oracleSave => 'Сохранить';
+
+  @override
+  String get oracleDelete => 'Удалить ключ и сбросить';
+
+  @override
+  String get oracleAsk => 'Спросить оракула';
+
+  @override
+  String get oracleConfirm =>
+      'Отправить этот запрос и критерии навыка выбранному провайдеру? Вызов API может быть платным.';
+
+  @override
+  String get oracleAnswer => 'Ответ оракула';
+
+  @override
+  String get oracleNotTraining =>
+      'Внешний ответ, не локальное решение. Модель не переобучается.';
+
+  @override
+  String get oracleManual =>
+      'По умолчанию выключен · подтверждение каждого запроса';
+
+  @override
+  String get modelKindDecision => 'Решения';
+
+  @override
+  String get modelKindChat => 'Чат';
+
+  @override
+  String get modelDecisionHelp =>
+      'Выбирает вариант или воздерживается от решения. Не генерирует ответы в чате.';
+
+  @override
+  String get modelChatHelp => 'Генерирует текст и отвечает на сообщения.';
+
+  @override
+  String get modelOpenDecisions => 'Открыть решения';
+
+  @override
+  String get skillBanking => 'Банковские обращения';
+
+  @override
+  String get skillAssistant => 'Запросы помощнику';
+
+  @override
+  String get skillCommands => 'Команды устройству';
+
+  @override
+  String get oracleApiUrl => 'Базовый URL API';
+
+  @override
+  String get oracleApiKey => 'Ключ API';
+
+  @override
+  String get oracleStorageError =>
+      'Защищённое хранилище недоступно. Попробуйте ещё раз.';
+
+  @override
+  String get oracleUrlError =>
+      'Укажите базовый HTTPS-адрес без логина, пароля, параметров запроса и фрагмента.';
+
+  @override
+  String get oracleModelError => 'Укажите ID модели: не более 200 символов.';
+
+  @override
+  String get oracleKeyError => 'Укажите ключ API без пробелов.';
+
+  @override
+  String get oracleRequestError =>
+      'Не удалось получить ответ оракула. Проверьте соединение и настройки API.';
+
+  @override
+  String oracleHttpError(int status) {
+    return 'Провайдер вернул HTTP $status. Проверьте ключ API, ID модели и баланс.';
+  }
+
+  @override
+  String get oracleInvalidResponse =>
+      'Ответ оракула не соответствует допустимым результатам навыка и не принят.';
+
+  @override
+  String get decisionFailed =>
+      'Не удалось получить локальное решение. Проверьте, что загружены модель CMF Decision и навык.';
+
+  @override
+  String get modelKindSkill => 'Дополнение';
+
+  @override
+  String get modelSkillHelp =>
+      'Дополнение к базовой чат-модели, а не самостоятельная модель. Его нельзя открыть как чат или модель решений.';
 }

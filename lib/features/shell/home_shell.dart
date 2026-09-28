@@ -5,6 +5,7 @@ import '../../core/providers.dart';
 import '../../data/models/companion.dart';
 import '../../l10n/app_localizations.dart';
 import '../chat/chat_screen.dart';
+import '../decisions/decision_screen.dart';
 import '../companion/companion_screen.dart';
 import '../models/models_screen.dart';
 import '../server/server_screen.dart';
@@ -17,34 +18,45 @@ class HomeShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final index = ref.watch(shellIndexProvider);
+    final engine = ref.watch(engineControllerProvider);
+    final decision =
+        !engine.isLoading && engine.loadedModel?.meta?.isDecision == true;
     final serverRunning = ref.watch(
-        serverControllerProvider.select((s) => s.running));
+      serverControllerProvider.select((s) => s.running),
+    );
     // A split is easy to forget about and changes where every reply comes
     // from, so the tab carries the same dot the server does.
-    final companionActive = ref.watch(companionControllerProvider.select(
-        (s) => s.role != CompanionRole.local || s.workerListening));
+    final companionActive = ref.watch(
+      companionControllerProvider.select(
+        (s) => s.role != CompanionRole.local || s.workerListening,
+      ),
+    );
 
     // Engine failures (bad file, unsupported arch, OOM) must be loud —
     // a silent spinner reset reads as "nothing happened".
     ref.listen(engineControllerProvider, (previous, next) {
       if (next.error != null && next.error != previous?.error) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(l.engineLoadFailed(next.error!)),
-          duration: const Duration(seconds: 8),
-          showCloseIcon: true,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l.engineLoadFailed(next.error!)),
+            duration: const Duration(seconds: 8),
+            showCloseIcon: true,
+          ),
+        );
       }
     });
 
     return Scaffold(
       body: IndexedStack(
         index: index,
-        children: const [
-          ChatScreen(),
-          ModelsScreen(),
-          ServerScreen(),
-          CompanionScreen(),
-          SettingsScreen(),
+        children: [
+          decision
+              ? DecisionScreen(key: ValueKey(engine.loadedModelId))
+              : const ChatScreen(),
+          const ModelsScreen(),
+          const ServerScreen(),
+          const CompanionScreen(),
+          const SettingsScreen(),
         ],
       ),
       // Five destinations leave ~78dp a tab, and a nine-letter label at the
@@ -54,55 +66,61 @@ class HomeShell extends ConsumerWidget {
       bottomNavigationBar: MediaQuery.withClampedTextScaling(
         maxScaleFactor: 1.15,
         child: NavigationBar(
-        selectedIndex: index,
-        onDestinationSelected: (i) =>
-            ref.read(shellIndexProvider.notifier).select(i),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.chat_bubble_outline),
-            selectedIcon: const Icon(Icons.chat_bubble),
-            label: l.navChat,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.layers_outlined),
-            selectedIcon: const Icon(Icons.layers),
-            label: l.navModels,
-          ),
-          NavigationDestination(
-            icon: Badge(
-              isLabelVisible: serverRunning,
-              smallSize: 8,
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              child: const Icon(Icons.wifi_tethering_outlined),
+          selectedIndex: index,
+          onDestinationSelected: (i) =>
+              ref.read(shellIndexProvider.notifier).select(i),
+          destinations: [
+            NavigationDestination(
+              icon: Icon(
+                decision
+                    ? Icons.account_tree_outlined
+                    : Icons.chat_bubble_outline,
+              ),
+              selectedIcon: Icon(
+                decision ? Icons.account_tree : Icons.chat_bubble,
+              ),
+              label: decision ? l.decisionTitle : l.navChat,
             ),
-            selectedIcon: Badge(
-              isLabelVisible: serverRunning,
-              smallSize: 8,
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              child: const Icon(Icons.wifi_tethering),
+            NavigationDestination(
+              icon: const Icon(Icons.layers_outlined),
+              selectedIcon: const Icon(Icons.layers),
+              label: l.navModels,
             ),
-            label: l.navServer,
-          ),
-          NavigationDestination(
-            icon: Badge(
-              isLabelVisible: companionActive,
-              smallSize: 8,
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              child: const Icon(Icons.devices_outlined),
+            NavigationDestination(
+              icon: Badge(
+                isLabelVisible: serverRunning,
+                smallSize: 8,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                child: const Icon(Icons.wifi_tethering_outlined),
+              ),
+              selectedIcon: Badge(
+                isLabelVisible: serverRunning,
+                smallSize: 8,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                child: const Icon(Icons.wifi_tethering),
+              ),
+              label: l.navServer,
             ),
-            selectedIcon: Badge(
-              isLabelVisible: companionActive,
-              smallSize: 8,
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              child: const Icon(Icons.devices),
+            NavigationDestination(
+              icon: Badge(
+                isLabelVisible: companionActive,
+                smallSize: 8,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                child: const Icon(Icons.devices_outlined),
+              ),
+              selectedIcon: Badge(
+                isLabelVisible: companionActive,
+                smallSize: 8,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                child: const Icon(Icons.devices),
+              ),
+              label: l.navCompanion,
             ),
-            label: l.navCompanion,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.tune_outlined),
-            selectedIcon: const Icon(Icons.tune),
-            label: l.navSettings,
-          ),
+            NavigationDestination(
+              icon: const Icon(Icons.tune_outlined),
+              selectedIcon: const Icon(Icons.tune),
+              label: l.navSettings,
+            ),
           ],
         ),
       ),

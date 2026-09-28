@@ -177,7 +177,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get modelsUnload => '卸载';
 
   @override
-  String get modelsUnloadHint => '释放内存,节省电量';
+  String get modelsUnloadHint => '释放模型占用的内存';
 
   @override
   String get modelsDeleteTitle => '删除模型';
@@ -248,10 +248,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get importNoResults => '未找到模型。';
 
   @override
-  String get importGatedBadge => 'gated';
+  String get importGatedBadge => '访问受限';
 
   @override
-  String get importGatedHint => 'gated 仓库——请在设置中填写 Hugging Face token。';
+  String get importGatedHint => '此仓库访问受限：请先在 Hugging Face 上获取访问权限，再在设置中添加令牌。';
 
   @override
   String get importConfigureTitle => '配置转换';
@@ -347,7 +347,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverTitle => '服务器';
 
   @override
-  String get serverSubtitle => '通过 CMF 协议(兼容 OpenAI 的 API)向局域网提供已加载的模型。';
+  String get serverSubtitle => '通过网络共享已加载的模型：根据模型类型提供聊天或决策 API。';
 
   @override
   String get serverStart => '启动服务器';
@@ -365,7 +365,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverStopped => '已停止';
 
   @override
-  String get serverNoModelWarning => '未加载模型——在“模型”页加载模型之前,API 请求将返回 503。';
+  String get serverNoModelWarning => '未加载模型。请打开“模型”页，加载聊天或决策模型后再发送请求。';
 
   @override
   String get serverAddresses => '地址';
@@ -401,7 +401,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverRecentRequests => '最近请求';
 
   @override
-  String get serverNoRequestsYet => '暂无请求。将任意兼容 OpenAI 的客户端指向这台手机即可。';
+  String get serverNoRequestsYet => '暂无请求，请通过下方端点连接客户端。';
 
   @override
   String get serverKeepAwakeNote => '服务器运行期间屏幕保持常亮。';
@@ -462,7 +462,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsUseGpuHint =>
-      '启用独立 GPU（下次加载模型时生效）。设备上首次 GPU 回答需要编译驱动着色器——可能耗时几分钟，仅此一次；结果会被缓存。';
+      '为聊天模型使用设备 GPU（下次加载时生效）。首次运行可能需要几分钟来编译并缓存着色器。CMF Decision 目前在手机上使用 CPU。';
 
   @override
   String get settingsUseGpuNeedsBackend =>
@@ -501,7 +501,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsHfToken => '访问 token';
 
   @override
-  String get settingsHfTokenHint => 'hf_…(gated 模型需要)';
+  String get settingsHfTokenHint => 'hf_…（用于访问受限的模型）';
 
   @override
   String get settingsStorage => '存储';
@@ -711,4 +711,163 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get importTabConvert => '从 HF';
+
+  @override
+  String get decisionTitle => '决策';
+
+  @override
+  String get decisionSubtitle => '选择技能，描述请求，获得决策而非生成文本。';
+
+  @override
+  String get decisionSkill => '技能';
+
+  @override
+  String get decisionInput => '请求文本';
+
+  @override
+  String get decisionExample => '使用示例';
+
+  @override
+  String get decisionPolicy => '决策策略';
+
+  @override
+  String get decisionBalanced => '均衡';
+
+  @override
+  String get decisionCareful => '不确定时不作决策';
+
+  @override
+  String get decisionBestEffort => '允许不确定的决策';
+
+  @override
+  String get decisionRun => '开始决策';
+
+  @override
+  String get decisionAccepted => '决策已通过置信度检查';
+
+  @override
+  String get decisionAbstained => '置信度不足';
+
+  @override
+  String get decisionAbstainBody => '无法给出可靠决策。请明确请求或更换技能。';
+
+  @override
+  String get decisionConfidence => '置信度分数';
+
+  @override
+  String get decisionTotal => '总耗时';
+
+  @override
+  String get decisionResonance => '共振耗时';
+
+  @override
+  String get decisionExplain => '为何做出此决策？';
+
+  @override
+  String get decisionErrorHelp => '重构误差越小，匹配越好。置信度不等于实测准确率。';
+
+  @override
+  String get decisionCopy => '复制 JSON';
+
+  @override
+  String get decisionOffline =>
+      '本地决策留在手机上。仅确认的预言机请求会向服务商发送文本。可导入 Cortiq 0.8+ 创建的 CMF Decision 文件以添加自定义技能。';
+
+  @override
+  String get oracleTitle => '预言机';
+
+  @override
+  String get oracleDescription => '可选的 OpenAI 兼容 API，用于本地技能无法可靠决策的情况。每次请求均需确认。';
+
+  @override
+  String get oracleEnabled => '启用手动预言机';
+
+  @override
+  String get oracleModel => '模型 ID';
+
+  @override
+  String get oracleKeyHelp => '密钥保存在设备加密存储中，不会通过手机 API 共享。';
+
+  @override
+  String get oracleSave => '保存';
+
+  @override
+  String get oracleDelete => '删除密钥并重置';
+
+  @override
+  String get oracleAsk => '询问预言机';
+
+  @override
+  String get oracleConfirm => '将请求和技能标准发送给所选服务商？可能产生 API 费用。';
+
+  @override
+  String get oracleAnswer => '预言机回答';
+
+  @override
+  String get oracleNotTraining => '外部回答，非本地决策。不会重新训练模型。';
+
+  @override
+  String get oracleManual => '默认关闭 · 每次请求需确认';
+
+  @override
+  String get modelKindDecision => '决策';
+
+  @override
+  String get modelKindChat => '聊天';
+
+  @override
+  String get modelDecisionHelp => '选择选项或不作决策，不生成聊天回复。';
+
+  @override
+  String get modelChatHelp => '生成文本并回复消息。';
+
+  @override
+  String get modelOpenDecisions => '打开决策';
+
+  @override
+  String get skillBanking => '银行业务咨询';
+
+  @override
+  String get skillAssistant => '助手请求';
+
+  @override
+  String get skillCommands => '设备命令';
+
+  @override
+  String get oracleApiUrl => 'API 基础 URL';
+
+  @override
+  String get oracleApiKey => 'API 密钥';
+
+  @override
+  String get oracleStorageError => '安全存储不可用，请重试。';
+
+  @override
+  String get oracleUrlError => '请使用 HTTPS 基础 URL，不含凭据、查询参数或片段。';
+
+  @override
+  String get oracleModelError => '请输入模型 ID，不超过 200 个字符。';
+
+  @override
+  String get oracleKeyError => '请输入 API 密钥，不要包含空格。';
+
+  @override
+  String get oracleRequestError => '无法获取预言机回答，请检查网络连接和 API 设置。';
+
+  @override
+  String oracleHttpError(int status) {
+    return '服务商返回 HTTP $status。请检查 API 密钥、模型 ID 和账户余额。';
+  }
+
+  @override
+  String get oracleInvalidResponse => '预言机回答不符合此技能允许的结果，未被接受。';
+
+  @override
+  String get decisionFailed => '无法获取本地决策。请确认已加载 CMF Decision 模型和技能。';
+
+  @override
+  String get modelKindSkill => '技能扩展';
+
+  @override
+  String get modelSkillHelp => '这是基础聊天模型的扩展，不是独立模型，不能作为聊天或决策模型打开。';
 }

@@ -45,7 +45,9 @@ class CmfMetadata {
   final int requiredFeatures;
 
   /// A skill plugs into a base model; it cannot be loaded and chatted with.
-  bool get isSkill => skills.isNotEmpty;
+  bool get isDecision => (requiredFeatures & 0x800) != 0;
+
+  bool get isSkill => !isDecision && skills.isNotEmpty;
 
   /// Text attachments are inlined into the prompt, so any chat model with a
   /// template and a reasonable context window can accept them.

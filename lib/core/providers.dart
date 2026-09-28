@@ -33,7 +33,8 @@ final hfApiProvider = Provider((ref) => HfApi());
 final deviceResourcesProvider = Provider((ref) => DeviceResources());
 
 final appVersionProvider = FutureProvider<String>(
-    (ref) async => (await PackageInfo.fromPlatform()).version);
+  (ref) async => (await PackageInfo.fromPlatform()).version,
+);
 
 final engineProvider = Provider<InferenceEngine>((ref) {
   final native = NativeCortiqEngine();
@@ -41,8 +42,9 @@ final engineProvider = Provider<InferenceEngine>((ref) {
   return DemoEngine();
 });
 
-final isDemoEngineProvider =
-    Provider<bool>((ref) => ref.watch(engineProvider) is DemoEngine);
+final isDemoEngineProvider = Provider<bool>(
+  (ref) => ref.watch(engineProvider) is DemoEngine,
+);
 
 final converterProvider = Provider<ConverterService>((ref) {
   final service = ConverterService(
@@ -70,8 +72,9 @@ class ShellIndexController extends Notifier<int> {
   void select(int index) => state = index;
 }
 
-final shellIndexProvider =
-    NotifierProvider<ShellIndexController, int>(ShellIndexController.new);
+final shellIndexProvider = NotifierProvider<ShellIndexController, int>(
+  ShellIndexController.new,
+);
 
 // ---------------------------------------------------------------------------
 // Settings
@@ -89,9 +92,9 @@ class SettingsController extends AsyncNotifier<AppSettings> {
   }
 }
 
-final settingsProvider =
-    AsyncNotifierProvider<SettingsController, AppSettings>(
-        SettingsController.new);
+final settingsProvider = AsyncNotifierProvider<SettingsController, AppSettings>(
+  SettingsController.new,
+);
 
 // ---------------------------------------------------------------------------
 // Model library
@@ -140,8 +143,10 @@ class ModelsController extends AsyncNotifier<List<LocalModel>> {
   }
 }
 
-final modelsProvider = AsyncNotifierProvider<ModelsController,
-    List<LocalModel>>(ModelsController.new);
+final modelsProvider =
+    AsyncNotifierProvider<ModelsController, List<LocalModel>>(
+      ModelsController.new,
+    );
 
 // ---------------------------------------------------------------------------
 // Engine state (which model is loaded)
@@ -165,9 +170,13 @@ class EngineController extends Notifier<EngineState> {
   @override
   EngineState build() => const EngineState();
 
-  Future<void> loadModel(LocalModel model) async {
+  Future<bool> loadModel(LocalModel model) async {
+    if (state.isLoading) return false; // one transition owns the native handle
     state = EngineState(
-        isLoading: true, loadedModelId: model.id, loadedModel: model);
+      isLoading: true,
+      loadedModelId: model.id,
+      loadedModel: model,
+    );
     try {
       final settings = ref.read(settingsProvider).value;
       final engine = ref.read(engineProvider);
@@ -181,14 +190,31 @@ class EngineController extends Notifier<EngineState> {
         engineFlags: settings?.engineFlags ?? '',
       );
       state = EngineState(loadedModelId: model.id, loadedModel: model);
+      return true;
     } catch (e) {
       state = EngineState(error: e.toString());
+      return false;
     }
   }
 
   Future<void> unload() async {
-    await ref.read(engineProvider).unload();
-    state = const EngineState();
+    if (state.isLoading) return;
+    final engine = ref.read(engineProvider);
+    state = EngineState(
+      isLoading: true,
+      loadedModelId: state.loadedModelId,
+      loadedModel: state.loadedModel,
+    );
+    try {
+      await engine.unload();
+      state = const EngineState();
+    } catch (e) {
+      state = EngineState(
+        loadedModelId: engine.loadedModel?.id,
+        loadedModel: engine.loadedModel,
+        error: e.toString(),
+      );
+    }
   }
 }
 
@@ -224,13 +250,12 @@ class ChatState {
     String? currentId,
     bool? generating,
     bool? loaded,
-  }) =>
-      ChatState(
-        sessions: sessions ?? this.sessions,
-        currentId: currentId ?? this.currentId,
-        generating: generating ?? this.generating,
-        loaded: loaded ?? this.loaded,
-      );
+  }) => ChatState(
+    sessions: sessions ?? this.sessions,
+    currentId: currentId ?? this.currentId,
+    generating: generating ?? this.generating,
+    loaded: loaded ?? this.loaded,
+  );
 }
 
 /// Text of the assistant reply currently being generated, updated on every
@@ -247,8 +272,11 @@ class StreamingReplyController
   void clear() => state = null;
 }
 
-final streamingReplyProvider = NotifierProvider<StreamingReplyController,
-    ({String sessionId, String text})?>(StreamingReplyController.new);
+final streamingReplyProvider =
+    NotifierProvider<
+      StreamingReplyController,
+      ({String sessionId, String text})?
+    >(StreamingReplyController.new);
 
 class ChatController extends Notifier<ChatState> {
   StreamSubscription<GenerationEvent>? _sub;
@@ -272,8 +300,7 @@ class ChatController extends Notifier<ChatState> {
 
   void newSession() {
     // Reuse an existing empty session instead of stacking blanks.
-    final empty =
-        state.sessions.where((s) => s.messages.isEmpty).firstOrNull;
+    final empty = state.sessions.where((s) => s.messages.isEmpty).firstOrNull;
     if (empty != null) {
       state = state.copyWith(currentId: empty.id);
       return;
@@ -314,12 +341,12 @@ class ChatController extends Notifier<ChatState> {
   Future<void> send(String text, List<ChatAttachment> attachments) async {
     final session = state.current;
     if (session == null || state.generating) return;
-    session.messages.add(ChatMessage(
-      role: ChatRole.user,
-      content: text,
-      attachments: attachments,
-    ));
-    session.messages.add(const ChatMessage(role: ChatRole.assistant, content: ''));
+    session.messages.add(
+      ChatMessage(role: ChatRole.user, content: text, attachments: attachments),
+    );
+    session.messages.add(
+      const ChatMessage(role: ChatRole.assistant, content: ''),
+    );
     state = state.copyWith(sessions: [...state.sessions], generating: true);
     // Persist the user turn right away so it survives a crash or an app
     // kill during the (potentially long) generation that follows.
@@ -336,7 +363,9 @@ class ChatController extends Notifier<ChatState> {
       session.messages.removeLast();
     }
     if (session.messages.isEmpty) return;
-    session.messages.add(const ChatMessage(role: ChatRole.assistant, content: ''));
+    session.messages.add(
+      const ChatMessage(role: ChatRole.assistant, content: ''),
+    );
     state = state.copyWith(sessions: [...state.sessions], generating: true);
     await _generate(session);
   }
@@ -354,10 +383,8 @@ class ChatController extends Notifier<ChatState> {
               ? m
               : ChatMessage(
                   role: m.role,
-                  content: '${m.content}\n\n${m.attachments.map(
-                        (a) =>
-                            '--- ${a.name} ---\n${a.text}\n--- end of ${a.name} ---',
-                      ).join('\n\n')}',
+                  content:
+                      '${m.content}\n\n${m.attachments.map((a) => '--- ${a.name} ---\n${a.text}\n--- end of ${a.name} ---').join('\n\n')}',
                   attachments: m.attachments,
                 ),
     ];
@@ -374,22 +401,26 @@ class ChatController extends Notifier<ChatState> {
       // Started from a user tap, so the foreground-service start is allowed;
       // it keeps the reply on the big cores if the user switches away.
       await ForegroundTask.acquire(ForegroundTask.generation);
-      final stream = engine.generate(GenerationRequest(
-        messages: history,
-        temperature: settings.temperature,
-        topP: settings.topP,
-        maxTokens: settings.maxTokens,
-        disableThinking: settings.disableThinking,
-      ));
+      final stream = engine.generate(
+        GenerationRequest(
+          messages: history,
+          temperature: settings.temperature,
+          topP: settings.topP,
+          maxTokens: settings.maxTokens,
+          disableThinking: settings.disableThinking,
+        ),
+      );
       final done = Completer<void>();
       _sub = stream.listen(
         (event) {
           if (event.done) {
-            updateLast(ChatMessage(
-              role: ChatRole.assistant,
-              content: buffer,
-              stats: event.stats,
-            ));
+            updateLast(
+              ChatMessage(
+                role: ChatRole.assistant,
+                content: buffer,
+                stats: event.stats,
+              ),
+            );
           } else {
             // Per-token updates go to the streaming provider only; the
             // session (and the full message list) updates once, on done.
@@ -399,11 +430,13 @@ class ChatController extends Notifier<ChatState> {
         },
         onError: (Object e) {
           _notePeerFailure(e);
-          updateLast(ChatMessage(
-            role: ChatRole.assistant,
-            content: buffer,
-            error: e.toString(),
-          ));
+          updateLast(
+            ChatMessage(
+              role: ChatRole.assistant,
+              content: buffer,
+              error: e.toString(),
+            ),
+          );
           if (!done.isCompleted) done.complete();
         },
         onDone: () {
@@ -413,11 +446,13 @@ class ChatController extends Notifier<ChatState> {
       await done.future;
     } catch (e) {
       _notePeerFailure(e);
-      updateLast(ChatMessage(
-        role: ChatRole.assistant,
-        content: buffer,
-        error: e.toString(),
-      ));
+      updateLast(
+        ChatMessage(
+          role: ChatRole.assistant,
+          content: buffer,
+          error: e.toString(),
+        ),
+      );
     } finally {
       _sub = null;
       streaming.clear();
@@ -445,8 +480,9 @@ class ChatController extends Notifier<ChatState> {
   }
 }
 
-final chatControllerProvider =
-    NotifierProvider<ChatController, ChatState>(ChatController.new);
+final chatControllerProvider = NotifierProvider<ChatController, ChatState>(
+  ChatController.new,
+);
 
 // ---------------------------------------------------------------------------
 // Server
@@ -496,8 +532,7 @@ class ServerController extends Notifier<ServerState> {
   }
 
   Future<void> start() async {
-    final settings =
-        ref.read(settingsProvider).value ?? const AppSettings();
+    final settings = ref.read(settingsProvider).value ?? const AppSettings();
     final server = ref.read(cmfServerProvider);
     state = ServerState(starting: true, port: settings.serverPort);
     try {
@@ -609,18 +644,16 @@ class CompanionState {
     bool clearCheck = false,
     PeerFailure? peerFailure,
     bool clearPeerFailure = false,
-  }) =>
-      CompanionState(
-        role: role ?? this.role,
-        busy: busy ?? this.busy,
-        error: clearError ? null : (error ?? this.error),
-        fault: clearError ? null : (fault ?? this.fault),
-        workerListenAddress: workerListenAddress ?? this.workerListenAddress,
-        stats: stats ?? this.stats,
-        lastCheckOk: clearCheck ? null : (lastCheckOk ?? this.lastCheckOk),
-        peerFailure:
-            clearPeerFailure ? null : (peerFailure ?? this.peerFailure),
-      );
+  }) => CompanionState(
+    role: role ?? this.role,
+    busy: busy ?? this.busy,
+    error: clearError ? null : (error ?? this.error),
+    fault: clearError ? null : (fault ?? this.fault),
+    workerListenAddress: workerListenAddress ?? this.workerListenAddress,
+    stats: stats ?? this.stats,
+    lastCheckOk: clearCheck ? null : (lastCheckOk ?? this.lastCheckOk),
+    peerFailure: clearPeerFailure ? null : (peerFailure ?? this.peerFailure),
+  );
 }
 
 class CompanionController extends Notifier<CompanionState> {
@@ -691,20 +724,27 @@ class CompanionController extends Notifier<CompanionState> {
   Future<void> check() async {
     if (ref.read(engineControllerProvider).loadedModel == null) {
       state = state.copyWith(
-          fault: CompanionFault.modelNotLoaded, lastCheckOk: false);
+        fault: CompanionFault.modelNotLoaded,
+        lastCheckOk: false,
+      );
       return;
     }
     state = state.copyWith(busy: true, clearError: true, clearCheck: true);
     try {
       final engine = ref.read(engineProvider);
-      await for (final event in engine.generate(const GenerationRequest(
-        messages: [ChatMessage(role: ChatRole.user, content: 'ping')],
-        maxTokens: 1,
-      ))) {
+      await for (final event in engine.generate(
+        const GenerationRequest(
+          messages: [ChatMessage(role: ChatRole.user, content: 'ping')],
+          maxTokens: 1,
+        ),
+      )) {
         if (event.done) break;
       }
       state = state.copyWith(
-          busy: false, lastCheckOk: true, clearPeerFailure: true);
+        busy: false,
+        lastCheckOk: true,
+        clearPeerFailure: true,
+      );
       refreshStats();
     } catch (e) {
       state = state.copyWith(
@@ -784,7 +824,8 @@ class CompanionController extends Notifier<CompanionState> {
   void refreshStats() {
     final json = ref.read(engineProvider).peerStats();
     state = state.copyWith(
-        stats: json.isEmpty ? PeerStats.empty : PeerStats.fromJson(json));
+      stats: json.isEmpty ? PeerStats.empty : PeerStats.fromJson(json),
+    );
   }
 
   Future<void> _persistRole(CompanionRole role) => ref
@@ -794,4 +835,5 @@ class CompanionController extends Notifier<CompanionState> {
 
 final companionControllerProvider =
     NotifierProvider<CompanionController, CompanionState>(
-        CompanionController.new);
+      CompanionController.new,
+    );

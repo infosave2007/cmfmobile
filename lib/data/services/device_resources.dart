@@ -46,7 +46,7 @@ class DeviceResources {
   int estimateRequiredBytes(LocalModel model) {
     final meta = model.meta;
     var kvCache = 0;
-    if (meta != null && meta.numLayers > 0) {
+    if (meta != null && !meta.isDecision && meta.numLayers > 0) {
       // f16 K and V per token: 2 * layers * kv_heads * head_dim * 2 bytes.
       final kvHeads = meta.numKvHeads > 0 ? meta.numKvHeads : 8;
       final headDim = meta.headDim > 0

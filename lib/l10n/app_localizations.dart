@@ -429,7 +429,7 @@ abstract class AppLocalizations {
   /// No description provided for @modelsUnloadHint.
   ///
   /// In en, this message translates to:
-  /// **'Frees memory and battery'**
+  /// **'Frees model memory'**
   String get modelsUnloadHint;
 
   /// No description provided for @modelsDeleteTitle.
@@ -543,13 +543,13 @@ abstract class AppLocalizations {
   /// No description provided for @importGatedBadge.
   ///
   /// In en, this message translates to:
-  /// **'gated'**
+  /// **'restricted access'**
   String get importGatedBadge;
 
   /// No description provided for @importGatedHint.
   ///
   /// In en, this message translates to:
-  /// **'Gated repo — set a Hugging Face token in Settings.'**
+  /// **'Restricted-access repository: grant access on Hugging Face, then add your token in Settings.'**
   String get importGatedHint;
 
   /// No description provided for @importConfigureTitle.
@@ -735,7 +735,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Serve the loaded model to your network over the CMF protocol (OpenAI-compatible API).'**
+  /// **'Share the loaded model on your network: chat or decision API, depending on the model.'**
   String get serverSubtitle;
 
   /// No description provided for @serverStart.
@@ -771,7 +771,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverNoModelWarning.
   ///
   /// In en, this message translates to:
-  /// **'No model is loaded — API requests will return 503 until you load one on the Models tab.'**
+  /// **'No model loaded. Open Models and load a chat or decision model before sending requests.'**
   String get serverNoModelWarning;
 
   /// No description provided for @serverAddresses.
@@ -843,7 +843,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverNoRequestsYet.
   ///
   /// In en, this message translates to:
-  /// **'No requests yet. Point any OpenAI-compatible client at this phone.'**
+  /// **'No requests yet. Connect a client using the endpoints below.'**
   String get serverNoRequestsYet;
 
   /// No description provided for @serverKeepAwakeNote.
@@ -957,7 +957,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsUseGpuHint.
   ///
   /// In en, this message translates to:
-  /// **'Enable the discrete GPU (applies at the next model load). The first GPU answer on a device compiles the driver\'s shaders — this can take several minutes, once; the result is cached.'**
+  /// **'Use the device GPU for chat models (applies on next load). The first run may take several minutes to compile and cache shaders. CMF Decision currently uses the CPU on phones.'**
   String get settingsUseGpuHint;
 
   /// No description provided for @settingsUseGpuNeedsBackend.
@@ -993,7 +993,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsEngineFlagsHint.
   ///
   /// In en, this message translates to:
-  /// **'One CMF_KEY=value per line, pushed to the runtime on model load. Empty = engine defaults.'**
+  /// **'One CMF_KEY=value per line, passed to the runtime on model load. Empty = defaults.'**
   String get settingsEngineFlagsHint;
 
   /// No description provided for @settingsServerSection.
@@ -1029,7 +1029,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsHfTokenHint.
   ///
   /// In en, this message translates to:
-  /// **'hf_… (needed for gated models)'**
+  /// **'hf_… (for restricted-access models)'**
   String get settingsHfTokenHint;
 
   /// No description provided for @settingsStorage.
@@ -1403,6 +1403,318 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'From HF'**
   String get importTabConvert;
+
+  /// No description provided for @decisionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Decisions'**
+  String get decisionTitle;
+
+  /// No description provided for @decisionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a skill. Describe the request. Get a decision, not a generated answer.'**
+  String get decisionSubtitle;
+
+  /// No description provided for @decisionSkill.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill'**
+  String get decisionSkill;
+
+  /// No description provided for @decisionInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Request text'**
+  String get decisionInput;
+
+  /// No description provided for @decisionExample.
+  ///
+  /// In en, this message translates to:
+  /// **'Use example'**
+  String get decisionExample;
+
+  /// No description provided for @decisionPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Decision policy'**
+  String get decisionPolicy;
+
+  /// No description provided for @decisionBalanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced'**
+  String get decisionBalanced;
+
+  /// No description provided for @decisionCareful.
+  ///
+  /// In en, this message translates to:
+  /// **'Abstain when uncertain'**
+  String get decisionCareful;
+
+  /// No description provided for @decisionBestEffort.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow uncertain decisions'**
+  String get decisionBestEffort;
+
+  /// No description provided for @decisionRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Decide'**
+  String get decisionRun;
+
+  /// No description provided for @decisionAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Decision accepted'**
+  String get decisionAccepted;
+
+  /// No description provided for @decisionAbstained.
+  ///
+  /// In en, this message translates to:
+  /// **'Not confident enough'**
+  String get decisionAbstained;
+
+  /// No description provided for @decisionAbstainBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No reliable decision. Try a clearer request or a different skill.'**
+  String get decisionAbstainBody;
+
+  /// No description provided for @decisionConfidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Confidence score'**
+  String get decisionConfidence;
+
+  /// No description provided for @decisionTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total time'**
+  String get decisionTotal;
+
+  /// No description provided for @decisionResonance.
+  ///
+  /// In en, this message translates to:
+  /// **'Resonance time'**
+  String get decisionResonance;
+
+  /// No description provided for @decisionExplain.
+  ///
+  /// In en, this message translates to:
+  /// **'Why this decision?'**
+  String get decisionExplain;
+
+  /// No description provided for @decisionErrorHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Lower reconstruction error means a closer match. Confidence is not a measured accuracy percentage.'**
+  String get decisionErrorHelp;
+
+  /// No description provided for @decisionCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy JSON'**
+  String get decisionCopy;
+
+  /// No description provided for @decisionOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Local decisions stay on your phone. Only an explicitly confirmed oracle request sends text to your provider. Import your own skills as a CMF Decision file built with Cortiq 0.8+.'**
+  String get decisionOffline;
+
+  /// No description provided for @oracleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Oracle'**
+  String get oracleTitle;
+
+  /// No description provided for @oracleDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'An optional OpenAI-compatible API for cases the local skill cannot confidently decide. Every request needs your confirmation.'**
+  String get oracleDescription;
+
+  /// No description provided for @oracleEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable manual oracle'**
+  String get oracleEnabled;
+
+  /// No description provided for @oracleModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Model ID'**
+  String get oracleModel;
+
+  /// No description provided for @oracleKeyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The key stays in encrypted device storage. No key is shared over the phone API.'**
+  String get oracleKeyHelp;
+
+  /// No description provided for @oracleSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get oracleSave;
+
+  /// No description provided for @oracleDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete key and reset'**
+  String get oracleDelete;
+
+  /// No description provided for @oracleAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask oracle'**
+  String get oracleAsk;
+
+  /// No description provided for @oracleConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Send this request and the skill rubric to the selected provider? This may incur API charges.'**
+  String get oracleConfirm;
+
+  /// No description provided for @oracleAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Oracle answer'**
+  String get oracleAnswer;
+
+  /// No description provided for @oracleNotTraining.
+  ///
+  /// In en, this message translates to:
+  /// **'External answer, not a local decision. Does not retrain the model.'**
+  String get oracleNotTraining;
+
+  /// No description provided for @oracleManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Off by default · confirmation per request'**
+  String get oracleManual;
+
+  /// No description provided for @modelKindDecision.
+  ///
+  /// In en, this message translates to:
+  /// **'Decisions'**
+  String get modelKindDecision;
+
+  /// No description provided for @modelKindChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get modelKindChat;
+
+  /// No description provided for @modelDecisionHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Chooses a label or abstains. Does not write chat replies.'**
+  String get modelDecisionHelp;
+
+  /// No description provided for @modelChatHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Generates text and answers messages.'**
+  String get modelChatHelp;
+
+  /// No description provided for @modelOpenDecisions.
+  ///
+  /// In en, this message translates to:
+  /// **'Open decisions'**
+  String get modelOpenDecisions;
+
+  /// No description provided for @skillBanking.
+  ///
+  /// In en, this message translates to:
+  /// **'Banking support'**
+  String get skillBanking;
+
+  /// No description provided for @skillAssistant.
+  ///
+  /// In en, this message translates to:
+  /// **'Assistant requests'**
+  String get skillAssistant;
+
+  /// No description provided for @skillCommands.
+  ///
+  /// In en, this message translates to:
+  /// **'Device commands'**
+  String get skillCommands;
+
+  /// No description provided for @oracleApiUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'API base URL'**
+  String get oracleApiUrl;
+
+  /// No description provided for @oracleApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'API key'**
+  String get oracleApiKey;
+
+  /// No description provided for @oracleStorageError.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure storage is unavailable. Try again.'**
+  String get oracleStorageError;
+
+  /// No description provided for @oracleUrlError.
+  ///
+  /// In en, this message translates to:
+  /// **'Use an HTTPS base URL without credentials, query parameters or a fragment.'**
+  String get oracleUrlError;
+
+  /// No description provided for @oracleModelError.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a model ID (up to 200 characters).'**
+  String get oracleModelError;
+
+  /// No description provided for @oracleKeyError.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an API key without spaces.'**
+  String get oracleKeyError;
+
+  /// No description provided for @oracleRequestError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not get an oracle answer. Check your connection and API settings.'**
+  String get oracleRequestError;
+
+  /// No description provided for @oracleHttpError.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider returned HTTP {status}. Check your API key, model ID and account balance.'**
+  String oracleHttpError(int status);
+
+  /// No description provided for @oracleInvalidResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'The oracle answer did not match the skill’s allowed results and was not accepted.'**
+  String get oracleInvalidResponse;
+
+  /// No description provided for @decisionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not get a local decision. Check that a CMF Decision model and skill are loaded.'**
+  String get decisionFailed;
+
+  /// No description provided for @modelKindSkill.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill add-on'**
+  String get modelKindSkill;
+
+  /// No description provided for @modelSkillHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'An add-on for a base chat model, not a standalone model. It cannot be opened as Chat or Decisions.'**
+  String get modelSkillHelp;
 }
 
 class _AppLocalizationsDelegate

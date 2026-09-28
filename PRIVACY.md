@@ -1,31 +1,67 @@
 # Privacy Policy — Cortiq: Local AI Models
 
-**Effective date: July 25, 2026**
+**Effective date: September 28, 2026**
 
-Cortiq ("the app") is built around a simple principle: your data stays on your device.
+Cortiq runs chat and CMF Decision models on your device by default. Network
+features are optional and described below; enabling them can send data off
+your phone.
 
-## Data we collect
+## Analytics and accounts
 
-**None.** The app does not collect, store, or transmit any personal data. There are no accounts, no analytics, no advertising identifiers, and no tracking of any kind.
+The app has no developer-operated account system, advertising identifiers,
+analytics or automatic conversation uploads. Your API credentials belong to
+the providers you choose, not to a Cortiq account.
 
-## How the app works
+## Local models and conversations
 
-- **AI chat runs entirely on your device.** Conversations, attached documents, and generated text never leave your phone and are stored only in the app's local storage.
-- **Model downloads and conversion.** When you search for or download models, the app connects directly to the Hugging Face Hub (huggingface.co). These requests contain only standard network metadata (such as your IP address) required to deliver files; they are governed by the [Hugging Face privacy policy](https://huggingface.co/privacy).
-- **Local AI server.** If you enable the server feature, the app serves loaded models over your local network only. You control when it runs and who can reach it. No traffic is routed through our servers — we do not operate any servers.
+Chat history, attached documents, model files and settings are stored on your
+device. Local decisions do not require a cloud API. Choosing a local model does
+not automatically enable an oracle or train a model on your requests.
 
-## Data deletion
+## Connections you choose
 
-All app data (chats, settings, downloaded models) lives on your device and is removed when you delete the app.
+- **Hugging Face.** Searching, downloading and converting models connects directly
+  to huggingface.co. Requests include your search or repository identifier,
+  network metadata such as your IP address, and your Hugging Face token if
+  configured. The [Hugging Face privacy policy](https://huggingface.co/privacy)
+  applies to those connections.
+- **Phone API server.** When enabled, this serves the loaded model to connected
+  clients. Clients send requests and receive results. Use bearer authentication
+  and a trusted network: the phone's HTTP API is not encrypted and should not
+  be exposed to the public internet. It cannot spend your oracle API key.
+- **Companion.** If you connect your own computer, model computation and related
+  data are exchanged with that computer. This is not an entirely on-device
+  session. Use a cable or trusted network and the shared access token.
+- **Optional oracle.** The oracle is off by default. When a local decision is
+  uncertain, you can explicitly confirm sending the request text and skill
+  criteria to the HTTPS API provider and model configured in **Settings → Oracle**.
+  The API key is sent to that provider for authentication. The provider can
+  charge for the call and handles the submitted data under its own policies.
+  No call is made merely by saving settings or opening the screen. Oracle
+  responses are identified separately and do not automatically retrain a model.
 
-## Children's privacy
+## Oracle credentials
 
-The app does not collect data from anyone, including children.
+Oracle settings and API keys are stored using Android Keystore-backed encrypted
+storage or iOS Keychain. They are not included in CMF model files, phone API
+responses or application request logs. Oracle credential storage is excluded
+from Android backup. No other client can retrieve the key through the phone API.
 
-## Changes to this policy
+## Deletion
 
-Updates to this policy will be published at this URL with a revised effective date.
+You can delete local conversations and downloaded models in the app. Use
+**Settings → Oracle → Delete key and reset** to remove oracle credentials before
+uninstalling the app. Removing local data does not delete anything a provider
+may already have received; contact that provider for its retention and deletion
+options.
 
-## Contact
+## Children
 
-Questions about this policy: open an issue at [github.com/infosave2007/cmfmobile](https://github.com/infosave2007/cmfmobile/issues) or email urevich55@gmail.com.
+The app does not add child-specific tracking or analytics. If an external
+provider is configured, its terms and age restrictions also apply.
+
+## Changes and contact
+
+Updates are published at this URL with a revised date. Questions: open an issue
+at [github.com/infosave2007/cmfmobile](https://github.com/infosave2007/cmfmobile/issues)
+or email urevich55@gmail.com. Do not post API keys or private requests in issues.

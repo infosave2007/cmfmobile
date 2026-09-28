@@ -10,5 +10,7 @@
 	     files this app can run at all. -->
 	<key>com.apple.developer.kernel.increased-memory-limit</key>
 	<true/>
+	<key>keychain-access-groups</key>
+	<array/>
 </dict>
 </plist>

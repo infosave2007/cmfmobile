@@ -22,6 +22,15 @@ const char *cortiq_version(void);
 /* Most recent failure on this thread (UTF-8, valid until next failure). */
 const char *cortiq_last_error(void);
 
+/* Decision ABI: a separate handle type; never pass it to chat functions.
+ * JSON envelope {status, body}; borrowed until next JSON call on this thread.
+ * Caller serializes requests and waits before free. NULL/error handling as above.
+ */
+void *cortiq_decision_load(const char *path);
+void cortiq_decision_free(void *handle);
+const char *cortiq_decision_request(void *handle, const char *method,
+                                   const char *path, const char *json_body);
+
 /* Open a .cmf file (memory-mapped — keep it on storage). NULL on error. */
 void *cortiq_load(const char *path);
 

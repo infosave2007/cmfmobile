@@ -59,6 +59,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Keep integration tests separate from the installed store app.
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+        }
         release {
             // No applicationIdSuffix here, ever: Play rejects the bundle with
             // "APK has the wrong package name", and the workflow's rerun

@@ -60,6 +60,7 @@ abstract final class Cmf {
   static const int dtQ1T = 14;
   static const int dtQ4TiledP = 15;
   static const int dtQ2TiledP = 16;
+  static const int dtU8 = 6;
 
   static String dtypeName(int id) => switch (id) {
     dtF32 => 'f32',
@@ -246,6 +247,7 @@ class CmfReader {
           final rec = 16 + i * Cmf.dirRecordLen;
           if (rec + Cmf.dirRecordLen > dir.length) break;
           final dtype = d.getUint8(rec + 6);
+          if (dtype == Cmf.dtU8) continue;
           final nbytes = d.getUint64(rec + 40, Endian.little);
           bytesPerDtype[dtype] = (bytesPerDtype[dtype] ?? 0) + nbytes;
         }
@@ -368,6 +370,12 @@ abstract final class CmfValidator {
         }
       }
 
+      // The native decision loader checks every manifest/hash/tensor and
+      // encoder golden. A decision file intentionally has no chat lm_head.
+      if ((env.requiredFeatures & 0x800) != 0) {
+        return names.contains('decision.manifest')
+            ? const [] : ['missing decision.manifest'];
+      }
       if (!names.contains('model.embed_tokens.weight')) {
         problems.add('missing model.embed_tokens.weight');
       }

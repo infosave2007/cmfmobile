@@ -1,4 +1,29 @@
-# Native cortiq runtime
+# Native Cortiq runtime (0.8.0)
+
+Mobile 1.3 builds a single `libcortiq_ffi` from `native/runtime`, preserving
+all chat/companion exports and adding `cortiq_decision_load`,
+`cortiq_decision_request` and `cortiq_decision_free`. Decision handles must
+never be passed to chat functions. Returned JSON is borrowed thread-local
+memory and must be copied before another native JSON call. Unload waits for
+queued requests before freeing a handle.
+
+```bash
+scripts/build_native.sh android        # all 3 ABIs; arm64/x86_64 retain GPU
+scripts/build_native.sh android-arm64  # connected-phone development
+# Apple: GitHub Actions uses scripts/build_native.sh ios
+```
+
+The script selects 16 KB ELF alignment on Android. `native/runtime/Cargo.lock`
+pins dependencies. See [provenance](runtime/UPSTREAM.md) and the
+[mobile Decision guide](../docs/mobile-decision.md). Generated native libraries
+are intentionally not stored in Git. Build them before a local Flutter build.
+
+The material below records the previous 0.5.82 packaging and companion setup;
+use the source-build commands above for 1.3+, not the old prebuilt libraries.
+
+---
+
+## Historical runtime notes
 
 CMF Mobile binds the cortiq inference engine through the C ABI of the
 [`cortiq-ffi`](https://github.com/infosave2007/cmf/tree/master/crates/cortiq-ffi)

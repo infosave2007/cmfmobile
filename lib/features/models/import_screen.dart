@@ -69,6 +69,7 @@ class _FeaturedEntry {
     this.tooBig = false,
     this.quant = '',
     this.cmfPath = '',
+    this.decision,
   });
   final HfModel model;
   final int cmfSizeBytes;
@@ -76,6 +77,7 @@ class _FeaturedEntry {
   /// The one .cmf this card stands for. A repo shipping three quantizations
   /// produces three cards, each with its own size and its own download.
   final String cmfPath;
+  final bool? decision;
 
   /// The file is bigger than this device can realistically hold in memory —
   /// still downloadable (the split needs the same file on both sides), but
@@ -123,24 +125,28 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
       final repos = await hf.listAuthorModels(featuredAuthor, token: token);
       // Text-generation CMF repos only: this app cannot run image, video or
       // music models, and a toolkit repo tagged cmf ships no model at all.
-      final cmfRepos =
-          repos.where(looksLikeCmfRepo).where(isTextGenerationRepo).toList();
+      final cmfRepos = repos
+          .where(looksLikeCmfRepo)
+          .where(isTextGenerationRepo)
+          .toList();
       final resources = ref.read(deviceResourcesProvider);
       // File listings per repo, fetched in parallel.
-      final listings = await Future.wait(cmfRepos.map((model) async {
-        try {
-          final files = await hf.listFiles(model.id, token: token);
-          return MapEntry(
-            model,
-            files
-                .where((f) => f.path.toLowerCase().endsWith('.cmf'))
-                .where((f) => f.size > 0)
-                .toList(),
-          );
-        } catch (_) {
-          return MapEntry(model, const <HfFileEntry>[]);
-        }
-      }));
+      final listings = await Future.wait(
+        cmfRepos.map((model) async {
+          try {
+            final files = await hf.listFiles(model.id, token: token);
+            return MapEntry(
+              model,
+              files
+                  .where((f) => f.path.toLowerCase().endsWith('.cmf'))
+                  .where((f) => f.size > 0)
+                  .toList(),
+            );
+          } catch (_) {
+            return MapEntry(model, const <HfFileEntry>[]);
+          }
+        }),
+      );
       // One card per .cmf, not per repo. Several repos ship the same model in
       // two or three quantizations; folding them into one card hid the choice
       // and — worse — showed the SUM of their sizes as if it were a single
@@ -151,34 +157,50 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
       // which, so ask each file's header; it declares it. Headers are a few
       // kilobytes, fetched in parallel.
       final skillPaths = <String>{};
+      final decisionPaths = <String>{};
+      final verifiedPaths = <String>{};
       await Future.wait([
         for (final listing in listings)
-          if (listing.value.length > 1)
-            for (final file in listing.value)
-              hf.fetchCmfHeader(listing.key.id, file.path, token: token).then(
-                (header) {
-                  if (header != null && cmfHeaderSkills(header).isNotEmpty) {
-                    skillPaths.add('${listing.key.id}/${file.path}');
-                  }
-                },
-              ),
+          for (final file in listing.value)
+            hf.fetchCmfHeader(listing.key.id, file.path, token: token).then((
+              header,
+            ) {
+              if (header != null) {
+                verifiedPaths.add('${listing.key.id}/${file.path}');
+              }
+              if (header?['arch']?['arch_name'] == 'cortiq-decision-ph-v1') {
+                decisionPaths.add('${listing.key.id}/${file.path}');
+              }
+              if (header != null &&
+                  header['arch']?['arch_name'] != 'cortiq-decision-ph-v1' &&
+                  cmfHeaderSkills(header).isNotEmpty) {
+                skillPaths.add('${listing.key.id}/${file.path}');
+              }
+            }),
       ]);
 
       final entries = <_FeaturedEntry>[];
       for (final listing in listings) {
         for (final file in listing.value) {
           if (skillPaths.contains('${listing.key.id}/${file.path}')) continue;
-          entries.add(_FeaturedEntry(
-            listing.key,
-            file.size,
-            // Measured against the per-process budget the loader uses, not the
-            // device's total RAM: iOS hands one app a few GB out of 8, so a
-            // total-RAM yardstick waved through 4.8 GB downloads that the load
-            // dialog then refused.
-            tooBig: await resources.weightsExceedBudget(file.size),
-            quant: quantLabelFor(file.path, listing.key.tags),
-            cmfPath: file.path,
-          ));
+          entries.add(
+            _FeaturedEntry(
+              listing.key,
+              file.size,
+              // Measured against the per-process budget the loader uses, not the
+              // device's total RAM: iOS hands one app a few GB out of 8, so a
+              // total-RAM yardstick waved through 4.8 GB downloads that the load
+              // dialog then refused.
+              tooBig: await resources.weightsExceedBudget(file.size),
+              quant: quantLabelFor(file.path, listing.key.tags),
+              cmfPath: file.path,
+              decision: decisionPaths.contains('${listing.key.id}/${file.path}')
+                  ? true
+                  : verifiedPaths.contains('${listing.key.id}/${file.path}')
+                  ? false
+                  : null,
+            ),
+          );
         }
       }
       // Smallest first: the variants a phone can actually run come first, and
@@ -242,10 +264,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
       _searchError = null;
     });
     try {
-      final token =
-          ref.read(settingsProvider).value?.hfToken;
-      final results =
-          await ref.read(hfApiProvider).search(query, token: token);
+      final token = ref.read(settingsProvider).value?.hfToken;
+      final results = await ref.read(hfApiProvider).search(query, token: token);
       if (mounted) setState(() => _results = results);
     } catch (e) {
       if (mounted) setState(() => _searchError = e.toString());
@@ -274,7 +294,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
         onStartConvert: (quant, name) async {
           Navigator.pop(sheetContext);
           final settings = ref.read(settingsProvider).value;
-          await ref.read(converterProvider).start(
+          await ref
+              .read(converterProvider)
+              .start(
                 repo: model.id,
                 quant: quant,
                 name: name,
@@ -282,9 +304,11 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
                 threads: EngineTuning.resolveThreads(settings?.threads ?? 0),
               );
           if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content:
-                  Text(AppLocalizations.of(context).importStartedSnack)));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context).importStartedSnack),
+            ),
+          );
           _tabs.animateTo(2);
         },
       ),
@@ -385,20 +409,25 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
     // Name the output after the file, not the repo: two quantizations of one
     // repo would otherwise both land on <repo>.cmf and overwrite each other.
     final fileName = cmfPath.split('/').last;
-    await ref.read(converterProvider).start(
+    await ref
+        .read(converterProvider)
+        .start(
           repo: model.id,
           quant: QuantType.q8_2f, // ignored: the repo ships .cmf
           name: fileName.isEmpty
               ? null
               : fileName.replaceAll(
-                  RegExp(r'\.cmf$', caseSensitive: false), ''),
+                  RegExp(r'\.cmf$', caseSensitive: false),
+                  '',
+                ),
           cmfPath: cmfPath.isEmpty ? null : cmfPath,
           hfToken: settings?.hfToken,
           threads: EngineTuning.resolveThreads(settings?.threads ?? 0),
         );
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(AppLocalizations.of(context).importStartedSnack)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(AppLocalizations.of(context).importStartedSnack)),
+    );
     _tabs.animateTo(2);
   }
 
@@ -447,7 +476,8 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
           child: Text(
             l.importSubtitle,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
         Expanded(
@@ -455,16 +485,18 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
-                    child: Text(_searchError!,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            color:
-                                Theme.of(context).colorScheme.error)),
+                    child: Text(
+                      _searchError!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
                   ),
                 )
               : (_results == null)
-                  ? const Center(child: CircularProgressIndicator())
-                  : _buildResultsList(l),
+              ? const Center(child: CircularProgressIndicator())
+              : _buildResultsList(l),
         ),
       ],
     );
@@ -499,7 +531,14 @@ class _FeaturedCard extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: scheme.primary.withValues(alpha: 0.15),
                 ),
-                child: Icon(Icons.bolt, color: scheme.primary),
+                child: Icon(
+                  entry.decision == true
+                      ? Icons.account_tree_outlined
+                      : entry.decision == false
+                      ? Icons.chat_bubble_outline
+                      : Icons.layers_outlined,
+                  color: scheme.primary,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -508,10 +547,9 @@ class _FeaturedCard extends StatelessWidget {
                   children: [
                     Text(
                       model.id,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                     // Which file this card is: two quantizations of one repo
@@ -520,7 +558,9 @@ class _FeaturedCard extends StatelessWidget {
                       Text(
                         entry.cmfPath.split('/').last,
                         style: TextStyle(
-                            fontSize: 11, color: scheme.onSurfaceVariant),
+                          fontSize: 11,
+                          color: scheme.onSurfaceVariant,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     const SizedBox(height: 4),
@@ -534,7 +574,9 @@ class _FeaturedCard extends StatelessWidget {
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: scheme.primary.withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(6),
@@ -542,15 +584,30 @@ class _FeaturedCard extends StatelessWidget {
                           child: Text(
                             l.importReadyCmfBadge,
                             style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: scheme.primary),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: scheme.primary,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          entry.decision == true
+                              ? l.modelKindDecision
+                              : entry.decision == false
+                              ? l.modelKindChat
+                              : 'CMF',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                            color: scheme.primary,
                           ),
                         ),
                         if (entry.quant.isNotEmpty)
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: scheme.surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(6),
@@ -558,33 +615,39 @@ class _FeaturedCard extends StatelessWidget {
                             child: Text(
                               entry.quant,
                               style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: scheme.onSurfaceVariant),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: scheme.onSurfaceVariant,
+                              ),
                             ),
                           ),
                         if (entry.cmfSizeBytes > 0)
                           Text(
                             formatBytes(entry.cmfSizeBytes),
                             style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: scheme.onSurfaceVariant),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: scheme.onSurfaceVariant,
+                            ),
                           ),
                         if (entry.tooBig)
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
-                              color:
-                                  scheme.errorContainer.withValues(alpha: 0.6),
+                              color: scheme.errorContainer.withValues(
+                                alpha: 0.6,
+                              ),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               l.importTooBigBadge,
                               style: TextStyle(
-                                  fontSize: 10,
-                                  color: scheme.onErrorContainer),
+                                fontSize: 10,
+                                color: scheme.onErrorContainer,
+                              ),
                             ),
                           ),
                       ],
@@ -592,8 +655,7 @@ class _FeaturedCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.download_for_offline_outlined,
-                  color: scheme.primary),
+              Icon(Icons.download_for_offline_outlined, color: scheme.primary),
             ],
           ),
         ),
@@ -627,10 +689,9 @@ class _HfModelCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       model.id,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -640,7 +701,9 @@ class _HfModelCard extends StatelessWidget {
                     Container(
                       margin: const EdgeInsets.only(left: 6),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: scheme.primary.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(6),
@@ -648,9 +711,10 @@ class _HfModelCard extends StatelessWidget {
                       child: Text(
                         l.importReadyCmfBadge,
                         style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: scheme.primary),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: scheme.primary,
+                        ),
                       ),
                     ),
                   if (model.gated)
@@ -658,7 +722,9 @@ class _HfModelCard extends StatelessWidget {
                       message: l.importGatedHint,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: scheme.errorContainer,
                           borderRadius: BorderRadius.circular(6),
@@ -666,8 +732,9 @@ class _HfModelCard extends StatelessWidget {
                         child: Text(
                           l.importGatedBadge,
                           style: TextStyle(
-                              fontSize: 10,
-                              color: scheme.onErrorContainer),
+                            fontSize: 10,
+                            color: scheme.onErrorContainer,
+                          ),
                         ),
                       ),
                     ),
@@ -677,33 +744,53 @@ class _HfModelCard extends StatelessWidget {
               Row(
                 children: [
                   if (model.pipelineTag != null) ...[
-                    Icon(Icons.category_outlined,
-                        size: 13, color: scheme.onSurfaceVariant),
+                    Icon(
+                      Icons.category_outlined,
+                      size: 13,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     const SizedBox(width: 3),
                     // Flexible: "automatic-speech-recognition" was pushing
                     // the download/like counters off the card.
                     Flexible(
-                      child: Text(model.pipelineTag!,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                              fontSize: 12,
-                              color: scheme.onSurfaceVariant)),
+                      child: Text(
+                        model.pipelineTag!,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 12),
                   ],
-                  Icon(Icons.download_outlined,
-                      size: 13, color: scheme.onSurfaceVariant),
+                  Icon(
+                    Icons.download_outlined,
+                    size: 13,
+                    color: scheme.onSurfaceVariant,
+                  ),
                   const SizedBox(width: 3),
-                  Text(formatCount(model.downloads),
-                      style: TextStyle(
-                          fontSize: 12, color: scheme.onSurfaceVariant)),
+                  Text(
+                    formatCount(model.downloads),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
                   const SizedBox(width: 12),
-                  Icon(Icons.favorite_outline,
-                      size: 13, color: scheme.onSurfaceVariant),
+                  Icon(
+                    Icons.favorite_outline,
+                    size: 13,
+                    color: scheme.onSurfaceVariant,
+                  ),
                   const SizedBox(width: 3),
-                  Text(formatCount(model.likes),
-                      style: TextStyle(
-                          fontSize: 12, color: scheme.onSurfaceVariant)),
+                  Text(
+                    formatCount(model.likes),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -737,7 +824,8 @@ class _RepoSheet extends StatefulWidget {
 
 class _RepoSheetState extends State<_RepoSheet> {
   late final TextEditingController _name = TextEditingController(
-      text: widget.model.id.split('/').last.toLowerCase());
+    text: widget.model.id.split('/').last.toLowerCase(),
+  );
   QuantType _quant = QuantType.q4tp;
 
   List<HfFileEntry>? _files;
@@ -746,11 +834,14 @@ class _RepoSheetState extends State<_RepoSheet> {
   @override
   void initState() {
     super.initState();
-    widget.resolveFiles().then((files) {
-      if (mounted) setState(() => _files = files);
-    }).catchError((Object e) {
-      if (mounted) setState(() => _error = e.toString());
-    });
+    widget
+        .resolveFiles()
+        .then((files) {
+          if (mounted) setState(() => _files = files);
+        })
+        .catchError((Object e) {
+          if (mounted) setState(() => _error = e.toString());
+        });
   }
 
   @override
@@ -772,25 +863,26 @@ class _RepoSheetState extends State<_RepoSheet> {
   int get _weightBytes => _files == null
       ? 0
       : _files!
-          .where((f) =>
-              f.path.endsWith('.safetensors') && !f.path.contains('/'))
-          .fold(0, (s, f) => s + f.size);
+            .where(
+              (f) => f.path.endsWith('.safetensors') && !f.path.contains('/'),
+            )
+            .fold(0, (s, f) => s + f.size);
 
   /// Estimated .cmf size for [q]: source stores ~2 bytes per weight, so
   /// weights ≈ bytes/2, times the profile's bytes-per-weight.
   int _estimate(QuantType q) => (_weightBytes / 2 * q.bytesPerWeight).round();
 
   String _quantDescription(AppLocalizations l, QuantType q) => switch (q) {
-        QuantType.q8_2f => l.quantQ8_2fDesc,
-        QuantType.q4tp => l.quantQ4tpDesc,
-        QuantType.q2tp => l.quantQ2tpDesc,
-        QuantType.q8Row => l.quantQ8RowDesc,
-        QuantType.q1t => l.quantQ1tDesc,
-        QuantType.q4Block => l.quantQ4Desc,
-        QuantType.vbit => l.quantVbitDesc,
-        QuantType.q1 => l.quantQ1Desc,
-        QuantType.f16 => l.quantF16Desc,
-      };
+    QuantType.q8_2f => l.quantQ8_2fDesc,
+    QuantType.q4tp => l.quantQ4tpDesc,
+    QuantType.q2tp => l.quantQ2tpDesc,
+    QuantType.q8Row => l.quantQ8RowDesc,
+    QuantType.q1t => l.quantQ1tDesc,
+    QuantType.q4Block => l.quantQ4Desc,
+    QuantType.vbit => l.quantVbitDesc,
+    QuantType.q1 => l.quantQ1Desc,
+    QuantType.f16 => l.quantF16Desc,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -799,7 +891,8 @@ class _RepoSheetState extends State<_RepoSheet> {
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.only(
-            bottom: MediaQuery.viewInsetsOf(context).bottom),
+          bottom: MediaQuery.viewInsetsOf(context).bottom,
+        ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
           child: Column(
@@ -813,13 +906,18 @@ class _RepoSheetState extends State<_RepoSheet> {
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 4),
-              Text(widget.model.id,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant)),
+              Text(
+                widget.model.id,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              ),
               const SizedBox(height: 16),
               if (_error != null)
-                Text(_error!,
-                    style: TextStyle(color: scheme.error, fontSize: 12))
+                Text(
+                  _error!,
+                  style: TextStyle(color: scheme.error, fontSize: 12),
+                )
               else if (_files == null)
                 Row(
                   children: [
@@ -829,8 +927,10 @@ class _RepoSheetState extends State<_RepoSheet> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     ),
                     const SizedBox(width: 10),
-                    Text(l.importCheckingRepo,
-                        style: const TextStyle(fontSize: 13)),
+                    Text(
+                      l.importCheckingRepo,
+                      style: const TextStyle(fontSize: 13),
+                    ),
                   ],
                 )
               else if (_readyCmf != null)
@@ -857,19 +957,27 @@ class _RepoSheetState extends State<_RepoSheet> {
         ),
         child: Row(
           children: [
-            Icon(Icons.insert_drive_file_outlined,
-                size: 18, color: scheme.primary),
+            Icon(
+              Icons.insert_drive_file_outlined,
+              size: 18,
+              color: scheme.primary,
+            ),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(file.path,
-                  style: const TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w600),
-                  overflow: TextOverflow.ellipsis),
+              child: Text(
+                file.path,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
             if (file.size > 0)
-              Text(formatBytes(file.size),
-                  style:
-                      TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+              Text(
+                formatBytes(file.size),
+                style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+              ),
           ],
         ),
       ),
@@ -896,12 +1004,12 @@ class _RepoSheetState extends State<_RepoSheet> {
       ),
       const SizedBox(height: 12),
       if (_weightBytes > 0)
-        Text(l.importDownloadSize(formatBytes(_weightBytes)),
-            style:
-                TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+        Text(
+          l.importDownloadSize(formatBytes(_weightBytes)),
+          style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+        ),
       const SizedBox(height: 12),
-      Text(l.importQuantization,
-          style: Theme.of(context).textTheme.labelLarge),
+      Text(l.importQuantization, style: Theme.of(context).textTheme.labelLarge),
       const SizedBox(height: 4),
       for (final q in QuantType.values)
         RadioListTile<QuantType>(
@@ -921,7 +1029,9 @@ class _RepoSheetState extends State<_RepoSheet> {
                 Text(
                   l.quantDesktopOnly,
                   style: TextStyle(
-                      fontSize: 10, color: scheme.onSurfaceVariant),
+                    fontSize: 10,
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ],
               const Spacer(),
@@ -931,20 +1041,25 @@ class _RepoSheetState extends State<_RepoSheet> {
                 Text(
                   l.importEstimatedOutput(formatBytes(_estimate(q))),
                   style: TextStyle(
-                      fontSize: 12,
-                      color: q == _quant
-                          ? scheme.primary
-                          : scheme.onSurfaceVariant),
+                    fontSize: 12,
+                    color: q == _quant
+                        ? scheme.primary
+                        : scheme.onSurfaceVariant,
+                  ),
                 ),
             ],
           ),
-          subtitle: Text(_quantDescription(l, q),
-              style: const TextStyle(fontSize: 11)),
+          subtitle: Text(
+            _quantDescription(l, q),
+            style: const TextStyle(fontSize: 11),
+          ),
         ),
       const SizedBox(height: 4),
       if (_weightBytes > 0)
-        Text(l.importEstimateNote,
-            style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant)),
+        Text(
+          l.importEstimateNote,
+          style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
+        ),
       const SizedBox(height: 8),
       Container(
         padding: const EdgeInsets.all(12),
@@ -957,8 +1072,10 @@ class _RepoSheetState extends State<_RepoSheet> {
             const Icon(Icons.info_outline, size: 16),
             const SizedBox(width: 8),
             Expanded(
-              child: Text(l.importOnDeviceNote,
-                  style: const TextStyle(fontSize: 12)),
+              child: Text(
+                l.importOnDeviceNote,
+                style: const TextStyle(fontSize: 12),
+              ),
             ),
           ],
         ),
@@ -969,8 +1086,7 @@ class _RepoSheetState extends State<_RepoSheet> {
         child: FilledButton.icon(
           icon: const Icon(Icons.bolt),
           label: Text(l.importStartConvert),
-          onPressed: () =>
-              widget.onStartConvert(_quant, _name.text.trim()),
+          onPressed: () => widget.onStartConvert(_quant, _name.text.trim()),
         ),
       ),
     ];
@@ -1052,23 +1168,23 @@ class _JobsTab extends ConsumerWidget {
                     Expanded(
                       child: Text(
                         '${job.name}.cmf',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleSmall
-                            ?.copyWith(fontWeight: FontWeight.w600),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: stateColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         _phaseLabel(l, job),
-                        style:
-                            TextStyle(fontSize: 11, color: stateColor),
+                        style: TextStyle(fontSize: 11, color: stateColor),
                       ),
                     ),
                     if (job.state == JobState.running)
@@ -1084,40 +1200,36 @@ class _JobsTab extends ConsumerWidget {
                         tooltip: l.actionDelete,
                         onPressed: () async {
                           final deleteFile = job.state == JobState.done;
-                          final confirmed = !deleteFile ||
+                          final confirmed =
+                              !deleteFile ||
                               (await showDialog<bool>(
                                     context: context,
-                                    builder: (dialogContext) =>
-                                        AlertDialog(
-                                      content: Text(
-                                          l.importDeleteConfirm),
+                                    builder: (dialogContext) => AlertDialog(
+                                      content: Text(l.importDeleteConfirm),
                                       actions: [
                                         TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(
-                                                  dialogContext,
-                                                  false),
-                                          child:
-                                              Text(l.actionCancel),
+                                          onPressed: () => Navigator.pop(
+                                            dialogContext,
+                                            false,
+                                          ),
+                                          child: Text(l.actionCancel),
                                         ),
                                         FilledButton(
-                                          onPressed: () =>
-                                              Navigator.pop(
-                                                  dialogContext, true),
-                                          child:
-                                              Text(l.actionDelete),
+                                          onPressed: () => Navigator.pop(
+                                            dialogContext,
+                                            true,
+                                          ),
+                                          child: Text(l.actionDelete),
                                         ),
                                       ],
                                     ),
                                   ) ==
                                   true);
                           if (confirmed) {
-                            await ref.read(converterProvider).delete(
-                                job.id,
-                                deleteFile: deleteFile);
-                            ref
-                                .read(modelsProvider.notifier)
-                                .refresh();
+                            await ref
+                                .read(converterProvider)
+                                .delete(job.id, deleteFile: deleteFile);
+                            ref.read(modelsProvider.notifier).refresh();
                           }
                         },
                       ),
@@ -1127,53 +1239,63 @@ class _JobsTab extends ConsumerWidget {
                   '${job.repo} · ${job.displayQuant}'
                   '${job.sizeBytes != null ? ' · ${formatBytes(job.sizeBytes!)}' : ''}',
                   style: TextStyle(
-                      fontSize: 12, color: scheme.onSurfaceVariant),
+                    fontSize: 12,
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
                 if (job.state == JobState.running) ...[
                   const SizedBox(height: 10),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
-                        value: job.progress > 0.01 ? job.progress : null),
+                      value: job.progress > 0.01 ? job.progress : null,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '${(job.progress * 100).toStringAsFixed(0)}%',
-                    style: AppTheme.mono(context,
-                        size: 11, color: scheme.onSurfaceVariant),
+                    style: AppTheme.mono(
+                      context,
+                      size: 11,
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
                 if (job.error != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 6),
-                    child: Text(job.error!,
-                        style: TextStyle(
-                            fontSize: 12, color: scheme.error)),
+                    child: Text(
+                      job.error!,
+                      style: TextStyle(fontSize: 12, color: scheme.error),
+                    ),
                   ),
                 if (job.log.isNotEmpty)
                   Theme(
-                    data: Theme.of(context)
-                        .copyWith(dividerColor: Colors.transparent),
+                    data: Theme.of(
+                      context,
+                    ).copyWith(dividerColor: Colors.transparent),
                     child: ExpansionTile(
                       tilePadding: EdgeInsets.zero,
-                      childrenPadding:
-                          const EdgeInsets.only(bottom: 8),
-                      title: Text(l.importShowLog,
-                          style: const TextStyle(fontSize: 12)),
+                      childrenPadding: const EdgeInsets.only(bottom: 8),
+                      title: Text(
+                        l.importShowLog,
+                        style: const TextStyle(fontSize: 12),
+                      ),
                       children: [
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: scheme.surfaceContainerHighest
-                                .withValues(alpha: 0.5),
+                            color: scheme.surfaceContainerHighest.withValues(
+                              alpha: 0.5,
+                            ),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             job.log
-                                .sublist(job.log.length > 10
-                                    ? job.log.length - 10
-                                    : 0)
+                                .sublist(
+                                  job.log.length > 10 ? job.log.length - 10 : 0,
+                                )
                                 .join('\n'),
                             style: AppTheme.mono(context, size: 10),
                           ),

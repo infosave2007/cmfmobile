@@ -37,32 +37,36 @@ typedef _LoadNative = ffi.Pointer<ffi.Void> Function(ffi.Pointer<Utf8>);
 typedef _LoadDart = ffi.Pointer<ffi.Void> Function(ffi.Pointer<Utf8>);
 typedef _FreeNative = ffi.Void Function(ffi.Pointer<ffi.Void>);
 typedef _FreeDart = void Function(ffi.Pointer<ffi.Void>);
-typedef _TokenCbNative = ffi.Bool Function(
-    ffi.Pointer<Utf8>, ffi.Pointer<ffi.Void>);
-typedef _GenNative = ffi.Int32 Function(
-    ffi.Pointer<ffi.Void>,
-    ffi.Pointer<Utf8>,
-    ffi.Uint32,
-    ffi.Pointer<ffi.NativeFunction<_TokenCbNative>>,
-    ffi.Pointer<ffi.Void>);
-typedef _GenDart = int Function(
-    ffi.Pointer<ffi.Void>,
-    ffi.Pointer<Utf8>,
-    int,
-    ffi.Pointer<ffi.NativeFunction<_TokenCbNative>>,
-    ffi.Pointer<ffi.Void>);
-typedef _SetOptionsNative = ffi.Int32 Function(
-    ffi.Pointer<ffi.Void>, ffi.Pointer<Utf8>);
-typedef _SetOptionsDart = int Function(
-    ffi.Pointer<ffi.Void>, ffi.Pointer<Utf8>);
+typedef _TokenCbNative =
+    ffi.Bool Function(ffi.Pointer<Utf8>, ffi.Pointer<ffi.Void>);
+typedef _GenNative =
+    ffi.Int32 Function(
+      ffi.Pointer<ffi.Void>,
+      ffi.Pointer<Utf8>,
+      ffi.Uint32,
+      ffi.Pointer<ffi.NativeFunction<_TokenCbNative>>,
+      ffi.Pointer<ffi.Void>,
+    );
+typedef _GenDart =
+    int Function(
+      ffi.Pointer<ffi.Void>,
+      ffi.Pointer<Utf8>,
+      int,
+      ffi.Pointer<ffi.NativeFunction<_TokenCbNative>>,
+      ffi.Pointer<ffi.Void>,
+    );
+typedef _SetOptionsNative =
+    ffi.Int32 Function(ffi.Pointer<ffi.Void>, ffi.Pointer<Utf8>);
+typedef _SetOptionsDart =
+    int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<Utf8>);
 typedef _SetGpuNative = ffi.Void Function(ffi.Bool);
 typedef _SetGpuDart = void Function(bool);
 typedef _GpuAvailableNative = ffi.Bool Function();
 typedef _GpuAvailableDart = bool Function();
 typedef _SetThreadsNative = ffi.Void Function(ffi.Int32);
 typedef _SetThreadsDart = void Function(int);
-typedef _WorkerTidsNative = ffi.Int32 Function(
-    ffi.Pointer<ffi.Int32>, ffi.Int32);
+typedef _WorkerTidsNative =
+    ffi.Int32 Function(ffi.Pointer<ffi.Int32>, ffi.Int32);
 typedef _WorkerTidsDart = int Function(ffi.Pointer<ffi.Int32>, int);
 typedef _CancelNative = ffi.Void Function(ffi.Pointer<ffi.Void>);
 typedef _CancelDart = void Function(ffi.Pointer<ffi.Void>);
@@ -72,6 +76,21 @@ typedef _WorkerStartDart = int Function(ffi.Pointer<Utf8>);
 typedef _SetPeerNative = ffi.Int32 Function(ffi.Pointer<Utf8>);
 typedef _SetPeerDart = int Function(ffi.Pointer<Utf8>);
 typedef _PeerStatsNative = ffi.Pointer<Utf8> Function();
+
+typedef _DecisionNative =
+    ffi.Pointer<Utf8> Function(
+      ffi.Pointer<ffi.Void>,
+      ffi.Pointer<Utf8>,
+      ffi.Pointer<Utf8>,
+      ffi.Pointer<Utf8>,
+    );
+typedef _DecisionDart =
+    ffi.Pointer<Utf8> Function(
+      ffi.Pointer<ffi.Void>,
+      ffi.Pointer<Utf8>,
+      ffi.Pointer<Utf8>,
+      ffi.Pointer<Utf8>,
+    );
 
 ffi.DynamicLibrary _openLibrary() {
   if (Platform.isAndroid) return ffi.DynamicLibrary.open('libcortiq_ffi.so');
@@ -84,21 +103,32 @@ ffi.DynamicLibrary _openLibrary() {
 ///
 /// Optional: when libcortiq_ffi is not bundled, [isAvailable] is false and
 /// the app falls back to [DemoEngine]. Build/bundling: native/README.md.
-class NativeCortiqEngine implements InferenceEngine {
+class NativeCortiqEngine extends InferenceEngine {
   NativeCortiqEngine() {
     try {
       final lib = _openLibrary();
       lib.lookup('cortiq_load'); // probe
       _lib = lib;
       _free = lib.lookupFunction<_FreeNative, _FreeDart>('cortiq_free');
+      try {
+        lib.lookup('cortiq_decision_load');
+        lib.lookup('cortiq_decision_request');
+        _decisionFree = lib.lookupFunction<_FreeNative, _FreeDart>(
+          'cortiq_decision_free',
+        );
+      } catch (_) {
+        _decisionFree = null;
+      }
       _version = lib
           .lookupFunction<_VersionNative, _VersionNative>('cortiq_version')()
           .toDartString();
       try {
         _setOptions = lib.lookupFunction<_SetOptionsNative, _SetOptionsDart>(
-            'cortiq_set_options');
+          'cortiq_set_options',
+        );
         _setGpu = lib.lookupFunction<_SetGpuNative, _SetGpuDart>(
-            'cortiq_set_gpu');
+          'cortiq_set_gpu',
+        );
       } catch (_) {
         _setOptions = null; // pre-0.3.10 library
         _setGpu = null;
@@ -109,12 +139,16 @@ class NativeCortiqEngine implements InferenceEngine {
         // the only way to tell whether the switch does anything;
         // cortiq_set_threads replaces the process-wide CMF_THREADS; the
         // worker tids feed Android's performance hints.
-        _gpuAvailable = lib.lookupFunction<_GpuAvailableNative,
-            _GpuAvailableDart>('cortiq_gpu_available');
+        _gpuAvailable = lib
+            .lookupFunction<_GpuAvailableNative, _GpuAvailableDart>(
+              'cortiq_gpu_available',
+            );
         _setThreads = lib.lookupFunction<_SetThreadsNative, _SetThreadsDart>(
-            'cortiq_set_threads');
+          'cortiq_set_threads',
+        );
         _workerTids = lib.lookupFunction<_WorkerTidsNative, _WorkerTidsDart>(
-            'cortiq_worker_tids');
+          'cortiq_worker_tids',
+        );
       } catch (_) {
         _gpuAvailable = null;
         _setThreads = null;
@@ -124,8 +158,9 @@ class NativeCortiqEngine implements InferenceEngine {
         // cortiq-ffi >= 0.5.32. Without it, cancelling can only be noticed
         // between tokens — which never happens during a prefill, so Stop
         // does nothing for the first minute of a long prompt.
-        _cancelNative =
-            lib.lookupFunction<_CancelNative, _CancelDart>('cortiq_cancel');
+        _cancelNative = lib.lookupFunction<_CancelNative, _CancelDart>(
+          'cortiq_cancel',
+        );
       } catch (_) {
         _cancelNative = null;
       }
@@ -134,9 +169,9 @@ class NativeCortiqEngine implements InferenceEngine {
         // straight from the runtime. Before it, the app assembled that line
         // itself from a thread count it had read too early — which is how
         // About came to claim one thread while four were running.
-        _execInfo = lib
-            .lookupFunction<_ExecInfoNative, _ExecInfoNative>(
-                'cortiq_execution_info');
+        _execInfo = lib.lookupFunction<_ExecInfoNative, _ExecInfoNative>(
+          'cortiq_execution_info',
+        );
       } catch (_) {
         _execInfo = null;
       }
@@ -145,11 +180,14 @@ class NativeCortiqEngine implements InferenceEngine {
         // above, so a phone still running an older runtime keeps working; it
         // simply has no companion, which [supportsCompanion] reports.
         _workerStart = lib.lookupFunction<_WorkerStartNative, _WorkerStartDart>(
-            'cortiq_worker_start');
-        _setPeer =
-            lib.lookupFunction<_SetPeerNative, _SetPeerDart>('cortiq_set_peer');
+          'cortiq_worker_start',
+        );
+        _setPeer = lib.lookupFunction<_SetPeerNative, _SetPeerDart>(
+          'cortiq_set_peer',
+        );
         _peerStats = lib.lookupFunction<_PeerStatsNative, _PeerStatsNative>(
-            'cortiq_peer_stats');
+          'cortiq_peer_stats',
+        );
       } catch (_) {
         _workerStart = null;
         _setPeer = null;
@@ -162,6 +200,13 @@ class NativeCortiqEngine implements InferenceEngine {
 
   ffi.DynamicLibrary? _lib;
   _FreeDart? _free;
+  _FreeDart? _decisionFree;
+  bool _decision = false;
+  bool _unloading = false;
+  @override
+  bool get supportsDecisions => _decisionFree != null;
+  @override
+  bool get isDecisionModel => _decision;
   _SetOptionsDart? _setOptions;
   _SetGpuDart? _setGpu;
   _GpuAvailableDart? _gpuAvailable;
@@ -205,8 +250,7 @@ class NativeCortiqEngine implements InferenceEngine {
 
   @override
   String get name {
-    final base =
-        _version.isEmpty ? 'cortiq-native' : 'cortiq-native $_version';
+    final base = _version.isEmpty ? 'cortiq-native' : 'cortiq-native $_version';
     // Prefer what the runtime says about itself; fall back to the pool size
     // we counted only when it cannot say (pre-0.5.33).
     final info = _executionInfo();
@@ -272,17 +316,24 @@ class NativeCortiqEngine implements InferenceEngine {
       // an older runtime may have been given.
       EngineTuning.apply(threads: null, flags: engineFlags);
     } else {
-      _poolThreads =
-          EngineTuning.apply(threads: threads, flags: engineFlags);
+      _poolThreads = EngineTuning.apply(threads: threads, flags: engineFlags);
     }
     // mmap + header parse can take a moment on big files — off the UI
     // isolate; the returned pointer is process-wide.
+    final isDecision = (await CmfReader.readMetadata(
+      model.filePath,
+    )).isDecision;
+    if (isDecision && !supportsDecisions) {
+      throw UnsupportedError('CMF Decision requires the mobile 0.8.0 runtime');
+    }
     final address = await Isolate.run(() {
       final lib = _openLibrary();
-      final load = lib.lookupFunction<_LoadNative, _LoadDart>('cortiq_load');
-      final lastError = lib
-          .lookupFunction<_LastErrorNative, _LastErrorNative>(
-              'cortiq_last_error');
+      final load = lib.lookupFunction<_LoadNative, _LoadDart>(
+        isDecision ? 'cortiq_decision_load' : 'cortiq_load',
+      );
+      final lastError = lib.lookupFunction<_LastErrorNative, _LastErrorNative>(
+        'cortiq_last_error',
+      );
       final pathPtr = model.filePath.toNativeUtf8();
       try {
         final handle = load(pathPtr);
@@ -294,6 +345,7 @@ class NativeCortiqEngine implements InferenceEngine {
         calloc.free(pathPtr);
       }
     });
+    _decision = isDecision;
     _handle = ffi.Pointer.fromAddress(address);
     _loaded = model;
     // The pool exists only once a model is loaded, so this is the first
@@ -317,9 +369,7 @@ class NativeCortiqEngine implements InferenceEngine {
     try {
       final total = workerTids(buffer, cap);
       if (total <= 0) return const [];
-      return [
-        for (var i = 0; i < (total < cap ? total : cap); i++) buffer[i],
-      ];
+      return [for (var i = 0; i < (total < cap ? total : cap); i++) buffer[i]];
     } finally {
       calloc.free(buffer);
     }
@@ -433,7 +483,8 @@ class NativeCortiqEngine implements InferenceEngine {
     try {
       final text = lib
           .lookupFunction<_LastErrorNative, _LastErrorNative>(
-              'cortiq_last_error')()
+            'cortiq_last_error',
+          )()
           .toDartString();
       return text.isEmpty ? 'unknown error' : text;
     } catch (_) {
@@ -446,16 +497,19 @@ class NativeCortiqEngine implements InferenceEngine {
     if (_handle == ffi.nullptr) return;
     // A worker isolate dereferences the handle until its blocking call
     // returns, so freeing it mid-generation would be use-after-free.
+    _unloading = true;
     cancel();
     await _generations;
     if (_handle != ffi.nullptr) {
-      _free!(_handle);
+      (_decision ? _decisionFree! : _free!)(_handle);
+      _decision = false;
       _handle = ffi.nullptr;
       _loaded = null;
       _poolThreads = null;
       _workerIds = const [];
     }
     _stopWorker();
+    _unloading = false;
   }
 
   /// Fallback transcript for pre-0.3.10 libraries without
@@ -500,12 +554,16 @@ class NativeCortiqEngine implements InferenceEngine {
 
   @override
   Stream<GenerationEvent> generate(GenerationRequest request) {
+    if (_decision || _unloading) {
+      return Stream.error(StateError('Use /v1/decide for a decision model'));
+    }
     if (_handle == ffi.nullptr) {
       return Stream.error(StateError('no model loaded'));
     }
     final controller = StreamController<GenerationEvent>();
-    _generations =
-        _generations.then((_) => _runGeneration(request, controller));
+    _generations = _generations.then(
+      (_) => _runGeneration(request, controller),
+    );
     return controller.stream;
   }
 
@@ -559,19 +617,21 @@ class NativeCortiqEngine implements InferenceEngine {
         case ('done', final int count):
           final elapsed = DateTime.now().difference(started);
           final tokens = count >= 0 ? count : completionTokens;
-          controller.add(GenerationEvent(
-            done: true,
-            stats: GenerationStats(
-              promptTokens: promptTokens,
-              completionTokens: tokens,
-              tokensPerSecond: elapsed.inMilliseconds > 0
-                  ? tokens * 1000 / elapsed.inMilliseconds
-                  : 0,
-              latencyMs: elapsed.inMilliseconds,
-              finishReason: cancelFlag.value != 0 ? 'cancelled' : 'stop',
-              taskUsed: request.task,
+          controller.add(
+            GenerationEvent(
+              done: true,
+              stats: GenerationStats(
+                promptTokens: promptTokens,
+                completionTokens: tokens,
+                tokensPerSecond: elapsed.inMilliseconds > 0
+                    ? tokens * 1000 / elapsed.inMilliseconds
+                    : 0,
+                latencyMs: elapsed.inMilliseconds,
+                finishReason: cancelFlag.value != 0 ? 'cancelled' : 'stop',
+                taskUsed: request.task,
+              ),
             ),
-          ));
+          );
           controller.close();
           receivePort.close();
           if (!done.isCompleted) done.complete();
@@ -600,14 +660,16 @@ class NativeCortiqEngine implements InferenceEngine {
     cycleStart = DateTime.now();
     try {
       final commands = await _workerCommands();
-      commands.send(_GenArgs(
-        sendPort: receivePort.sendPort,
-        handleAddress: _handle.address,
-        cancelFlagAddress: cancelFlag.address,
-        messagesJson: messagesJson,
-        fallbackPrompt: renderPrompt(request.messages),
-        maxTokens: request.maxTokens,
-      ));
+      commands.send(
+        _GenArgs(
+          sendPort: receivePort.sendPort,
+          handleAddress: _handle.address,
+          cancelFlagAddress: cancelFlag.address,
+          messagesJson: messagesJson,
+          fallbackPrompt: renderPrompt(request.messages),
+          maxTokens: request.maxTokens,
+        ),
+      );
     } catch (e) {
       fail('failed to start generation: $e');
     }
@@ -635,9 +697,59 @@ class NativeCortiqEngine implements InferenceEngine {
     // isolate: the ABI documents the flag as thread-safe and expects the
     // call from a thread other than the blocked one.
     final cancelNative = _cancelNative;
-    if (cancelNative != null && _handle != ffi.nullptr) {
+    if (cancelNative != null && _handle != ffi.nullptr && !_decision) {
       cancelNative(_handle);
     }
+  }
+
+  @override
+  Future<Map<String, dynamic>> decisionRequest(
+    String method,
+    String path, [
+    Map<String, dynamic> body = const {},
+  ]) {
+    if (!_decision || _unloading) {
+      return Future.error(StateError('no decision model loaded'));
+    }
+    final reply = Completer<Map<String, dynamic>>();
+    _generations = _generations.then((_) async {
+      final port = ReceivePort();
+      final done = Completer<Map<String, dynamic>>();
+      _onWorkerLost = (message) {
+        if (!done.isCompleted) done.completeError(StateError(message));
+      };
+      port.listen((message) {
+        if (done.isCompleted) return;
+        if (message case ('decision', final String value)) {
+          try {
+            done.complete(jsonDecode(value) as Map<String, dynamic>);
+          } catch (e, s) {
+            done.completeError(e, s);
+          }
+        } else if (message case ('error', final String error)) {
+          done.completeError(StateError(error));
+        }
+      });
+      try {
+        final commands = await _workerCommands();
+        commands.send(
+          _DecisionArgs(
+            port.sendPort,
+            _handle.address,
+            method,
+            path,
+            jsonEncode(body),
+          ),
+        );
+        reply.complete(await done.future);
+      } catch (e, s) {
+        reply.completeError(e, s);
+      } finally {
+        _onWorkerLost = null;
+        port.close();
+      }
+    });
+    return reply.future;
   }
 
   // --- generation worker ---------------------------------------------------
@@ -700,6 +812,19 @@ class NativeCortiqEngine implements InferenceEngine {
   }
 }
 
+class _DecisionArgs {
+  const _DecisionArgs(
+    this.sendPort,
+    this.handle,
+    this.method,
+    this.path,
+    this.body,
+  );
+  final SendPort sendPort;
+  final int handle;
+  final String method, path, body;
+}
+
 class _GenArgs {
   const _GenArgs({
     required this.sendPort,
@@ -727,8 +852,9 @@ void _generateWorker(SendPort handshake) {
   handshake.send(jobs.sendPort);
 
   final lib = _openLibrary();
-  final lastError = lib
-      .lookupFunction<_LastErrorNative, _LastErrorNative>('cortiq_last_error');
+  final lastError = lib.lookupFunction<_LastErrorNative, _LastErrorNative>(
+    'cortiq_last_error',
+  );
   _GenDart gen;
   bool multiTurn;
   try {
@@ -741,19 +867,45 @@ void _generateWorker(SendPort handshake) {
   }
 
   jobs.listen((message) {
+    if (message is _DecisionArgs) {
+      final method = message.method.toNativeUtf8();
+      final path = message.path.toNativeUtf8();
+      final body = message.body.toNativeUtf8();
+      try {
+        final call = lib.lookupFunction<_DecisionNative, _DecisionDart>(
+          'cortiq_decision_request',
+        );
+        final result = call(
+          ffi.Pointer.fromAddress(message.handle),
+          method,
+          path,
+          body,
+        );
+        if (result == ffi.nullptr) throw StateError('empty decision response');
+        message.sendPort.send(('decision', result.toDartString()));
+      } catch (e) {
+        message.sendPort.send(('error', e.toString()));
+      } finally {
+        calloc.free(method);
+        calloc.free(path);
+        calloc.free(body);
+      }
+      return;
+    }
     final args = message as _GenArgs;
     final port = args.sendPort;
     try {
       final payload = multiTurn ? args.messagesJson : args.fallbackPrompt;
-      final cancelFlag =
-          ffi.Pointer<ffi.Uint8>.fromAddress(args.cancelFlagAddress);
-      final callback = ffi.NativeCallable<_TokenCbNative>.isolateLocal(
-        (ffi.Pointer<Utf8> token, ffi.Pointer<ffi.Void> user) {
-          port.send(token.toDartString());
-          return cancelFlag.value == 0;
-        },
-        exceptionalReturn: false,
+      final cancelFlag = ffi.Pointer<ffi.Uint8>.fromAddress(
+        args.cancelFlagAddress,
       );
+      final callback = ffi.NativeCallable<_TokenCbNative>.isolateLocal((
+        ffi.Pointer<Utf8> token,
+        ffi.Pointer<ffi.Void> user,
+      ) {
+        port.send(token.toDartString());
+        return cancelFlag.value == 0;
+      }, exceptionalReturn: false);
 
       final payloadPtr = payload.toNativeUtf8();
       try {
