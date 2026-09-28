@@ -380,7 +380,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverNoModelWarning =>
-      'No model is loaded — API requests will return 503 until you load one on the Models tab.';
+      'No model loaded. Open Models and load a chat or decision model before sending requests.';
 
   @override
   String get serverAddresses => 'Addresses';

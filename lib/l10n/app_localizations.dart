@@ -771,7 +771,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverNoModelWarning.
   ///
   /// In en, this message translates to:
-  /// **'No model is loaded — API requests will return 503 until you load one on the Models tab.'**
+  /// **'No model loaded. Open Models and load a chat or decision model before sending requests.'**
   String get serverNoModelWarning;
 
   /// No description provided for @serverAddresses.

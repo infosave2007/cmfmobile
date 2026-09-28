@@ -383,7 +383,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get serverNoModelWarning =>
-      'No hay ningún modelo cargado: las peticiones a la API devolverán 503 hasta que cargues uno en la pestaña Modelos.';
+      'No hay ningún modelo cargado. Abre Modelos y carga un modelo de chat o de decisiones antes de enviar solicitudes.';
 
   @override
   String get serverAddresses => 'Direcciones';

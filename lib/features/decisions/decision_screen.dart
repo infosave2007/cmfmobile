@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
@@ -173,6 +174,8 @@ class _DecisionScreenState extends ConsumerState<DecisionScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
+    String decimal(num value, int digits) =>
+        NumberFormat('0.${'0' * digits}', l.localeName).format(value);
     final result = _result;
     return Scaffold(
       appBar: AppBar(
@@ -355,15 +358,15 @@ class _DecisionScreenState extends ConsumerState<DecisionScreen> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      '${l.decisionConfidence}: ${((result['confidence'] as num).clamp(0, 1) * 100).toStringAsFixed(1)}%',
+                      '${l.decisionConfidence}: ${decimal((result['confidence'] as num).clamp(0, 1) * 100, 1)}%',
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      '${l.decisionTotal}: ${((result['timings_us']['total'] as num) / 1000).toStringAsFixed(2)} ms'
+                      '${l.decisionTotal}: ${decimal((result['timings_us']['total'] as num) / 1000, 2)} ms'
                       ' · ${result['device']}',
                     ),
                     Text(
-                      '${l.decisionResonance}: ${((result['timings_us']['resonance'] as num) / 1000).toStringAsFixed(3)} ms',
+                      '${l.decisionResonance}: ${decimal((result['timings_us']['resonance'] as num) / 1000, 3)} ms',
                     ),
                   ],
                 ),

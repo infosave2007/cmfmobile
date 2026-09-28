@@ -385,7 +385,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get serverNoModelWarning =>
-      'Aucun modèle chargé — les requêtes API renverront 503 tant que vous n\'en aurez pas chargé un dans l\'onglet Modèles.';
+      'Aucun modèle chargé. Ouvrez Modèles et chargez un modèle de chat ou de décision avant d’envoyer des requêtes.';
 
   @override
   String get serverAddresses => 'Adresses';

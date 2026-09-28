@@ -382,7 +382,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get serverNoModelWarning =>
-      'Kein Modell geladen — API-Anfragen erhalten 503, bis du auf dem Tab „Modelle“ eines lädst.';
+      'Kein Modell geladen. Öffne „Modelle“ und lade vor dem Senden ein Chat- oder Entscheidungsmodell.';
 
   @override
   String get serverAddresses => 'Adressen';

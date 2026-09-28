@@ -193,7 +193,7 @@
   "serverStarting": "Starting…",
   "serverRunning": "Running",
   "serverStopped": "Stopped",
-  "serverNoModelWarning": "No model is loaded — API requests will return 503 until you load one on the Models tab.",
+  "serverNoModelWarning": "No model loaded. Open Models and load a chat or decision model before sending requests.",
   "serverAddresses": "Addresses",
   "serverQrHint": "Scan from another device to get the base URL",
   "serverAuthRequire": "Require bearer token",

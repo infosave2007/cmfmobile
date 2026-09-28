@@ -110,7 +110,7 @@
   "serverStarting": "Başlatılıyor…",
   "serverRunning": "Çalışıyor",
   "serverStopped": "Durduruldu",
-  "serverNoModelWarning": "Yüklü model yok — Modeller sekmesinden bir model yükleyene kadar API istekleri 503 döndürecek.",
+  "serverNoModelWarning": "Yüklü model yok. İstek göndermeden önce Modeller’i açıp bir sohbet veya karar modeli yükleyin.",
   "serverAddresses": "Adresler",
   "serverQrHint": "Temel URL'yi almak için başka bir cihazdan tarayın",
   "serverAuthRequire": "Bearer token iste",

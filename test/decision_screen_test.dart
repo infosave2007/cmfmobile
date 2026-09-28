@@ -88,11 +88,29 @@ void main() {
             find.byKey(const Key('decision-input')),
             'Where is my card?',
           );
+          await tester.pumpAndSettle();
           await tester.ensureVisible(run);
+          await tester.pumpAndSettle();
           await tester.tap(run);
           await tester.pumpAndSettle();
+          await tester.scrollUntilVisible(
+            find.text('card_arrival'),
+            150,
+            scrollable: find.byType(Scrollable).first,
+          );
           expect(find.text('card_arrival'), findsOneWidget);
+          expect(
+            find.textContaining(
+              ['ru', 'de', 'fr', 'es', 'tr'].contains(lang) ? '99,0%' : '99.0%',
+            ),
+            findsOneWidget,
+          );
           expect(tester.takeException(), isNull);
+          await tester.scrollUntilVisible(
+            find.byKey(const Key('decision-input')),
+            -150,
+            scrollable: find.byType(Scrollable).first,
+          );
           await tester.enterText(
             find.byKey(const Key('decision-input')),
             'Different request',

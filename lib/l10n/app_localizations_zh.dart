@@ -365,7 +365,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverStopped => '已停止';
 
   @override
-  String get serverNoModelWarning => '未加载模型——在“模型”页加载模型之前,API 请求将返回 503。';
+  String get serverNoModelWarning => '未加载模型。请打开“模型”页，加载聊天或决策模型后再发送请求。';
 
   @override
   String get serverAddresses => '地址';

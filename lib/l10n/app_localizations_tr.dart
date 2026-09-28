@@ -380,7 +380,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get serverNoModelWarning =>
-      'Yüklü model yok — Modeller sekmesinden bir model yükleyene kadar API istekleri 503 döndürecek.';
+      'Yüklü model yok. İstek göndermeden önce Modeller’i açıp bir sohbet veya karar modeli yükleyin.';
 
   @override
   String get serverAddresses => 'Adresler';

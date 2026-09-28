@@ -110,7 +110,7 @@
   "serverStarting": "Démarrage…",
   "serverRunning": "En marche",
   "serverStopped": "Arrêté",
-  "serverNoModelWarning": "Aucun modèle chargé — les requêtes API renverront 503 tant que vous n'en aurez pas chargé un dans l'onglet Modèles.",
+  "serverNoModelWarning": "Aucun modèle chargé. Ouvrez Modèles et chargez un modèle de chat ou de décision avant d’envoyer des requêtes.",
   "serverAddresses": "Adresses",
   "serverQrHint": "Scannez depuis un autre appareil pour obtenir l'URL de base",
   "serverAuthRequire": "Exiger un token bearer",

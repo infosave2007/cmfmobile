@@ -110,7 +110,7 @@
   "serverStarting": "Iniciando…",
   "serverRunning": "En ejecución",
   "serverStopped": "Detenido",
-  "serverNoModelWarning": "No hay ningún modelo cargado: las peticiones a la API devolverán 503 hasta que cargues uno en la pestaña Modelos.",
+  "serverNoModelWarning": "No hay ningún modelo cargado. Abre Modelos y carga un modelo de chat o de decisiones antes de enviar solicitudes.",
   "serverAddresses": "Direcciones",
   "serverQrHint": "Escanéalo desde otro dispositivo para obtener la URL base",
   "serverAuthRequire": "Requerir token bearer",

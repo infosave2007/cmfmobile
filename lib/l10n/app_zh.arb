@@ -110,7 +110,7 @@
   "serverStarting": "正在启动…",
   "serverRunning": "运行中",
   "serverStopped": "已停止",
-  "serverNoModelWarning": "未加载模型——在“模型”页加载模型之前,API 请求将返回 503。",
+  "serverNoModelWarning": "未加载模型。请打开“模型”页，加载聊天或决策模型后再发送请求。",
   "serverAddresses": "地址",
   "serverQrHint": "用其他设备扫码获取基础 URL",
   "serverAuthRequire": "要求 bearer token",

@@ -111,8 +111,11 @@ void main() {
             find.widgetWithText(TextField, l.oracleApiUrl),
             'http://example.com',
           );
+          FocusManager.instance.primaryFocus?.unfocus();
+          await tester.pumpAndSettle();
           final save = find.widgetWithText(FilledButton, l.oracleSave);
           await tester.ensureVisible(save);
+          await tester.pumpAndSettle();
           await tester.tap(save);
           await tester.pumpAndSettle();
           expect(find.text(l.oracleUrlError), findsOneWidget);

@@ -110,7 +110,7 @@
   "serverStarting": "Wird gestartet…",
   "serverRunning": "Läuft",
   "serverStopped": "Gestoppt",
-  "serverNoModelWarning": "Kein Modell geladen — API-Anfragen erhalten 503, bis du auf dem Tab „Modelle“ eines lädst.",
+  "serverNoModelWarning": "Kein Modell geladen. Öffne „Modelle“ und lade vor dem Senden ein Chat- oder Entscheidungsmodell.",
   "serverAddresses": "Adressen",
   "serverQrHint": "Mit einem anderen Gerät scannen, um die Basis-URL zu erhalten",
   "serverAuthRequire": "Bearer-Token erforderlich",

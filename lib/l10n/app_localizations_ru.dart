@@ -381,7 +381,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get serverNoModelWarning =>
-      'Модель не загружена — запросы к API будут получать 503, пока вы не загрузите её на вкладке «Модели».';
+      'Модель не загружена. Откройте «Модели» и загрузите модель чата или решений перед отправкой запросов.';
 
   @override
   String get serverAddresses => 'Адреса';
