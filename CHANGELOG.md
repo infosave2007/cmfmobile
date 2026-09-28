@@ -1,3 +1,14 @@
+# 1.3.0 — CMF Decision on mobile
+
+- Cortiq 0.8.0 built from pinned source for Android and Apple in CI.
+- Reconstruction-based skills, confidence policies, abstention and stage timings.
+- `/v1/decide`, typed `/v1/decisions`, skill discovery, authenticated local API.
+- Optional, manually confirmed MiMo/OpenAI-compatible oracle; encrypted API key,
+  strict response validation, no oracle spending through the phone's LAN API.
+- Seven-language decision/oracle UI. Existing generative chat remains separate.
+- Debug installs no longer replace the store app. Apple build/upload/processing
+  verification runs on GitHub Actions; Play defaults to internal testing.
+
 # Changelog
 
 All notable changes to CMF Mobile are documented here.

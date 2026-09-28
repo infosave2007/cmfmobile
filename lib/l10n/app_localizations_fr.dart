@@ -750,4 +750,110 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get importTabConvert => 'Depuis HF';
+
+  @override
+  String get decisionTitle => 'Décisions';
+
+  @override
+  String get decisionSubtitle =>
+      'Choisissez une compétence, décrivez la demande : une décision, pas un texte généré.';
+
+  @override
+  String get decisionSkill => 'Compétence';
+
+  @override
+  String get decisionInput => 'Demande';
+
+  @override
+  String get decisionExample => 'Utiliser un exemple';
+
+  @override
+  String get decisionPolicy => 'Politique de décision';
+
+  @override
+  String get decisionBalanced => 'Équilibrée';
+
+  @override
+  String get decisionCareful => 'Prudente — abstention en cas de doute';
+
+  @override
+  String get decisionBestEffort =>
+      'Meilleure estimation — accepte l’incertitude';
+
+  @override
+  String get decisionRun => 'Décider';
+
+  @override
+  String get decisionAccepted => 'Décision acceptée';
+
+  @override
+  String get decisionAbstained => 'Confiance insuffisante';
+
+  @override
+  String get decisionAbstainBody =>
+      'Aucune décision fiable. Précisez la demande ou changez de compétence.';
+
+  @override
+  String get decisionConfidence => 'Score de confiance';
+
+  @override
+  String get decisionTotal => 'Requête complète';
+
+  @override
+  String get decisionResonance => 'Résonance seule';
+
+  @override
+  String get decisionExplain => 'Pourquoi cette décision ?';
+
+  @override
+  String get decisionErrorHelp =>
+      'Une erreur de reconstruction plus faible indique une meilleure correspondance. La confiance n’est pas une précision mesurée.';
+
+  @override
+  String get decisionCopy => 'Copier le JSON';
+
+  @override
+  String get decisionOffline =>
+      'Les décisions locales restent sur le téléphone. Seule une requête d’oracle confirmée envoie le texte au fournisseur. Importez vos compétences comme CMF Decision créé avec Cortiq 0.8+.';
+
+  @override
+  String get oracleTitle => 'Oracle';
+
+  @override
+  String get oracleDescription =>
+      'API compatible OpenAI facultative pour les décisions locales incertaines. Chaque requête nécessite votre confirmation.';
+
+  @override
+  String get oracleEnabled => 'Activer l’oracle manuel';
+
+  @override
+  String get oracleModel => 'ID du modèle';
+
+  @override
+  String get oracleKeyHelp =>
+      'La clé reste dans le stockage chiffré et n’est pas transmise via l’API du téléphone.';
+
+  @override
+  String get oracleSave => 'Enregistrer';
+
+  @override
+  String get oracleDelete => 'Supprimer la clé et réinitialiser';
+
+  @override
+  String get oracleAsk => 'Interroger l’oracle';
+
+  @override
+  String get oracleConfirm =>
+      'Envoyer la demande et les critères au fournisseur ? Des frais d’API peuvent s’appliquer.';
+
+  @override
+  String get oracleAnswer => 'Réponse de l’oracle';
+
+  @override
+  String get oracleNotTraining =>
+      'Réponse externe, pas une décision locale. Aucun réentraînement du modèle.';
+
+  @override
+  String get oracleManual =>
+      'Désactivé par défaut · confirmation à chaque requête';
 }

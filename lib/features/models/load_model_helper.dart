@@ -39,4 +39,7 @@ Future<void> loadModelWithMemoryCheck(
     if (proceed != true) return;
   }
   await ref.read(engineControllerProvider.notifier).loadModel(model);
+  if (model.meta?.isDecision == true && ref.read(engineControllerProvider).loadedModelId == model.id) {
+    ref.read(shellIndexProvider.notifier).select(0);
+  }
 }

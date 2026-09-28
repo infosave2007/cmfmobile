@@ -743,4 +743,108 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get importTabConvert => 'HF\'den';
+
+  @override
+  String get decisionTitle => 'Kararlar';
+
+  @override
+  String get decisionSubtitle =>
+      'Bir beceri seçin, isteği açıklayın: üretilmiş metin değil, bir karar alın.';
+
+  @override
+  String get decisionSkill => 'Beceri';
+
+  @override
+  String get decisionInput => 'İstek metni';
+
+  @override
+  String get decisionExample => 'Örneği kullan';
+
+  @override
+  String get decisionPolicy => 'Karar politikası';
+
+  @override
+  String get decisionBalanced => 'Dengeli';
+
+  @override
+  String get decisionCareful => 'Temkinli — belirsizlikte karar verme';
+
+  @override
+  String get decisionBestEffort => 'En iyi tahmin — belirsizliği kabul et';
+
+  @override
+  String get decisionRun => 'Karar ver';
+
+  @override
+  String get decisionAccepted => 'Karar kabul edildi';
+
+  @override
+  String get decisionAbstained => 'Yeterince emin değil';
+
+  @override
+  String get decisionAbstainBody =>
+      'Güvenilir karar yok. İsteği netleştirin veya başka bir beceri seçin.';
+
+  @override
+  String get decisionConfidence => 'Güven puanı';
+
+  @override
+  String get decisionTotal => 'Tüm istek';
+
+  @override
+  String get decisionResonance => 'Yalnızca rezonans';
+
+  @override
+  String get decisionExplain => 'Neden bu karar?';
+
+  @override
+  String get decisionErrorHelp =>
+      'Daha düşük yeniden yapılandırma hatası daha yakın eşleşme demektir. Güven puanı ölçülmüş doğruluk değildir.';
+
+  @override
+  String get decisionCopy => 'JSON kopyala';
+
+  @override
+  String get decisionOffline =>
+      'Yerel kararlar telefonda kalır. Yalnızca onaylı oracle isteği metni sağlayıcıya gönderir. Kendi becerilerinizi Cortiq 0.8+ ile oluşturulan CMF Decision dosyası olarak içe aktarın.';
+
+  @override
+  String get oracleTitle => 'Oracle';
+
+  @override
+  String get oracleDescription =>
+      'Belirsiz yerel kararlar için isteğe bağlı OpenAI uyumlu API. Her istek onayınızı gerektirir.';
+
+  @override
+  String get oracleEnabled => 'Manuel oracle etkinleştir';
+
+  @override
+  String get oracleModel => 'Model kimliği';
+
+  @override
+  String get oracleKeyHelp =>
+      'Anahtar cihazın şifreli deposunda kalır, telefon API’si üzerinden paylaşılmaz.';
+
+  @override
+  String get oracleSave => 'Kaydet';
+
+  @override
+  String get oracleDelete => 'Anahtarı sil ve sıfırla';
+
+  @override
+  String get oracleAsk => 'Oracle’a sor';
+
+  @override
+  String get oracleConfirm =>
+      'İstek ve beceri ölçütleri sağlayıcıya gönderilsin mi? API ücreti oluşabilir.';
+
+  @override
+  String get oracleAnswer => 'Oracle yanıtı';
+
+  @override
+  String get oracleNotTraining =>
+      'Harici yanıt, yerel karar değil. Modeli yeniden eğitmez.';
+
+  @override
+  String get oracleManual => 'Varsayılan olarak kapalı · her istekte onay';
 }

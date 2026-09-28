@@ -1403,6 +1403,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'From HF'**
   String get importTabConvert;
+
+  /// No description provided for @decisionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Decisions'**
+  String get decisionTitle;
+
+  /// No description provided for @decisionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a skill. Describe the request. Get a decision, not a generated answer.'**
+  String get decisionSubtitle;
+
+  /// No description provided for @decisionSkill.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill'**
+  String get decisionSkill;
+
+  /// No description provided for @decisionInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Request text'**
+  String get decisionInput;
+
+  /// No description provided for @decisionExample.
+  ///
+  /// In en, this message translates to:
+  /// **'Use example'**
+  String get decisionExample;
+
+  /// No description provided for @decisionPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Decision policy'**
+  String get decisionPolicy;
+
+  /// No description provided for @decisionBalanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced'**
+  String get decisionBalanced;
+
+  /// No description provided for @decisionCareful.
+  ///
+  /// In en, this message translates to:
+  /// **'Careful — abstain when uncertain'**
+  String get decisionCareful;
+
+  /// No description provided for @decisionBestEffort.
+  ///
+  /// In en, this message translates to:
+  /// **'Best effort — may accept uncertain cases'**
+  String get decisionBestEffort;
+
+  /// No description provided for @decisionRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Decide'**
+  String get decisionRun;
+
+  /// No description provided for @decisionAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Decision accepted'**
+  String get decisionAccepted;
+
+  /// No description provided for @decisionAbstained.
+  ///
+  /// In en, this message translates to:
+  /// **'Not confident enough'**
+  String get decisionAbstained;
+
+  /// No description provided for @decisionAbstainBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No reliable decision. Try a clearer request or a different skill.'**
+  String get decisionAbstainBody;
+
+  /// No description provided for @decisionConfidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Confidence score'**
+  String get decisionConfidence;
+
+  /// No description provided for @decisionTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Full request'**
+  String get decisionTotal;
+
+  /// No description provided for @decisionResonance.
+  ///
+  /// In en, this message translates to:
+  /// **'Resonance only'**
+  String get decisionResonance;
+
+  /// No description provided for @decisionExplain.
+  ///
+  /// In en, this message translates to:
+  /// **'Why this decision?'**
+  String get decisionExplain;
+
+  /// No description provided for @decisionErrorHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Lower reconstruction error means a closer match. Confidence is not a measured accuracy percentage.'**
+  String get decisionErrorHelp;
+
+  /// No description provided for @decisionCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy JSON'**
+  String get decisionCopy;
+
+  /// No description provided for @decisionOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Local decisions stay on your phone. Only an explicitly confirmed oracle request sends text to your provider. Import your own skills as a CMF Decision file built with Cortiq 0.8+.'**
+  String get decisionOffline;
+
+  /// No description provided for @oracleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Oracle'**
+  String get oracleTitle;
+
+  /// No description provided for @oracleDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'An optional OpenAI-compatible API for cases the local skill cannot confidently decide. Every request needs your confirmation.'**
+  String get oracleDescription;
+
+  /// No description provided for @oracleEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable manual oracle'**
+  String get oracleEnabled;
+
+  /// No description provided for @oracleModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Model ID'**
+  String get oracleModel;
+
+  /// No description provided for @oracleKeyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The key stays in encrypted device storage. No key is shared over the phone API.'**
+  String get oracleKeyHelp;
+
+  /// No description provided for @oracleSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get oracleSave;
+
+  /// No description provided for @oracleDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete key and reset'**
+  String get oracleDelete;
+
+  /// No description provided for @oracleAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask oracle'**
+  String get oracleAsk;
+
+  /// No description provided for @oracleConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Send this request and the skill rubric to the selected provider? This may incur API charges.'**
+  String get oracleConfirm;
+
+  /// No description provided for @oracleAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Oracle answer'**
+  String get oracleAnswer;
+
+  /// No description provided for @oracleNotTraining.
+  ///
+  /// In en, this message translates to:
+  /// **'External answer, not a local decision. Does not retrain the model.'**
+  String get oracleNotTraining;
+
+  /// No description provided for @oracleManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Off by default · confirmation per request'**
+  String get oracleManual;
 }
 
 class _AppLocalizationsDelegate

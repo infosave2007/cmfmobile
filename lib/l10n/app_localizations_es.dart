@@ -748,4 +748,109 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get importTabConvert => 'De HF';
+
+  @override
+  String get decisionTitle => 'Decisiones';
+
+  @override
+  String get decisionSubtitle =>
+      'Elige una habilidad y describe la solicitud: una decisión, no texto generado.';
+
+  @override
+  String get decisionSkill => 'Habilidad';
+
+  @override
+  String get decisionInput => 'Solicitud';
+
+  @override
+  String get decisionExample => 'Usar ejemplo';
+
+  @override
+  String get decisionPolicy => 'Política de decisión';
+
+  @override
+  String get decisionBalanced => 'Equilibrada';
+
+  @override
+  String get decisionCareful => 'Prudente — abstenerse ante dudas';
+
+  @override
+  String get decisionBestEffort => 'Mejor estimación — acepta incertidumbre';
+
+  @override
+  String get decisionRun => 'Decidir';
+
+  @override
+  String get decisionAccepted => 'Decisión aceptada';
+
+  @override
+  String get decisionAbstained => 'Confianza insuficiente';
+
+  @override
+  String get decisionAbstainBody =>
+      'No hay una decisión fiable. Aclara la solicitud o cambia de habilidad.';
+
+  @override
+  String get decisionConfidence => 'Puntuación de confianza';
+
+  @override
+  String get decisionTotal => 'Solicitud completa';
+
+  @override
+  String get decisionResonance => 'Solo resonancia';
+
+  @override
+  String get decisionExplain => '¿Por qué esta decisión?';
+
+  @override
+  String get decisionErrorHelp =>
+      'Un error de reconstrucción menor indica mayor similitud. La confianza no es una precisión medida.';
+
+  @override
+  String get decisionCopy => 'Copiar JSON';
+
+  @override
+  String get decisionOffline =>
+      'Las decisiones locales permanecen en el teléfono. Solo una solicitud confirmada envía texto al proveedor. Importa tus habilidades como CMF Decision creado con Cortiq 0.8+.';
+
+  @override
+  String get oracleTitle => 'Oráculo';
+
+  @override
+  String get oracleDescription =>
+      'API opcional compatible con OpenAI para decisiones locales inciertas. Cada solicitud requiere confirmación.';
+
+  @override
+  String get oracleEnabled => 'Activar oráculo manual';
+
+  @override
+  String get oracleModel => 'ID del modelo';
+
+  @override
+  String get oracleKeyHelp =>
+      'La clave permanece cifrada en el dispositivo y no se comparte mediante la API del teléfono.';
+
+  @override
+  String get oracleSave => 'Guardar';
+
+  @override
+  String get oracleDelete => 'Eliminar clave y restablecer';
+
+  @override
+  String get oracleAsk => 'Preguntar al oráculo';
+
+  @override
+  String get oracleConfirm =>
+      '¿Enviar esta solicitud y los criterios al proveedor? Puede generar cargos de API.';
+
+  @override
+  String get oracleAnswer => 'Respuesta del oráculo';
+
+  @override
+  String get oracleNotTraining =>
+      'Respuesta externa, no una decisión local. No reentrena el modelo.';
+
+  @override
+  String get oracleManual =>
+      'Desactivado por defecto · confirmar cada solicitud';
 }

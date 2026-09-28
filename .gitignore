@@ -50,3 +50,8 @@ app.*.map.json
 
 # Ответы App Review: черновики переписки с ревьюером, не для публичного репозитория
 /store_assets/app_review_notes.md
+
+# Reproducible mobile native build cache
+/native/runtime/target/
+/android/app/src/main/jniLibs/*/libcortiq_ffi.so
+/ios/Frameworks/libcortiq_ffi*.a

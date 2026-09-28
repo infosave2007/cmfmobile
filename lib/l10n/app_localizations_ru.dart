@@ -744,4 +744,110 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get importTabConvert => 'Из HF';
+
+  @override
+  String get decisionTitle => 'Решения';
+
+  @override
+  String get decisionSubtitle =>
+      'Выберите навык, опишите запрос — получите решение, а не сгенерированный ответ.';
+
+  @override
+  String get decisionSkill => 'Навык';
+
+  @override
+  String get decisionInput => 'Текст запроса';
+
+  @override
+  String get decisionExample => 'Подставить пример';
+
+  @override
+  String get decisionPolicy => 'Политика решения';
+
+  @override
+  String get decisionBalanced => 'Сбалансированная';
+
+  @override
+  String get decisionCareful => 'Осторожная — отказ при сомнении';
+
+  @override
+  String get decisionBestEffort =>
+      'Лучшее предположение — допускает неопределённость';
+
+  @override
+  String get decisionRun => 'Принять решение';
+
+  @override
+  String get decisionAccepted => 'Решение принято';
+
+  @override
+  String get decisionAbstained => 'Недостаточно уверенности';
+
+  @override
+  String get decisionAbstainBody =>
+      'Надёжного решения нет. Уточните запрос или выберите другой навык.';
+
+  @override
+  String get decisionConfidence => 'Оценка уверенности';
+
+  @override
+  String get decisionTotal => 'Весь запрос';
+
+  @override
+  String get decisionResonance => 'Только резонанс';
+
+  @override
+  String get decisionExplain => 'Почему это решение?';
+
+  @override
+  String get decisionErrorHelp =>
+      'Меньше ошибка реконструкции — ближе соответствие. Оценка уверенности не равна измеренной точности.';
+
+  @override
+  String get decisionCopy => 'Копировать JSON';
+
+  @override
+  String get decisionOffline =>
+      'Локальные решения остаются на телефоне. Только подтверждённый вызов оракула отправляет текст провайдеру. Свои навыки импортируйте как CMF Decision, созданный в Cortiq 0.8+.';
+
+  @override
+  String get oracleTitle => 'Оракул';
+
+  @override
+  String get oracleDescription =>
+      'Необязательный OpenAI-совместимый API для случаев, когда локальному навыку не хватает уверенности. Каждый запрос требует подтверждения.';
+
+  @override
+  String get oracleEnabled => 'Включить ручной вызов оракула';
+
+  @override
+  String get oracleModel => 'ID модели';
+
+  @override
+  String get oracleKeyHelp =>
+      'Ключ хранится в защищённом хранилище телефона и не передаётся через API телефона.';
+
+  @override
+  String get oracleSave => 'Сохранить';
+
+  @override
+  String get oracleDelete => 'Удалить ключ и сбросить';
+
+  @override
+  String get oracleAsk => 'Спросить оракула';
+
+  @override
+  String get oracleConfirm =>
+      'Отправить этот запрос и критерии навыка выбранному провайдеру? Вызов API может быть платным.';
+
+  @override
+  String get oracleAnswer => 'Ответ оракула';
+
+  @override
+  String get oracleNotTraining =>
+      'Внешний ответ, не локальное решение. Модель не переобучается.';
+
+  @override
+  String get oracleManual =>
+      'По умолчанию выключен · подтверждение каждого запроса';
 }

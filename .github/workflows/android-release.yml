@@ -6,7 +6,7 @@ on:
       build_number:
         description: "versionCode (целое число), например 24"
         required: true
-        default: "24"
+        default: "47"
       track:
         description: "Трек Play: internal | alpha | beta | production"
         required: true
@@ -30,6 +30,10 @@ jobs:
           channel: stable
           cache: true
 
+      - uses: ./.github/actions/native-runtime
+        with:
+          platform: android
+
       - name: Restore upload keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -45,6 +49,11 @@ jobs:
           flutter pub get
           flutter build appbundle --release --build-number="${{ inputs.build_number }}"
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: play-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+
       - name: Upload to Google Play
         uses: r0adkll/upload-google-play@v1
         with:
@@ -53,3 +62,13 @@ jobs:
           releaseFiles: build/app/outputs/bundle/release/app-release.aab
           track: ${{ inputs.track }}
           status: completed
+
+      - name: Verify store processing
+        env:
+          BUILD_NUMBER: ${{ inputs.build_number }}
+          PLAY_TRACK: ${{ inputs.track }}
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          python3 -m venv "$RUNNER_TEMP/store-verify"
+          "$RUNNER_TEMP/store-verify/bin/pip" install -r scripts/store-requirements.txt
+          "$RUNNER_TEMP/store-verify/bin/python" scripts/verify_store.py google

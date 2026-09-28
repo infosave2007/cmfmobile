@@ -224,7 +224,8 @@ class _ModelCard extends ConsumerWidget {
                   _MetaChip(text: meta.archName),
                   _MetaChip(text: meta.quantType),
                   _MetaChip(text: formatBytes(model.sizeBytes)),
-                  _MetaChip(text: l.modelsMetaLayers(meta.numLayers)),
+                  if (meta.isDecision) _MetaChip(text: l.decisionTitle, highlight: true)
+                  else _MetaChip(text: l.modelsMetaLayers(meta.numLayers)),
                   if (meta.contextLength > 0)
                     _MetaChip(
                         text: l.modelsMetaContext(

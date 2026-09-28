@@ -23,6 +23,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: "3.44.1"
           channel: stable
           cache: true
 
@@ -30,6 +31,10 @@ jobs:
       - run: flutter gen-l10n
       - run: flutter analyze
       - run: flutter test
+
+      - uses: ./.github/actions/native-runtime
+        with:
+          platform: android
 
       - name: Build APKs
         run: |
@@ -59,11 +64,16 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: "3.44.1"
           channel: stable
           cache: true
 
       - run: flutter pub get
       - run: flutter gen-l10n
+
+      - uses: ./.github/actions/native-runtime
+        with:
+          platform: ios
 
       - name: Build iOS (no codesign)
         run: flutter build ios --release --no-codesign
@@ -72,6 +82,8 @@ jobs:
       - name: Verify cortiq runtime is linked
         run: |
           BIN=build/ios/iphoneos/Runner.app/Runner
+          xcrun dyld_info -exports "$BIN" > /tmp/cmf-exports.txt
+          grep -q _cortiq_decision_request /tmp/cmf-exports.txt
           if dyld_info -exports "$BIN" 2>/dev/null | grep -q _cortiq_load \
              || nm -gU "$BIN" 2>/dev/null | grep -q _cortiq_load; then
             echo "cortiq symbols present"

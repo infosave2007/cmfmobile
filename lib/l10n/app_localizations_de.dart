@@ -746,4 +746,108 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get importTabConvert => 'Aus HF';
+
+  @override
+  String get decisionTitle => 'Entscheidungen';
+
+  @override
+  String get decisionSubtitle =>
+      'Fähigkeit wählen, Anfrage beschreiben — eine Entscheidung statt generiertem Text.';
+
+  @override
+  String get decisionSkill => 'Fähigkeit';
+
+  @override
+  String get decisionInput => 'Anfrage';
+
+  @override
+  String get decisionExample => 'Beispiel verwenden';
+
+  @override
+  String get decisionPolicy => 'Entscheidungsregel';
+
+  @override
+  String get decisionBalanced => 'Ausgewogen';
+
+  @override
+  String get decisionCareful => 'Vorsichtig — bei Unsicherheit ablehnen';
+
+  @override
+  String get decisionBestEffort => 'Beste Schätzung — unsichere Fälle zulassen';
+
+  @override
+  String get decisionRun => 'Entscheiden';
+
+  @override
+  String get decisionAccepted => 'Entscheidung akzeptiert';
+
+  @override
+  String get decisionAbstained => 'Nicht sicher genug';
+
+  @override
+  String get decisionAbstainBody =>
+      'Keine verlässliche Entscheidung. Präzisieren Sie die Anfrage oder wählen Sie eine andere Fähigkeit.';
+
+  @override
+  String get decisionConfidence => 'Konfidenzwert';
+
+  @override
+  String get decisionTotal => 'Gesamte Anfrage';
+
+  @override
+  String get decisionResonance => 'Nur Resonanz';
+
+  @override
+  String get decisionExplain => 'Warum diese Entscheidung?';
+
+  @override
+  String get decisionErrorHelp =>
+      'Ein kleinerer Rekonstruktionsfehler bedeutet bessere Übereinstimmung. Konfidenz ist keine gemessene Genauigkeit.';
+
+  @override
+  String get decisionCopy => 'JSON kopieren';
+
+  @override
+  String get decisionOffline =>
+      'Lokale Entscheidungen bleiben auf dem Telefon. Nur bestätigte Orakelanfragen senden Text an den Anbieter. Eigene Fähigkeiten als CMF Decision aus Cortiq 0.8+ importieren.';
+
+  @override
+  String get oracleTitle => 'Orakel';
+
+  @override
+  String get oracleDescription =>
+      'Optionale OpenAI-kompatible API für unsichere lokale Entscheidungen. Jede Anfrage muss bestätigt werden.';
+
+  @override
+  String get oracleEnabled => 'Manuelles Orakel aktivieren';
+
+  @override
+  String get oracleModel => 'Modell-ID';
+
+  @override
+  String get oracleKeyHelp =>
+      'Der Schlüssel bleibt im verschlüsselten Gerätespeicher und wird nicht über die Telefon-API weitergegeben.';
+
+  @override
+  String get oracleSave => 'Speichern';
+
+  @override
+  String get oracleDelete => 'Schlüssel löschen und zurücksetzen';
+
+  @override
+  String get oracleAsk => 'Orakel fragen';
+
+  @override
+  String get oracleConfirm =>
+      'Anfrage und Kriterien an den Anbieter senden? Dabei können API-Kosten entstehen.';
+
+  @override
+  String get oracleAnswer => 'Orakelantwort';
+
+  @override
+  String get oracleNotTraining =>
+      'Externe Antwort, keine lokale Entscheidung. Trainiert das Modell nicht nach.';
+
+  @override
+  String get oracleManual => 'Standardmäßig aus · Bestätigung pro Anfrage';
 }

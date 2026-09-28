@@ -70,6 +70,16 @@ abstract class InferenceEngine {
 
   Future<void> unload();
 
+  bool get supportsDecisions => false;
+  bool get isDecisionModel => loadedModel?.meta?.isDecision == true;
+
+  /// Native service envelope: {status: HTTP status, body: JSON object}.
+  Future<Map<String, dynamic>> decisionRequest(
+    String method,
+    String path, [
+    Map<String, dynamic> body = const {},
+  ]) => Future.error(UnsupportedError('decision runtime is not available'));
+
   // --- network split (cortiq-ffi >= 0.5.70) ---------------------------------
   //
   // Defaults say "no": the demo engine has no peer to talk to, and neither
@@ -84,8 +94,7 @@ abstract class InferenceEngine {
     required String modelPath,
     required String listen,
     String token = '',
-  }) =>
-      throw UnsupportedError('this engine cannot serve layers');
+  }) => throw UnsupportedError('this engine cannot serve layers');
 
   /// Routes every later generation through a peer holding the same file.
   void setPeer({
@@ -94,8 +103,7 @@ abstract class InferenceEngine {
     int split = 0,
     bool head = true,
     String dtype = 'f16',
-  }) =>
-      throw UnsupportedError('this engine cannot borrow a peer');
+  }) => throw UnsupportedError('this engine cannot borrow a peer');
 
   /// Back to computing locally. A no-op where there was never a peer.
   void clearPeer() {}

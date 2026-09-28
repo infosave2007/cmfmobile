@@ -346,8 +346,17 @@ class ServerScreen extends ConsumerWidget {
                   Text(l.serverEndpointsTitle,
                       style: Theme.of(context).textTheme.titleSmall),
                   const SizedBox(height: 8),
+                  if (engineState.loadedModel?.meta?.isDecision == true) ...[
+                    SelectableText('POST /v1/decide\n'
+                        '{"skill":"banking77","text":"Where is my card?","profile":"balanced"}'),
+                    TextButton.icon(icon: const Icon(Icons.copy), label: Text(l.decisionCopy),
+                      onPressed: () => Clipboard.setData(const ClipboardData(text:
+                          '{"skill":"banking77","text":"Where is my card?","profile":"balanced"}'))),
+                  ],
                   Text(
-                    'POST /v1/chat/completions\n'
+                    engineState.loadedModel?.meta?.isDecision == true
+                    ? 'POST /v1/decide\nPOST /v1/decisions\nGET  /v1/skills\nGET  /v1/skills/{id}\nGET  /v1/models\nGET  /healthz'
+                    : 'POST /v1/chat/completions\n'
                     'POST /v1/completions\n'
                     'GET  /v1/models\n'
                     'GET  /v1/cortiq/status\n'

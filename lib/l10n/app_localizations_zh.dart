@@ -711,4 +711,101 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get importTabConvert => '从 HF';
+
+  @override
+  String get decisionTitle => '决策';
+
+  @override
+  String get decisionSubtitle => '选择技能，描述请求，获得决策而非生成文本。';
+
+  @override
+  String get decisionSkill => '技能';
+
+  @override
+  String get decisionInput => '请求文本';
+
+  @override
+  String get decisionExample => '使用示例';
+
+  @override
+  String get decisionPolicy => '决策策略';
+
+  @override
+  String get decisionBalanced => '均衡';
+
+  @override
+  String get decisionCareful => '谨慎：不确定时拒绝';
+
+  @override
+  String get decisionBestEffort => '最佳猜测：允许不确定结果';
+
+  @override
+  String get decisionRun => '开始决策';
+
+  @override
+  String get decisionAccepted => '已接受决策';
+
+  @override
+  String get decisionAbstained => '置信度不足';
+
+  @override
+  String get decisionAbstainBody => '无法给出可靠决策。请明确请求或更换技能。';
+
+  @override
+  String get decisionConfidence => '置信度分数';
+
+  @override
+  String get decisionTotal => '完整请求';
+
+  @override
+  String get decisionResonance => '仅共振';
+
+  @override
+  String get decisionExplain => '为何做出此决策？';
+
+  @override
+  String get decisionErrorHelp => '重构误差越小，匹配越好。置信度不等于实测准确率。';
+
+  @override
+  String get decisionCopy => '复制 JSON';
+
+  @override
+  String get decisionOffline =>
+      '本地决策留在手机上。仅确认的预言机请求会向服务商发送文本。可导入 Cortiq 0.8+ 创建的 CMF Decision 文件以添加自定义技能。';
+
+  @override
+  String get oracleTitle => '预言机';
+
+  @override
+  String get oracleDescription => '可选的 OpenAI 兼容 API，用于本地技能无法可靠决策的情况。每次请求均需确认。';
+
+  @override
+  String get oracleEnabled => '启用手动预言机';
+
+  @override
+  String get oracleModel => '模型 ID';
+
+  @override
+  String get oracleKeyHelp => '密钥保存在设备加密存储中，不会通过手机 API 共享。';
+
+  @override
+  String get oracleSave => '保存';
+
+  @override
+  String get oracleDelete => '删除密钥并重置';
+
+  @override
+  String get oracleAsk => '询问预言机';
+
+  @override
+  String get oracleConfirm => '将请求和技能标准发送给所选服务商？可能产生 API 费用。';
+
+  @override
+  String get oracleAnswer => '预言机回答';
+
+  @override
+  String get oracleNotTraining => '外部回答，非本地决策。不会重新训练模型。';
+
+  @override
+  String get oracleManual => '默认关闭 · 每次请求需确认';
 }

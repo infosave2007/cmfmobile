@@ -1,30 +1,18 @@
 name: iOS App Store Release
 
-# Deliberately NOT triggered by pushing a tag any more.
-#
-# This job signs with `-allowProvisioningUpdates`, and every Actions run is a
-# fresh machine with an empty keychain — so Xcode asks Apple for a NEW
-# certificate each time rather than reusing one. Firing on every `v*` tag
-# minted twelve "Apple Development: Created via API" duplicates and then hit
-# the account's certificate limit, which is what failed the v1.2.1 release.
-#
-# Until the job is switched to manual signing with a stored .p12 and an
-# explicit App Store profile (see native/README.md), release iOS from the
-# local Mac: `flutter build ipa --release --build-number=<v>` then altool.
-# That machine reuses the Apple Distribution identity already in its keychain
-# and creates nothing.
+# Explicit dispatch only: build/sign/upload on GitHub, never on the local Mac.
 on:
   workflow_dispatch:
     inputs:
       build_number:
-        description: "Номер сборки (CFBundleVersion), например 1.1.22"
+        description: "Номер сборки (CFBundleVersion), например 47"
         required: true
-        default: "1.1.22"
+        default: "47"
 
 jobs:
   build-and-upload:
     runs-on: macos-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     env:
       ASC_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
       # По тегу vX.Y.Z номер сборки берётся из тега; вручную — из инпута.
@@ -46,6 +34,10 @@ jobs:
           flutter-version: "3.44.1"
           channel: stable
           cache: true
+
+      - uses: ./.github/actions/native-runtime
+        with:
+          platform: ios
 
       - name: Install App Store Connect API key
         env:
@@ -95,14 +87,31 @@ jobs:
           cd build/ipa
           unzip -o -q *.ipa "Payload/Runner.app/Runner"
           n=$(xcrun dyld_info -exports Payload/Runner.app/Runner | grep -c "_cortiq_" || true)
+          xcrun dyld_info -exports Payload/Runner.app/Runner > exports.txt
+          for symbol in cortiq_decision_load cortiq_decision_request cortiq_decision_free; do
+            grep -q "_$symbol" exports.txt || { echo "::error::Missing $symbol"; exit 1; }
+          done
           echo "exported cortiq entry points: $n"
           if [ "$n" -lt 10 ]; then
             echo "::error::Runner exports $n cortiq symbols — the engine was stripped out; the app would fall back to the demo engine. See ios/Flutter/Cortiq.xcconfig."
             exit 1
           fi
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-store-ipa
+          path: build/ipa/*.ipa
+
       - name: Upload to App Store Connect
         run: |
           xcrun altool --upload-app --type ios -f build/ipa/*.ipa \
             --apiKey ${ASC_KEY_ID} \
             --apiIssuer 69a6de97-8c6a-47e3-e053-5b8c7c11a4d1
+
+      - name: Verify store processing
+        env:
+          BUILD_NUMBER: ${{ inputs.build_number }}
+        run: |
+          python3 -m venv "$RUNNER_TEMP/store-verify"
+          "$RUNNER_TEMP/store-verify/bin/pip" install -r scripts/store-requirements.txt
+          "$RUNNER_TEMP/store-verify/bin/python" scripts/verify_store.py apple

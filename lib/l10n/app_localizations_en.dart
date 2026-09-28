@@ -742,4 +742,108 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get importTabConvert => 'From HF';
+
+  @override
+  String get decisionTitle => 'Decisions';
+
+  @override
+  String get decisionSubtitle =>
+      'Choose a skill. Describe the request. Get a decision, not a generated answer.';
+
+  @override
+  String get decisionSkill => 'Skill';
+
+  @override
+  String get decisionInput => 'Request text';
+
+  @override
+  String get decisionExample => 'Use example';
+
+  @override
+  String get decisionPolicy => 'Decision policy';
+
+  @override
+  String get decisionBalanced => 'Balanced';
+
+  @override
+  String get decisionCareful => 'Careful — abstain when uncertain';
+
+  @override
+  String get decisionBestEffort => 'Best effort — may accept uncertain cases';
+
+  @override
+  String get decisionRun => 'Decide';
+
+  @override
+  String get decisionAccepted => 'Decision accepted';
+
+  @override
+  String get decisionAbstained => 'Not confident enough';
+
+  @override
+  String get decisionAbstainBody =>
+      'No reliable decision. Try a clearer request or a different skill.';
+
+  @override
+  String get decisionConfidence => 'Confidence score';
+
+  @override
+  String get decisionTotal => 'Full request';
+
+  @override
+  String get decisionResonance => 'Resonance only';
+
+  @override
+  String get decisionExplain => 'Why this decision?';
+
+  @override
+  String get decisionErrorHelp =>
+      'Lower reconstruction error means a closer match. Confidence is not a measured accuracy percentage.';
+
+  @override
+  String get decisionCopy => 'Copy JSON';
+
+  @override
+  String get decisionOffline =>
+      'Local decisions stay on your phone. Only an explicitly confirmed oracle request sends text to your provider. Import your own skills as a CMF Decision file built with Cortiq 0.8+.';
+
+  @override
+  String get oracleTitle => 'Oracle';
+
+  @override
+  String get oracleDescription =>
+      'An optional OpenAI-compatible API for cases the local skill cannot confidently decide. Every request needs your confirmation.';
+
+  @override
+  String get oracleEnabled => 'Enable manual oracle';
+
+  @override
+  String get oracleModel => 'Model ID';
+
+  @override
+  String get oracleKeyHelp =>
+      'The key stays in encrypted device storage. No key is shared over the phone API.';
+
+  @override
+  String get oracleSave => 'Save';
+
+  @override
+  String get oracleDelete => 'Delete key and reset';
+
+  @override
+  String get oracleAsk => 'Ask oracle';
+
+  @override
+  String get oracleConfirm =>
+      'Send this request and the skill rubric to the selected provider? This may incur API charges.';
+
+  @override
+  String get oracleAnswer => 'Oracle answer';
+
+  @override
+  String get oracleNotTraining =>
+      'External answer, not a local decision. Does not retrain the model.';
+
+  @override
+  String get oracleManual => 'Off by default · confirmation per request';
 }

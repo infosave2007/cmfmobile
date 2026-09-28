@@ -6,6 +6,7 @@ import '../../core/util/formats.dart';
 import '../../data/models/settings.dart';
 import '../../data/services/inference/engine_tuning.dart';
 import '../../l10n/app_localizations.dart';
+import '../decisions/oracle_settings_screen.dart';
 
 /// Languages shipped by the app — the same seven as cortiq-gateway.
 const appLanguages = <(String, String)>[
@@ -83,6 +84,10 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
           ]),
+
+          ListTile(leading: const Icon(Icons.cloud_outlined), title: Text(l.oracleTitle),
+            subtitle: Text(l.oracleManual), trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const OracleSettingsScreen()))),
 
           _Section(title: l.settingsGeneration, children: [
             _SliderTile(
