@@ -73,7 +73,7 @@
   "importReadyCmfBadge": "CMF LISTO",
   "importNoResults": "No se encontraron modelos.",
   "importGatedBadge": "acceso restringido",
-  "importGatedHint": "Repositorio gated: configura un token de Hugging Face en Ajustes.",
+  "importGatedHint": "Repositorio de acceso restringido: consigue acceso en Hugging Face y añade tu token en Ajustes.",
   "importConfigureTitle": "Configurar conversión",
   "importOutputName": "Nombre de salida",
   "importOutputNameHint": "Letras, dígitos, - y _",
@@ -154,13 +154,13 @@
   "settingsDisableThinkingHint": "Los modelos de razonamiento (Qwen3/3.5) responden directamente, sin paso <think>",
   "settingsEngineSection": "Motor",
   "settingsEngineFlags": "Opciones del motor (avanzado)",
-  "settingsEngineFlagsHint": "Un CMF_CLAVE=valor por línea, enviado al motor al cargar el modelo. Vacío = valores por defecto.",
+  "settingsEngineFlagsHint": "Un CMF_KEY=value por línea, aplicado al cargar el modelo. Vacío = valores predeterminados.",
   "settingsServerSection": "Servidor",
   "settingsServerPort": "Puerto",
   "settingsServerPortHint": "Se aplica en el próximo inicio del servidor",
   "settingsHfSection": "Hugging Face",
   "settingsHfToken": "Token de acceso",
-  "settingsHfTokenHint": "hf_… (necesario para modelos gated)",
+  "settingsHfTokenHint": "hf_… (para modelos de acceso restringido)",
   "settingsStorage": "Almacenamiento",
   "settingsStorageUsage": "{size} en {count} modelos",
   "settingsAbout": "Acerca de",
@@ -272,5 +272,7 @@
   "oracleRequestError": "No se pudo obtener una respuesta del oráculo. Revisa la conexión y la configuración de la API.",
   "oracleHttpError": "El proveedor devolvió HTTP {status}. Revisa la clave de API, el ID del modelo y el saldo.",
   "oracleInvalidResponse": "La respuesta del oráculo no cumple los resultados permitidos de la habilidad y no se ha aceptado.",
-  "decisionFailed": "No se pudo obtener una decisión local. Comprueba que hay un modelo CMF Decision y una habilidad cargados."
+  "decisionFailed": "No se pudo obtener una decisión local. Comprueba que hay un modelo CMF Decision y una habilidad cargados.",
+  "modelKindSkill": "Complemento",
+  "modelSkillHelp": "Complemento para un modelo de chat base, no un modelo independiente. No se puede abrir como chat ni como modelo de decisiones."
 }

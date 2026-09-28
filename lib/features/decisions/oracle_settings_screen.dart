@@ -59,12 +59,13 @@ class _OracleSettingsScreenState extends State<OracleSettingsScreen> {
       );
       if (mounted) Navigator.pop(context);
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(
           () => _error = e is OracleValidationException
               ? oracleErrorMessage(e, AppLocalizations.of(context))
               : AppLocalizations.of(context).oracleStorageError,
         );
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -81,10 +82,11 @@ class _OracleSettingsScreenState extends State<OracleSettingsScreen> {
       _key.clear();
       await _load();
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(
           () => _error = AppLocalizations.of(context).oracleStorageError,
         );
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }

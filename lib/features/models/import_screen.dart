@@ -165,12 +165,15 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
             hf.fetchCmfHeader(listing.key.id, file.path, token: token).then((
               header,
             ) {
-              if (header != null)
+              if (header != null) {
                 verifiedPaths.add('${listing.key.id}/${file.path}');
+              }
               if (header?['arch']?['arch_name'] == 'cortiq-decision-ph-v1') {
                 decisionPaths.add('${listing.key.id}/${file.path}');
               }
-              if (header != null && cmfHeaderSkills(header).isNotEmpty) {
+              if (header != null &&
+                  header['arch']?['arch_name'] != 'cortiq-decision-ph-v1' &&
+                  cmfHeaderSkills(header).isNotEmpty) {
                 skillPaths.add('${listing.key.id}/${file.path}');
               }
             }),

@@ -24,6 +24,15 @@ LocalModel _model(String id, {bool decision = false}) => LocalModel(
 final _models = [
   _model('decision-guide-chat'),
   _model('support', decision: true),
+  LocalModel(
+    id: 'addon',
+    filePath: '/addon.cmf',
+    sizeBytes: 1,
+    modifiedAt: DateTime(2026),
+    meta: CmfMetadata.fromJson({
+      'skills': ['code'],
+    }),
+  ),
 ];
 
 class _Models extends ModelsController {
@@ -119,6 +128,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.textContaining('${l.modelKindChat} ·'), findsOneWidget);
         expect(find.textContaining('${l.modelKindDecision} ·'), findsOneWidget);
+        expect(find.text('addon'), findsNothing);
         await tester.tap(find.text('support'));
         await tester.pumpAndSettle();
         expect(find.text('parent replaced'), findsOneWidget);

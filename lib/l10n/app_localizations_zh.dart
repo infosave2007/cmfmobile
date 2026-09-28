@@ -251,7 +251,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get importGatedBadge => '访问受限';
 
   @override
-  String get importGatedHint => 'gated 仓库——请在设置中填写 Hugging Face token。';
+  String get importGatedHint => '此仓库访问受限：请先在 Hugging Face 上获取访问权限，再在设置中添加令牌。';
 
   @override
   String get importConfigureTitle => '配置转换';
@@ -501,7 +501,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsHfToken => '访问 token';
 
   @override
-  String get settingsHfTokenHint => 'hf_…(gated 模型需要)';
+  String get settingsHfTokenHint => 'hf_…（用于访问受限的模型）';
 
   @override
   String get settingsStorage => '存储';
@@ -864,4 +864,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get decisionFailed => '无法获取本地决策。请确认已加载 CMF Decision 模型和技能。';
+
+  @override
+  String get modelKindSkill => '技能扩展';
+
+  @override
+  String get modelSkillHelp => '这是基础聊天模型的扩展，不是独立模型，不能作为聊天或决策模型打开。';
 }

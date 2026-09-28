@@ -258,7 +258,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get importGatedHint =>
-      'Gated depo — Ayarlar\'da bir Hugging Face tokenı girin.';
+      'Kısıtlı erişimli depo: Hugging Face üzerinden erişim alın, ardından Ayarlar’a belirtecinizi ekleyin.';
 
   @override
   String get importConfigureTitle => 'Dönüştürmeyi yapılandır';
@@ -501,7 +501,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsEngineFlagsHint =>
-      'Her satırda bir CMF_ANAHTAR=değer, model yüklenirken çalışma zamanına aktarılır. Boş = varsayılanlar.';
+      'Her satıra bir CMF_KEY=value yazın. Model yüklenirken uygulanır. Boş = varsayılanlar.';
 
   @override
   String get settingsServerSection => 'Sunucu';
@@ -520,7 +520,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsHfToken => 'Erişim tokenı';
 
   @override
-  String get settingsHfTokenHint => 'hf_… (gated modeller için gerekli)';
+  String get settingsHfTokenHint => 'hf_… (kısıtlı erişimli modeller için)';
 
   @override
   String get settingsStorage => 'Depolama';
@@ -910,4 +910,11 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get decisionFailed =>
       'Yerel karar alınamadı. Bir CMF Decision modeli ve beceri yüklendiğinden emin olun.';
+
+  @override
+  String get modelKindSkill => 'Beceri eklentisi';
+
+  @override
+  String get modelSkillHelp =>
+      'Temel sohbet modeli için bir eklentidir; bağımsız model değildir. Sohbet veya karar modeli olarak açılamaz.';
 }

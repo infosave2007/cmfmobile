@@ -15,7 +15,9 @@ void showModelPickerSheet(BuildContext context, WidgetRef ref) {
     builder: (sheetContext) => Consumer(
       builder: (context, ref, _) {
         final l = AppLocalizations.of(context);
-        final models = ref.watch(modelsProvider).value ?? const [];
+        final models = (ref.watch(modelsProvider).value ?? const [])
+            .where((m) => m.isValid && !m.meta!.isSkill)
+            .toList();
         final engineState = ref.watch(engineControllerProvider);
 
         if (models.isEmpty) {
@@ -59,7 +61,7 @@ void showModelPickerSheet(BuildContext context, WidgetRef ref) {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
-              for (final model in models.where((m) => m.isValid))
+              for (final model in models)
                 ListTile(
                   leading: Icon(
                     model.meta!.isDecision

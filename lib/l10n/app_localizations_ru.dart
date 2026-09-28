@@ -259,7 +259,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get importGatedHint =>
-      'Закрытый репозиторий — укажите токен Hugging Face в настройках.';
+      'Репозиторий с ограниченным доступом: получите доступ на Hugging Face и добавьте токен в настройках.';
 
   @override
   String get importConfigureTitle => 'Настройка конвертации';
@@ -502,7 +502,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsEngineFlagsHint =>
-      'По одному CMF_КЛЮЧ=значение в строке, передаются движку при загрузке модели. Пусто — значения по умолчанию.';
+      'По одному CMF_KEY=value в строке. Параметры применятся при загрузке модели. Пусто — значения по умолчанию.';
 
   @override
   String get settingsServerSection => 'Сервер';
@@ -521,7 +521,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsHfToken => 'Токен доступа';
 
   @override
-  String get settingsHfTokenHint => 'hf_… (нужен для gated-моделей)';
+  String get settingsHfTokenHint =>
+      'hf_… (для моделей с ограниченным доступом)';
 
   @override
   String get settingsStorage => 'Хранилище';
@@ -911,4 +912,11 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get decisionFailed =>
       'Не удалось получить локальное решение. Проверьте, что загружены модель CMF Decision и навык.';
+
+  @override
+  String get modelKindSkill => 'Дополнение';
+
+  @override
+  String get modelSkillHelp =>
+      'Дополнение к базовой чат-модели, а не самостоятельная модель. Его нельзя открыть как чат или модель решений.';
 }

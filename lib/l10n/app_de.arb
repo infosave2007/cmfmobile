@@ -73,7 +73,7 @@
   "importReadyCmfBadge": "CMF FERTIG",
   "importNoResults": "Keine Modelle gefunden.",
   "importGatedBadge": "eingeschränkter Zugriff",
-  "importGatedHint": "Gated-Repo — hinterlege einen Hugging-Face-Token in den Einstellungen.",
+  "importGatedHint": "Repository mit eingeschränktem Zugriff: Hole die Freigabe bei Hugging Face ein und hinterlege deinen Token in den Einstellungen.",
   "importConfigureTitle": "Konvertierung konfigurieren",
   "importOutputName": "Ausgabename",
   "importOutputNameHint": "Buchstaben, Ziffern, - und _",
@@ -154,13 +154,13 @@
   "settingsDisableThinkingHint": "Reasoning-Modelle (Qwen3/3.5) antworten direkt, ohne <think>-Schritt",
   "settingsEngineSection": "Engine",
   "settingsEngineFlags": "Engine-Flags (für Fortgeschrittene)",
-  "settingsEngineFlagsHint": "Ein CMF_SCHLÜSSEL=Wert pro Zeile, beim Laden des Modells an die Laufzeit übergeben. Leer = Standardwerte.",
+  "settingsEngineFlagsHint": "Ein CMF_KEY=value pro Zeile, beim Laden an die Laufzeit übergeben. Leer = Standardwerte.",
   "settingsServerSection": "Server",
   "settingsServerPort": "Port",
   "settingsServerPortHint": "Gilt ab dem nächsten Serverstart",
   "settingsHfSection": "Hugging Face",
   "settingsHfToken": "Zugriffstoken",
-  "settingsHfTokenHint": "hf_… (für gated Modelle erforderlich)",
+  "settingsHfTokenHint": "hf_… (für Modelle mit eingeschränktem Zugriff)",
   "settingsStorage": "Speicher",
   "settingsStorageUsage": "{size} in {count} Modellen",
   "settingsAbout": "Über",
@@ -272,5 +272,7 @@
   "oracleRequestError": "Keine Orakelantwort erhalten. Prüfe deine Verbindung und die API-Einstellungen.",
   "oracleHttpError": "Der Anbieter meldet HTTP {status}. Prüfe API-Schlüssel, Modell-ID und Guthaben.",
   "oracleInvalidResponse": "Die Orakelantwort entspricht nicht den zulässigen Ergebnissen der Fähigkeit und wurde abgelehnt.",
-  "decisionFailed": "Keine lokale Entscheidung möglich. Prüfe, ob ein CMF-Decision-Modell und eine Fähigkeit geladen sind."
+  "decisionFailed": "Keine lokale Entscheidung möglich. Prüfe, ob ein CMF-Decision-Modell und eine Fähigkeit geladen sind.",
+  "modelKindSkill": "Fähigkeitserweiterung",
+  "modelSkillHelp": "Eine Erweiterung für ein Basis-Chatmodell, kein eigenständiges Modell. Nicht als Chat oder Entscheidungsmodell startbar."
 }

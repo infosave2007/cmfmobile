@@ -549,7 +549,7 @@ abstract class AppLocalizations {
   /// No description provided for @importGatedHint.
   ///
   /// In en, this message translates to:
-  /// **'Gated repo — set a Hugging Face token in Settings.'**
+  /// **'Restricted-access repository: grant access on Hugging Face, then add your token in Settings.'**
   String get importGatedHint;
 
   /// No description provided for @importConfigureTitle.
@@ -993,7 +993,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsEngineFlagsHint.
   ///
   /// In en, this message translates to:
-  /// **'One CMF_KEY=value per line, pushed to the runtime on model load. Empty = engine defaults.'**
+  /// **'One CMF_KEY=value per line, passed to the runtime on model load. Empty = defaults.'**
   String get settingsEngineFlagsHint;
 
   /// No description provided for @settingsServerSection.
@@ -1029,7 +1029,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsHfTokenHint.
   ///
   /// In en, this message translates to:
-  /// **'hf_… (needed for gated models)'**
+  /// **'hf_… (for restricted-access models)'**
   String get settingsHfTokenHint;
 
   /// No description provided for @settingsStorage.
@@ -1703,6 +1703,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not get a local decision. Check that a CMF Decision model and skill are loaded.'**
   String get decisionFailed;
+
+  /// No description provided for @modelKindSkill.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill add-on'**
+  String get modelKindSkill;
+
+  /// No description provided for @modelSkillHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'An add-on for a base chat model, not a standalone model. It cannot be opened as Chat or Decisions.'**
+  String get modelSkillHelp;
 }
 
 class _AppLocalizationsDelegate

@@ -73,7 +73,7 @@
   "importReadyCmfBadge": "现成 CMF",
   "importNoResults": "未找到模型。",
   "importGatedBadge": "访问受限",
-  "importGatedHint": "gated 仓库——请在设置中填写 Hugging Face token。",
+  "importGatedHint": "此仓库访问受限：请先在 Hugging Face 上获取访问权限，再在设置中添加令牌。",
   "importConfigureTitle": "配置转换",
   "importOutputName": "输出名称",
   "importOutputNameHint": "字母、数字、- 和 _",
@@ -160,7 +160,7 @@
   "settingsServerPortHint": "下次启动服务器时生效",
   "settingsHfSection": "Hugging Face",
   "settingsHfToken": "访问 token",
-  "settingsHfTokenHint": "hf_…(gated 模型需要)",
+  "settingsHfTokenHint": "hf_…（用于访问受限的模型）",
   "settingsStorage": "存储",
   "settingsStorageUsage": "{count} 个模型,共 {size}",
   "settingsAbout": "关于",
@@ -272,5 +272,7 @@
   "oracleRequestError": "无法获取预言机回答，请检查网络连接和 API 设置。",
   "oracleHttpError": "服务商返回 HTTP {status}。请检查 API 密钥、模型 ID 和账户余额。",
   "oracleInvalidResponse": "预言机回答不符合此技能允许的结果，未被接受。",
-  "decisionFailed": "无法获取本地决策。请确认已加载 CMF Decision 模型和技能。"
+  "decisionFailed": "无法获取本地决策。请确认已加载 CMF Decision 模型和技能。",
+  "modelKindSkill": "技能扩展",
+  "modelSkillHelp": "这是基础聊天模型的扩展，不是独立模型，不能作为聊天或决策模型打开。"
 }

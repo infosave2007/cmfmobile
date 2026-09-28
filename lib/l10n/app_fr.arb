@@ -73,7 +73,7 @@
   "importReadyCmfBadge": "CMF PRÊT",
   "importNoResults": "Aucun modèle trouvé.",
   "importGatedBadge": "accès restreint",
-  "importGatedHint": "Dépôt gated — ajoutez un token Hugging Face dans les réglages.",
+  "importGatedHint": "Dépôt à accès restreint : obtenez l’accès sur Hugging Face, puis ajoutez votre jeton dans les réglages.",
   "importConfigureTitle": "Configurer la conversion",
   "importOutputName": "Nom de sortie",
   "importOutputNameHint": "Lettres, chiffres, - et _",
@@ -154,13 +154,13 @@
   "settingsDisableThinkingHint": "Les modèles de raisonnement (Qwen3/3.5) répondent directement, sans étape <think>",
   "settingsEngineSection": "Moteur",
   "settingsEngineFlags": "Options du moteur (avancé)",
-  "settingsEngineFlagsHint": "Un CMF_CLE=valeur par ligne, transmis au moteur au chargement du modèle. Vide = valeurs par défaut.",
+  "settingsEngineFlagsHint": "Un CMF_KEY=value par ligne, transmis au moteur au chargement. Vide = valeurs par défaut.",
   "settingsServerSection": "Serveur",
   "settingsServerPort": "Port",
   "settingsServerPortHint": "Appliqué au prochain démarrage du serveur",
   "settingsHfSection": "Hugging Face",
   "settingsHfToken": "Token d'accès",
-  "settingsHfTokenHint": "hf_… (requis pour les modèles gated)",
+  "settingsHfTokenHint": "hf_… (pour les modèles à accès restreint)",
   "settingsStorage": "Stockage",
   "settingsStorageUsage": "{size} dans {count} modèles",
   "settingsAbout": "À propos",
@@ -272,5 +272,7 @@
   "oracleRequestError": "Impossible d’obtenir une réponse de l’oracle. Vérifiez la connexion et les réglages de l’API.",
   "oracleHttpError": "Le fournisseur a renvoyé HTTP {status}. Vérifiez la clé API, l’ID du modèle et le solde.",
   "oracleInvalidResponse": "La réponse de l’oracle ne correspond pas aux résultats autorisés par la compétence et a été rejetée.",
-  "decisionFailed": "Impossible d’obtenir une décision locale. Vérifiez qu’un modèle CMF Decision et une compétence sont chargés."
+  "decisionFailed": "Impossible d’obtenir une décision locale. Vérifiez qu’un modèle CMF Decision et une compétence sont chargés.",
+  "modelKindSkill": "Extension",
+  "modelSkillHelp": "Une extension pour un modèle de chat de base, pas un modèle autonome. Elle ne s’ouvre pas comme un chat ou un modèle de décision."
 }

@@ -262,7 +262,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get importGatedHint =>
-      'Dépôt gated — ajoutez un token Hugging Face dans les réglages.';
+      'Dépôt à accès restreint : obtenez l’accès sur Hugging Face, puis ajoutez votre jeton dans les réglages.';
 
   @override
   String get importConfigureTitle => 'Configurer la conversion';
@@ -507,7 +507,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settingsEngineFlagsHint =>
-      'Un CMF_CLE=valeur par ligne, transmis au moteur au chargement du modèle. Vide = valeurs par défaut.';
+      'Un CMF_KEY=value par ligne, transmis au moteur au chargement. Vide = valeurs par défaut.';
 
   @override
   String get settingsServerSection => 'Serveur';
@@ -526,7 +526,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsHfToken => 'Token d\'accès';
 
   @override
-  String get settingsHfTokenHint => 'hf_… (requis pour les modèles gated)';
+  String get settingsHfTokenHint => 'hf_… (pour les modèles à accès restreint)';
 
   @override
   String get settingsStorage => 'Stockage';
@@ -918,4 +918,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get decisionFailed =>
       'Impossible d’obtenir une décision locale. Vérifiez qu’un modèle CMF Decision et une compétence sont chargés.';
+
+  @override
+  String get modelKindSkill => 'Extension';
+
+  @override
+  String get modelSkillHelp =>
+      'Une extension pour un modèle de chat de base, pas un modèle autonome. Elle ne s’ouvre pas comme un chat ou un modèle de décision.';
 }

@@ -73,7 +73,7 @@
   "importReadyCmfBadge": "HAZIR CMF",
   "importNoResults": "Model bulunamadı.",
   "importGatedBadge": "kısıtlı erişim",
-  "importGatedHint": "Gated depo — Ayarlar'da bir Hugging Face tokenı girin.",
+  "importGatedHint": "Kısıtlı erişimli depo: Hugging Face üzerinden erişim alın, ardından Ayarlar’a belirtecinizi ekleyin.",
   "importConfigureTitle": "Dönüştürmeyi yapılandır",
   "importOutputName": "Çıktı adı",
   "importOutputNameHint": "Harf, rakam, - ve _",
@@ -154,13 +154,13 @@
   "settingsDisableThinkingHint": "Akıl yürüten modeller (Qwen3/3.5) <think> adımı olmadan doğrudan yanıt verir",
   "settingsEngineSection": "Motor",
   "settingsEngineFlags": "Motor bayrakları (gelişmiş)",
-  "settingsEngineFlagsHint": "Her satırda bir CMF_ANAHTAR=değer, model yüklenirken çalışma zamanına aktarılır. Boş = varsayılanlar.",
+  "settingsEngineFlagsHint": "Her satıra bir CMF_KEY=value yazın. Model yüklenirken uygulanır. Boş = varsayılanlar.",
   "settingsServerSection": "Sunucu",
   "settingsServerPort": "Port",
   "settingsServerPortHint": "Bir sonraki sunucu başlatmada uygulanır",
   "settingsHfSection": "Hugging Face",
   "settingsHfToken": "Erişim tokenı",
-  "settingsHfTokenHint": "hf_… (gated modeller için gerekli)",
+  "settingsHfTokenHint": "hf_… (kısıtlı erişimli modeller için)",
   "settingsStorage": "Depolama",
   "settingsStorageUsage": "{count} modelde {size}",
   "settingsAbout": "Hakkında",
@@ -272,5 +272,7 @@
   "oracleRequestError": "Oracle yanıtı alınamadı. Bağlantınızı ve API ayarlarını kontrol edin.",
   "oracleHttpError": "Sağlayıcı HTTP {status} döndürdü. API anahtarını, model kimliğini ve bakiyeyi kontrol edin.",
   "oracleInvalidResponse": "Oracle yanıtı becerinin izin verdiği sonuçlara uymadığı için kabul edilmedi.",
-  "decisionFailed": "Yerel karar alınamadı. Bir CMF Decision modeli ve beceri yüklendiğinden emin olun."
+  "decisionFailed": "Yerel karar alınamadı. Bir CMF Decision modeli ve beceri yüklendiğinden emin olun.",
+  "modelKindSkill": "Beceri eklentisi",
+  "modelSkillHelp": "Temel sohbet modeli için bir eklentidir; bağımsız model değildir. Sohbet veya karar modeli olarak açılamaz."
 }

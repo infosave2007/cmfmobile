@@ -260,7 +260,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get importGatedHint =>
-      'Repositorio gated: configura un token de Hugging Face en Ajustes.';
+      'Repositorio de acceso restringido: consigue acceso en Hugging Face y añade tu token en Ajustes.';
 
   @override
   String get importConfigureTitle => 'Configurar conversión';
@@ -505,7 +505,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsEngineFlagsHint =>
-      'Un CMF_CLAVE=valor por línea, enviado al motor al cargar el modelo. Vacío = valores por defecto.';
+      'Un CMF_KEY=value por línea, aplicado al cargar el modelo. Vacío = valores predeterminados.';
 
   @override
   String get settingsServerSection => 'Servidor';
@@ -524,7 +524,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsHfToken => 'Token de acceso';
 
   @override
-  String get settingsHfTokenHint => 'hf_… (necesario para modelos gated)';
+  String get settingsHfTokenHint => 'hf_… (para modelos de acceso restringido)';
 
   @override
   String get settingsStorage => 'Almacenamiento';
@@ -916,4 +916,11 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get decisionFailed =>
       'No se pudo obtener una decisión local. Comprueba que hay un modelo CMF Decision y una habilidad cargados.';
+
+  @override
+  String get modelKindSkill => 'Complemento';
+
+  @override
+  String get modelSkillHelp =>
+      'Complemento para un modelo de chat base, no un modelo independiente. No se puede abrir como chat ni como modelo de decisiones.';
 }

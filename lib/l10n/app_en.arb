@@ -156,7 +156,7 @@
   "importReadyCmfBadge": "READY CMF",
   "importNoResults": "No models found.",
   "importGatedBadge": "restricted access",
-  "importGatedHint": "Gated repo — set a Hugging Face token in Settings.",
+  "importGatedHint": "Restricted-access repository: grant access on Hugging Face, then add your token in Settings.",
   "importConfigureTitle": "Configure conversion",
   "importOutputName": "Output name",
   "importOutputNameHint": "Letters, digits, - and _",
@@ -237,13 +237,13 @@
   "settingsDisableThinkingHint": "Reasoning models (Qwen3/3.5) answer directly, with no <think> step",
   "settingsEngineSection": "Engine",
   "settingsEngineFlags": "Engine flags (advanced)",
-  "settingsEngineFlagsHint": "One CMF_KEY=value per line, pushed to the runtime on model load. Empty = engine defaults.",
+  "settingsEngineFlagsHint": "One CMF_KEY=value per line, passed to the runtime on model load. Empty = defaults.",
   "settingsServerSection": "Server",
   "settingsServerPort": "Port",
   "settingsServerPortHint": "Applied on next server start",
   "settingsHfSection": "Hugging Face",
   "settingsHfToken": "Access token",
-  "settingsHfTokenHint": "hf_… (needed for gated models)",
+  "settingsHfTokenHint": "hf_… (for restricted-access models)",
   "settingsStorage": "Storage",
   "settingsStorageUsage": "{size} in {count} models",
   "@settingsStorageUsage": {
@@ -421,5 +421,7 @@
         "type": "int"
       }
     }
-  }
+  },
+  "modelKindSkill": "Skill add-on",
+  "modelSkillHelp": "An add-on for a base chat model, not a standalone model. It cannot be opened as Chat or Decisions."
 }

@@ -219,7 +219,11 @@ class _ModelCard extends ConsumerWidget {
             const SizedBox(height: 4),
             if (meta != null) ...[
               Text(
-                meta.isDecision ? l.modelDecisionHelp : l.modelChatHelp,
+                meta.isDecision
+                    ? l.modelDecisionHelp
+                    : meta.isSkill
+                    ? l.modelSkillHelp
+                    : l.modelChatHelp,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 8),
@@ -230,9 +234,13 @@ class _ModelCard extends ConsumerWidget {
                   _MetaChip(
                     text: meta.isDecision
                         ? l.modelKindDecision
+                        : meta.isSkill
+                        ? l.modelKindSkill
                         : l.modelKindChat,
                     icon: meta.isDecision
                         ? Icons.account_tree_outlined
+                        : meta.isSkill
+                        ? Icons.extension_outlined
                         : Icons.chat_bubble_outline,
                     highlight: true,
                   ),
@@ -261,41 +269,45 @@ class _ModelCard extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 10),
-              Align(
-                alignment: Alignment.centerRight,
-                child: isLoading
-                    ? const Padding(
-                        padding: EdgeInsets.all(8),
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+              if (!meta.isSkill)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: isLoading
+                      ? const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : isLoaded
+                      ? Tooltip(
+                          message: l.modelsUnloadHint,
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.eject_outlined, size: 18),
+                            label: Text(l.modelsUnload),
+                            onPressed: () => ref
+                                .read(engineControllerProvider.notifier)
+                                .unload(),
+                          ),
+                        )
+                      : FilledButton.tonalIcon(
+                          icon: const Icon(Icons.play_arrow, size: 18),
+                          label: Text(
+                            meta.isDecision
+                                ? l.modelOpenDecisions
+                                : l.modelsLoadIntoEngine,
+                          ),
+                          onPressed: engineState.isLoading
+                              ? null
+                              : () => loadModelWithMemoryCheck(
+                                  context,
+                                  ref,
+                                  model,
+                                ),
                         ),
-                      )
-                    : isLoaded
-                    ? Tooltip(
-                        message: l.modelsUnloadHint,
-                        child: OutlinedButton.icon(
-                          icon: const Icon(Icons.eject_outlined, size: 18),
-                          label: Text(l.modelsUnload),
-                          onPressed: () => ref
-                              .read(engineControllerProvider.notifier)
-                              .unload(),
-                        ),
-                      )
-                    : FilledButton.tonalIcon(
-                        icon: const Icon(Icons.play_arrow, size: 18),
-                        label: Text(
-                          meta.isDecision
-                              ? l.modelOpenDecisions
-                              : l.modelsLoadIntoEngine,
-                        ),
-                        onPressed: engineState.isLoading
-                            ? null
-                            : () =>
-                                  loadModelWithMemoryCheck(context, ref, model),
-                      ),
-              ),
+                ),
             ] else
               Padding(
                 padding: const EdgeInsets.only(top: 4),

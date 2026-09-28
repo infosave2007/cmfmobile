@@ -257,7 +257,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get importGatedHint =>
-      'Gated repo — set a Hugging Face token in Settings.';
+      'Restricted-access repository: grant access on Hugging Face, then add your token in Settings.';
 
   @override
   String get importConfigureTitle => 'Configure conversion';
@@ -501,7 +501,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsEngineFlagsHint =>
-      'One CMF_KEY=value per line, pushed to the runtime on model load. Empty = engine defaults.';
+      'One CMF_KEY=value per line, passed to the runtime on model load. Empty = defaults.';
 
   @override
   String get settingsServerSection => 'Server';
@@ -519,7 +519,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsHfToken => 'Access token';
 
   @override
-  String get settingsHfTokenHint => 'hf_… (needed for gated models)';
+  String get settingsHfTokenHint => 'hf_… (for restricted-access models)';
 
   @override
   String get settingsStorage => 'Storage';
@@ -907,4 +907,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get decisionFailed =>
       'Could not get a local decision. Check that a CMF Decision model and skill are loaded.';
+
+  @override
+  String get modelKindSkill => 'Skill add-on';
+
+  @override
+  String get modelSkillHelp =>
+      'An add-on for a base chat model, not a standalone model. It cannot be opened as Chat or Decisions.';
 }

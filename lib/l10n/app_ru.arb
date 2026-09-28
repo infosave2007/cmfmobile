@@ -73,7 +73,7 @@
   "importReadyCmfBadge": "ГОТОВЫЙ CMF",
   "importNoResults": "Модели не найдены.",
   "importGatedBadge": "ограниченный доступ",
-  "importGatedHint": "Закрытый репозиторий — укажите токен Hugging Face в настройках.",
+  "importGatedHint": "Репозиторий с ограниченным доступом: получите доступ на Hugging Face и добавьте токен в настройках.",
   "importConfigureTitle": "Настройка конвертации",
   "importOutputName": "Имя файла",
   "importOutputNameHint": "Буквы, цифры, - и _",
@@ -154,13 +154,13 @@
   "settingsDisableThinkingHint": "Модели с рассуждением (Qwen3/3.5) отвечают сразу, без блока <think>",
   "settingsEngineSection": "Движок",
   "settingsEngineFlags": "Флаги движка (для опытных)",
-  "settingsEngineFlagsHint": "По одному CMF_КЛЮЧ=значение в строке, передаются движку при загрузке модели. Пусто — значения по умолчанию.",
+  "settingsEngineFlagsHint": "По одному CMF_KEY=value в строке. Параметры применятся при загрузке модели. Пусто — значения по умолчанию.",
   "settingsServerSection": "Сервер",
   "settingsServerPort": "Порт",
   "settingsServerPortHint": "Применится при следующем запуске сервера",
   "settingsHfSection": "Hugging Face",
   "settingsHfToken": "Токен доступа",
-  "settingsHfTokenHint": "hf_… (нужен для gated-моделей)",
+  "settingsHfTokenHint": "hf_… (для моделей с ограниченным доступом)",
   "settingsStorage": "Хранилище",
   "settingsStorageUsage": "{size} в {count} моделях",
   "settingsAbout": "О приложении",
@@ -272,5 +272,7 @@
   "oracleRequestError": "Не удалось получить ответ оракула. Проверьте соединение и настройки API.",
   "oracleHttpError": "Провайдер вернул HTTP {status}. Проверьте ключ API, ID модели и баланс.",
   "oracleInvalidResponse": "Ответ оракула не соответствует допустимым результатам навыка и не принят.",
-  "decisionFailed": "Не удалось получить локальное решение. Проверьте, что загружены модель CMF Decision и навык."
+  "decisionFailed": "Не удалось получить локальное решение. Проверьте, что загружены модель CMF Decision и навык.",
+  "modelKindSkill": "Дополнение",
+  "modelSkillHelp": "Дополнение к базовой чат-модели, а не самостоятельная модель. Его нельзя открыть как чат или модель решений."
 }

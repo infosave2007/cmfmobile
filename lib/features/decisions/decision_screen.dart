@@ -77,10 +77,11 @@ class _DecisionScreenState extends ConsumerState<DecisionScreen> {
       );
       if (mounted) setState(() => _oracleResult = result);
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(
           () => _error = oracleErrorMessage(e, AppLocalizations.of(context)),
         );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -153,8 +154,9 @@ class _DecisionScreenState extends ConsumerState<DecisionScreen> {
         setState(() => _result = response['body'] as Map<String, dynamic>);
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() => _error = AppLocalizations.of(context).decisionFailed);
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }

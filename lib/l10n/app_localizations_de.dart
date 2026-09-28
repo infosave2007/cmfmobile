@@ -259,7 +259,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get importGatedHint =>
-      'Gated-Repo — hinterlege einen Hugging-Face-Token in den Einstellungen.';
+      'Repository mit eingeschränktem Zugriff: Hole die Freigabe bei Hugging Face ein und hinterlege deinen Token in den Einstellungen.';
 
   @override
   String get importConfigureTitle => 'Konvertierung konfigurieren';
@@ -504,7 +504,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsEngineFlagsHint =>
-      'Ein CMF_SCHLÜSSEL=Wert pro Zeile, beim Laden des Modells an die Laufzeit übergeben. Leer = Standardwerte.';
+      'Ein CMF_KEY=value pro Zeile, beim Laden an die Laufzeit übergeben. Leer = Standardwerte.';
 
   @override
   String get settingsServerSection => 'Server';
@@ -522,7 +522,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsHfToken => 'Zugriffstoken';
 
   @override
-  String get settingsHfTokenHint => 'hf_… (für gated Modelle erforderlich)';
+  String get settingsHfTokenHint =>
+      'hf_… (für Modelle mit eingeschränktem Zugriff)';
 
   @override
   String get settingsStorage => 'Speicher';
@@ -913,4 +914,11 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get decisionFailed =>
       'Keine lokale Entscheidung möglich. Prüfe, ob ein CMF-Decision-Modell und eine Fähigkeit geladen sind.';
+
+  @override
+  String get modelKindSkill => 'Fähigkeitserweiterung';
+
+  @override
+  String get modelSkillHelp =>
+      'Eine Erweiterung für ein Basis-Chatmodell, kein eigenständiges Modell. Nicht als Chat oder Entscheidungsmodell startbar.';
 }
