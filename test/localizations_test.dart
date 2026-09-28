@@ -114,7 +114,11 @@ void main() {
           FocusManager.instance.primaryFocus?.unfocus();
           await tester.pumpAndSettle();
           final save = find.widgetWithText(FilledButton, l.oracleSave);
-          await tester.ensureVisible(save);
+          await tester.scrollUntilVisible(
+            save,
+            150,
+            scrollable: find.byType(Scrollable).first,
+          );
           await tester.pumpAndSettle();
           await tester.tap(save);
           await tester.pumpAndSettle();
