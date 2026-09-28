@@ -177,7 +177,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get modelsUnload => '卸载';
 
   @override
-  String get modelsUnloadHint => '释放内存,节省电量';
+  String get modelsUnloadHint => '释放模型占用的内存';
 
   @override
   String get modelsDeleteTitle => '删除模型';
@@ -248,7 +248,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get importNoResults => '未找到模型。';
 
   @override
-  String get importGatedBadge => 'gated';
+  String get importGatedBadge => '访问受限';
 
   @override
   String get importGatedHint => 'gated 仓库——请在设置中填写 Hugging Face token。';
@@ -347,7 +347,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverTitle => '服务器';
 
   @override
-  String get serverSubtitle => '通过 CMF 协议(兼容 OpenAI 的 API)向局域网提供已加载的模型。';
+  String get serverSubtitle => '通过网络共享已加载的模型：根据模型类型提供聊天或决策 API。';
 
   @override
   String get serverStart => '启动服务器';
@@ -401,7 +401,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverRecentRequests => '最近请求';
 
   @override
-  String get serverNoRequestsYet => '暂无请求。将任意兼容 OpenAI 的客户端指向这台手机即可。';
+  String get serverNoRequestsYet => '暂无请求，请通过下方端点连接客户端。';
 
   @override
   String get serverKeepAwakeNote => '服务器运行期间屏幕保持常亮。';
@@ -462,7 +462,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsUseGpuHint =>
-      '启用独立 GPU（下次加载模型时生效）。设备上首次 GPU 回答需要编译驱动着色器——可能耗时几分钟，仅此一次；结果会被缓存。';
+      '为聊天模型使用设备 GPU（下次加载时生效）。首次运行可能需要几分钟来编译并缓存着色器。CMF Decision 目前在手机上使用 CPU。';
 
   @override
   String get settingsUseGpuNeedsBackend =>
@@ -734,16 +734,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get decisionBalanced => '均衡';
 
   @override
-  String get decisionCareful => '谨慎：不确定时拒绝';
+  String get decisionCareful => '不确定时不作决策';
 
   @override
-  String get decisionBestEffort => '最佳猜测：允许不确定结果';
+  String get decisionBestEffort => '允许不确定的决策';
 
   @override
   String get decisionRun => '开始决策';
 
   @override
-  String get decisionAccepted => '已接受决策';
+  String get decisionAccepted => '决策已通过置信度检查';
 
   @override
   String get decisionAbstained => '置信度不足';
@@ -755,10 +755,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get decisionConfidence => '置信度分数';
 
   @override
-  String get decisionTotal => '完整请求';
+  String get decisionTotal => '总耗时';
 
   @override
-  String get decisionResonance => '仅共振';
+  String get decisionResonance => '共振耗时';
 
   @override
   String get decisionExplain => '为何做出此决策？';
@@ -808,4 +808,60 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get oracleManual => '默认关闭 · 每次请求需确认';
+
+  @override
+  String get modelKindDecision => '决策';
+
+  @override
+  String get modelKindChat => '聊天';
+
+  @override
+  String get modelDecisionHelp => '选择选项或不作决策，不生成聊天回复。';
+
+  @override
+  String get modelChatHelp => '生成文本并回复消息。';
+
+  @override
+  String get modelOpenDecisions => '打开决策';
+
+  @override
+  String get skillBanking => '银行业务咨询';
+
+  @override
+  String get skillAssistant => '助手请求';
+
+  @override
+  String get skillCommands => '设备命令';
+
+  @override
+  String get oracleApiUrl => 'API 基础 URL';
+
+  @override
+  String get oracleApiKey => 'API 密钥';
+
+  @override
+  String get oracleStorageError => '安全存储不可用，请重试。';
+
+  @override
+  String get oracleUrlError => '请使用 HTTPS 基础 URL，不含凭据、查询参数或片段。';
+
+  @override
+  String get oracleModelError => '请输入模型 ID，不超过 200 个字符。';
+
+  @override
+  String get oracleKeyError => '请输入 API 密钥，不要包含空格。';
+
+  @override
+  String get oracleRequestError => '无法获取预言机回答，请检查网络连接和 API 设置。';
+
+  @override
+  String oracleHttpError(int status) {
+    return '服务商返回 HTTP $status。请检查 API 密钥、模型 ID 和账户余额。';
+  }
+
+  @override
+  String get oracleInvalidResponse => '预言机回答不符合此技能允许的结果，未被接受。';
+
+  @override
+  String get decisionFailed => '无法获取本地决策。请确认已加载 CMF Decision 模型和技能。';
 }

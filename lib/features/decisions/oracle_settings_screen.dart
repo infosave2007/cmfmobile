@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../data/services/decision_oracle.dart';
 import '../../l10n/app_localizations.dart';
+import 'oracle_error_message.dart';
 
 class OracleSettingsScreen extends StatefulWidget {
   const OracleSettingsScreen({super.key});
@@ -35,7 +36,7 @@ class _OracleSettingsScreenState extends State<OracleSettingsScreen> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          _error = 'Secure storage is unavailable';
+          _error = AppLocalizations.of(context).oracleStorageError;
           _loading = false;
         });
       }
@@ -58,7 +59,32 @@ class _OracleSettingsScreenState extends State<OracleSettingsScreen> {
       );
       if (mounted) Navigator.pop(context);
     } catch (e) {
-      if (mounted) setState(() => _error = '$e');
+      if (mounted)
+        setState(
+          () => _error = e is OracleValidationException
+              ? oracleErrorMessage(e, AppLocalizations.of(context))
+              : AppLocalizations.of(context).oracleStorageError,
+        );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _clear() async {
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      await _store.clear();
+      if (!mounted) return;
+      _key.clear();
+      await _load();
+    } catch (_) {
+      if (mounted)
+        setState(
+          () => _error = AppLocalizations.of(context).oracleStorageError,
+        );
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -96,8 +122,8 @@ class _OracleSettingsScreenState extends State<OracleSettingsScreen> {
                   enabled: !_saving,
                   keyboardType: TextInputType.url,
                   autocorrect: false,
-                  decoration: const InputDecoration(
-                    labelText: 'API URL',
+                  decoration: InputDecoration(
+                    labelText: l.oracleApiUrl,
                     hintText: 'https://openrouter.ai/api/v1',
                   ),
                 ),
@@ -115,7 +141,7 @@ class _OracleSettingsScreenState extends State<OracleSettingsScreen> {
                   obscureText: true,
                   autocorrect: false,
                   enableSuggestions: false,
-                  decoration: const InputDecoration(labelText: 'API key'),
+                  decoration: InputDecoration(labelText: l.oracleApiKey),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -138,13 +164,7 @@ class _OracleSettingsScreenState extends State<OracleSettingsScreen> {
                   child: Text(l.oracleSave),
                 ),
                 TextButton(
-                  onPressed: _saving
-                      ? null
-                      : () async {
-                          await _store.clear();
-                          _key.clear();
-                          await _load();
-                        },
+                  onPressed: _saving ? null : _clear,
                   child: Text(l.oracleDelete),
                 ),
               ],

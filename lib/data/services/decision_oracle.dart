@@ -2,6 +2,24 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
+enum OracleValidationIssue { url, model, key }
+
+/// Typed errors let the UI translate messages without matching English text.
+class OracleValidationException extends FormatException {
+  const OracleValidationException(this.issue, String message) : super(message);
+  final OracleValidationIssue issue;
+}
+
+class OracleResponseException extends StateError {
+  OracleResponseException.http(int status)
+    : statusCode = status,
+      super('Oracle HTTP $status; check API settings');
+  OracleResponseException.invalid()
+    : statusCode = null,
+      super('Invalid or incomplete oracle response');
+  final int? statusCode;
+}
+
 class OracleSettings {
   const OracleSettings({
     this.enabled = false,
@@ -21,15 +39,22 @@ class OracleSettings {
         url.userInfo.isNotEmpty ||
         url.hasQuery ||
         url.hasFragment) {
-      throw const FormatException(
+      throw const OracleValidationException(
+        OracleValidationIssue.url,
         'Use an HTTPS API base URL without credentials, query or fragment',
       );
     }
     if (model.trim().isEmpty || model.length > 200) {
-      throw const FormatException('Enter a model ID');
+      throw const OracleValidationException(
+        OracleValidationIssue.model,
+        'Enter a model ID',
+      );
     }
     if (enabled && (apiKey.trim().isEmpty || RegExp(r'\s').hasMatch(apiKey))) {
-      throw const FormatException('Enter an API key without spaces');
+      throw const OracleValidationException(
+        OracleValidationIssue.key,
+        'Enter an API key without spaces',
+      );
     }
   }
 
@@ -139,29 +164,27 @@ class DecisionOracle {
         final response = await client.send(request);
         // Never reflect upstream bodies: they can echo credentials or input.
         if (response.statusCode != 200) {
-          throw StateError(
-            'Oracle HTTP ${response.statusCode}; check API settings',
-          );
+          throw OracleResponseException.http(response.statusCode);
         }
         final bytes = <int>[];
         await for (final chunk in response.stream) {
           bytes.addAll(chunk);
           if (bytes.length > 1024 * 1024) {
-            throw StateError('Oracle response too large');
+            throw OracleResponseException.invalid();
           }
         }
         final value = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
         final choice =
             (value['choices'] as List).single as Map<String, dynamic>;
         if (choice['finish_reason'] != 'stop') {
-          throw StateError('Oracle response is incomplete');
+          throw OracleResponseException.invalid();
         }
         final answer = jsonDecode(choice['message']['content'] as String);
         if (answer is! Map ||
             answer.length != 1 ||
             !answer.containsKey('label') ||
             (answer['label'] != null && !labels.contains(answer['label']))) {
-          throw StateError('Oracle returned a label outside the skill');
+          throw OracleResponseException.invalid();
         }
         final usage = value['usage'] as Map? ?? {};
         return {
@@ -174,7 +197,9 @@ class DecisionOracle {
         };
       })().timeout(const Duration(seconds: 30));
     } on FormatException {
-      throw StateError('Invalid oracle JSON response');
+      throw OracleResponseException.invalid();
+    } on TypeError {
+      throw OracleResponseException.invalid();
     } finally {
       client.close();
     }

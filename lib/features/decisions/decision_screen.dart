@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../data/services/decision_oracle.dart';
 import 'oracle_settings_screen.dart';
+import 'oracle_error_message.dart';
 import '../../l10n/app_localizations.dart';
 import '../chat/model_picker_sheet.dart';
 
@@ -76,7 +77,10 @@ class _DecisionScreenState extends ConsumerState<DecisionScreen> {
       );
       if (mounted) setState(() => _oracleResult = result);
     } catch (e) {
-      if (mounted) setState(() => _error = '$e');
+      if (mounted)
+        setState(
+          () => _error = oracleErrorMessage(e, AppLocalizations.of(context)),
+        );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -118,7 +122,7 @@ class _DecisionScreenState extends ConsumerState<DecisionScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = '$e';
+          _error = AppLocalizations.of(context).decisionFailed;
           _loading = false;
         });
       }
@@ -149,11 +153,19 @@ class _DecisionScreenState extends ConsumerState<DecisionScreen> {
         setState(() => _result = response['body'] as Map<String, dynamic>);
       }
     } catch (e) {
-      if (mounted) setState(() => _error = '$e');
+      if (mounted)
+        setState(() => _error = AppLocalizations.of(context).decisionFailed);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
+
+  String _skillTitle(String skill, AppLocalizations l) => switch (skill) {
+    'banking77' => l.skillBanking,
+    'clinc150' => l.skillAssistant,
+    'massive' => l.skillCommands,
+    _ => skill,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -187,6 +199,11 @@ class _DecisionScreenState extends ConsumerState<DecisionScreen> {
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
         children: [
           Text(
+            ref.watch(engineControllerProvider).loadedModelId ?? '',
+            style: Theme.of(context).textTheme.labelMedium,
+          ),
+          const SizedBox(height: 8),
+          Text(
             l.decisionSubtitle,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
@@ -200,19 +217,29 @@ class _DecisionScreenState extends ConsumerState<DecisionScreen> {
               decoration: InputDecoration(labelText: l.decisionSkill),
               items: [
                 for (final skill in _skills)
-                  DropdownMenuItem(value: skill, child: Text(skill)),
+                  DropdownMenuItem(
+                    value: skill,
+                    child: Text(_skillTitle(skill, l)),
+                  ),
               ],
               onChanged: _busy
                   ? null
                   : (value) => setState(() {
                       _skill = value;
                       _result = null;
+                      _oracleResult = null;
+                      _error = null;
                     }),
             ),
             const SizedBox(height: 14),
             TextField(
               key: const Key('decision-input'),
               controller: _input,
+              onChanged: (_) => setState(() {
+                _result = null;
+                _oracleResult = null;
+                _error = null;
+              }),
               minLines: 3,
               maxLines: 7,
               maxLength: 2000,
@@ -232,7 +259,11 @@ class _DecisionScreenState extends ConsumerState<DecisionScreen> {
                       ? null
                       : () {
                           _input.text = examples[_skill]!;
-                          setState(() => _result = null);
+                          setState(() {
+                            _result = null;
+                            _oracleResult = null;
+                            _error = null;
+                          });
                         },
                 ),
               ),
@@ -260,12 +291,14 @@ class _DecisionScreenState extends ConsumerState<DecisionScreen> {
                   : (value) => setState(() {
                       _profile = value!;
                       _result = null;
+                      _oracleResult = null;
+                      _error = null;
                     }),
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
               key: const Key('decision-run'),
-              onPressed: _busy ? null : _decide,
+              onPressed: _busy || _input.text.trim().isEmpty ? null : _decide,
               icon: _busy
                   ? const SizedBox(
                       width: 18,

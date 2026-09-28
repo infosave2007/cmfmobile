@@ -18,10 +18,10 @@ class ModelsScreen extends ConsumerWidget {
     if (path == null || !context.mounted) return;
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final model =
-        await ref.read(modelsProvider.notifier).importFile(path);
+    final model = await ref.read(modelsProvider.notifier).importFile(path);
     messenger.showSnackBar(
-        SnackBar(content: Text(l.modelsImportedSnack(model.id))));
+      SnackBar(content: Text(l.modelsImportedSnack(model.id))),
+    );
   }
 
   @override
@@ -49,8 +49,7 @@ class ModelsScreen extends ConsumerWidget {
             label: Text(l.modelsGetFromHf),
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute<void>(
-                  builder: (_) => const ImportScreen()),
+              MaterialPageRoute<void>(builder: (_) => const ImportScreen()),
             ),
           ),
         ],
@@ -66,10 +65,8 @@ class ModelsScreen extends ConsumerWidget {
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
                   itemCount: models.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
-                  itemBuilder: (context, i) => _ModelCard(
-                    model: models[i],
-                    engineState: engineState,
-                  ),
+                  itemBuilder: (context, i) =>
+                      _ModelCard(model: models[i], engineState: engineState),
                 ),
         ),
       ),
@@ -96,19 +93,23 @@ class _EmptyLibrary extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.layers_outlined,
-                      size: 56, color: scheme.onSurfaceVariant),
+                  Icon(
+                    Icons.layers_outlined,
+                    size: 56,
+                    color: scheme.onSurfaceVariant,
+                  ),
                   const SizedBox(height: 16),
-                  Text(l.modelsEmptyTitle,
-                      style: Theme.of(context).textTheme.titleLarge),
+                  Text(
+                    l.modelsEmptyTitle,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     l.modelsEmptyBody,
                     textAlign: TextAlign.center,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: scheme.onSurfaceVariant),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -150,17 +151,18 @@ class _ModelCard extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     model.id,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 if (isLoaded)
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: scheme.primary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
@@ -168,9 +170,10 @@ class _ModelCard extends ConsumerWidget {
                     child: Text(
                       l.modelsLoadedBadge,
                       style: TextStyle(
-                          fontSize: 11,
-                          color: scheme.primary,
-                          fontWeight: FontWeight.w600),
+                        fontSize: 11,
+                        color: scheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 PopupMenuButton<String>(
@@ -180,8 +183,7 @@ class _ModelCard extends ConsumerWidget {
                         context: context,
                         builder: (dialogContext) => AlertDialog(
                           title: Text(l.modelsDeleteTitle),
-                          content:
-                              Text(l.modelsDeleteConfirm(model.id)),
+                          content: Text(l.modelsDeleteConfirm(model.id)),
                           actions: [
                             TextButton(
                               onPressed: () =>
@@ -190,10 +192,10 @@ class _ModelCard extends ConsumerWidget {
                             ),
                             FilledButton(
                               style: FilledButton.styleFrom(
-                                  backgroundColor:
-                                      Theme.of(dialogContext)
-                                          .colorScheme
-                                          .error),
+                                backgroundColor: Theme.of(
+                                  dialogContext,
+                                ).colorScheme.error,
+                              ),
                               onPressed: () =>
                                   Navigator.pop(dialogContext, true),
                               child: Text(l.actionDelete),
@@ -209,34 +211,53 @@ class _ModelCard extends ConsumerWidget {
                     }
                   },
                   itemBuilder: (context) => [
-                    PopupMenuItem(
-                        value: 'delete', child: Text(l.actionDelete)),
+                    PopupMenuItem(value: 'delete', child: Text(l.actionDelete)),
                   ],
                 ),
               ],
             ),
             const SizedBox(height: 4),
             if (meta != null) ...[
+              Text(
+                meta.isDecision ? l.modelDecisionHelp : l.modelChatHelp,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 8),
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
                 children: [
-                  _MetaChip(text: meta.archName),
+                  _MetaChip(
+                    text: meta.isDecision
+                        ? l.modelKindDecision
+                        : l.modelKindChat,
+                    icon: meta.isDecision
+                        ? Icons.account_tree_outlined
+                        : Icons.chat_bubble_outline,
+                    highlight: true,
+                  ),
+                  if (!meta.isDecision) _MetaChip(text: meta.archName),
                   _MetaChip(text: meta.quantType),
                   _MetaChip(text: formatBytes(model.sizeBytes)),
-                  if (meta.isDecision) _MetaChip(text: l.decisionTitle, highlight: true)
-                  else _MetaChip(text: l.modelsMetaLayers(meta.numLayers)),
+                  if (!meta.isDecision)
+                    _MetaChip(text: l.modelsMetaLayers(meta.numLayers)),
                   if (meta.contextLength > 0)
                     _MetaChip(
-                        text: l.modelsMetaContext(
-                            formatCount(meta.contextLength))),
+                      text: l.modelsMetaContext(
+                        formatCount(meta.contextLength),
+                      ),
+                    ),
                   _MetaChip(text: l.modelsMetaRam(formatBytes(ramEstimate))),
                   if (meta.tasks.isNotEmpty)
                     _MetaChip(
-                        text: l.modelsMetaTasks(meta.tasks.length),
-                        highlight: true),
+                      text: l.modelsMetaTasks(meta.tasks.length),
+                      highlight: true,
+                    ),
                   if (meta.supportsAttachments)
-                    _MetaChip(text: l.modelsAttachmentsOk, icon: Icons.attach_file),
+                    _MetaChip(
+                      text: l.modelsAttachmentsOk,
+                      icon: Icons.attach_file,
+                    ),
                 ],
               ),
               const SizedBox(height: 10),
@@ -252,37 +273,40 @@ class _ModelCard extends ConsumerWidget {
                         ),
                       )
                     : isLoaded
-                        ? Tooltip(
-                            message: l.modelsUnloadHint,
-                            child: OutlinedButton.icon(
-                              icon: const Icon(Icons.eject_outlined,
-                                  size: 18),
-                              label: Text(l.modelsUnload),
-                              onPressed: () => ref
-                                  .read(engineControllerProvider.notifier)
-                                  .unload(),
-                            ),
-                          )
-                        : FilledButton.tonalIcon(
-                            icon: const Icon(Icons.play_arrow, size: 18),
-                            label: Text(l.modelsLoadIntoEngine),
-                            onPressed: () => loadModelWithMemoryCheck(
-                                context, ref, model),
-                          ),
+                    ? Tooltip(
+                        message: l.modelsUnloadHint,
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.eject_outlined, size: 18),
+                          label: Text(l.modelsUnload),
+                          onPressed: () => ref
+                              .read(engineControllerProvider.notifier)
+                              .unload(),
+                        ),
+                      )
+                    : FilledButton.tonalIcon(
+                        icon: const Icon(Icons.play_arrow, size: 18),
+                        label: Text(
+                          meta.isDecision
+                              ? l.modelOpenDecisions
+                              : l.modelsLoadIntoEngine,
+                        ),
+                        onPressed: engineState.isLoading
+                            ? null
+                            : () =>
+                                  loadModelWithMemoryCheck(context, ref, model),
+                      ),
               ),
             ] else
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Row(
                   children: [
-                    Icon(Icons.error_outline,
-                        size: 16, color: scheme.error),
+                    Icon(Icons.error_outline, size: 16, color: scheme.error),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         '${l.modelsInvalidFile} — ${model.metaError}',
-                        style: TextStyle(
-                            fontSize: 12, color: scheme.error),
+                        style: TextStyle(fontSize: 12, color: scheme.error),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -318,10 +342,7 @@ class _MetaChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (icon != null) ...[
-            Icon(icon, size: 11),
-            const SizedBox(width: 3),
-          ],
+          if (icon != null) ...[Icon(icon, size: 11), const SizedBox(width: 3)],
           Text(
             text,
             style: TextStyle(

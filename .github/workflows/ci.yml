@@ -2,9 +2,13 @@ name: CI
 
 on:
   push:
-    branches: [master, "codex/mobile-decision-0-8"]
+    branches: [master]
   pull_request:
     branches: [master]
+
+concurrency:
+  group: ci-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check:

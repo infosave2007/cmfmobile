@@ -71,8 +71,14 @@ class HomeShell extends ConsumerWidget {
               ref.read(shellIndexProvider.notifier).select(i),
           destinations: [
             NavigationDestination(
-              icon: const Icon(Icons.chat_bubble_outline),
-              selectedIcon: const Icon(Icons.chat_bubble),
+              icon: Icon(
+                decision
+                    ? Icons.account_tree_outlined
+                    : Icons.chat_bubble_outline,
+              ),
+              selectedIcon: Icon(
+                decision ? Icons.account_tree : Icons.chat_bubble,
+              ),
               label: decision ? l.decisionTitle : l.navChat,
             ),
             NavigationDestination(

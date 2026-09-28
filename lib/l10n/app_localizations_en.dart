@@ -181,7 +181,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get modelsUnload => 'Unload';
 
   @override
-  String get modelsUnloadHint => 'Frees memory and battery';
+  String get modelsUnloadHint => 'Frees model memory';
 
   @override
   String get modelsDeleteTitle => 'Delete model';
@@ -253,7 +253,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importNoResults => 'No models found.';
 
   @override
-  String get importGatedBadge => 'gated';
+  String get importGatedBadge => 'restricted access';
 
   @override
   String get importGatedHint =>
@@ -361,7 +361,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverSubtitle =>
-      'Serve the loaded model to your network over the CMF protocol (OpenAI-compatible API).';
+      'Share the loaded model on your network: chat or decision API, depending on the model.';
 
   @override
   String get serverStart => 'Start server';
@@ -418,7 +418,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverNoRequestsYet =>
-      'No requests yet. Point any OpenAI-compatible client at this phone.';
+      'No requests yet. Connect a client using the endpoints below.';
 
   @override
   String get serverKeepAwakeNote =>
@@ -480,7 +480,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsUseGpuHint =>
-      'Enable the discrete GPU (applies at the next model load). The first GPU answer on a device compiles the driver\'s shaders — this can take several minutes, once; the result is cached.';
+      'Use the device GPU for chat models (applies on next load). The first run may take several minutes to compile and cache shaders. CMF Decision currently uses the CPU on phones.';
 
   @override
   String get settingsUseGpuNeedsBackend =>
@@ -766,10 +766,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get decisionBalanced => 'Balanced';
 
   @override
-  String get decisionCareful => 'Careful — abstain when uncertain';
+  String get decisionCareful => 'Abstain when uncertain';
 
   @override
-  String get decisionBestEffort => 'Best effort — may accept uncertain cases';
+  String get decisionBestEffort => 'Allow uncertain decisions';
 
   @override
   String get decisionRun => 'Decide';
@@ -788,10 +788,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get decisionConfidence => 'Confidence score';
 
   @override
-  String get decisionTotal => 'Full request';
+  String get decisionTotal => 'Total time';
 
   @override
-  String get decisionResonance => 'Resonance only';
+  String get decisionResonance => 'Resonance time';
 
   @override
   String get decisionExplain => 'Why this decision?';
@@ -846,4 +846,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get oracleManual => 'Off by default · confirmation per request';
+
+  @override
+  String get modelKindDecision => 'Decisions';
+
+  @override
+  String get modelKindChat => 'Chat';
+
+  @override
+  String get modelDecisionHelp =>
+      'Chooses a label or abstains. Does not write chat replies.';
+
+  @override
+  String get modelChatHelp => 'Generates text and answers messages.';
+
+  @override
+  String get modelOpenDecisions => 'Open decisions';
+
+  @override
+  String get skillBanking => 'Banking support';
+
+  @override
+  String get skillAssistant => 'Assistant requests';
+
+  @override
+  String get skillCommands => 'Device commands';
+
+  @override
+  String get oracleApiUrl => 'API base URL';
+
+  @override
+  String get oracleApiKey => 'API key';
+
+  @override
+  String get oracleStorageError => 'Secure storage is unavailable. Try again.';
+
+  @override
+  String get oracleUrlError =>
+      'Use an HTTPS base URL without credentials, query parameters or a fragment.';
+
+  @override
+  String get oracleModelError => 'Enter a model ID (up to 200 characters).';
+
+  @override
+  String get oracleKeyError => 'Enter an API key without spaces.';
+
+  @override
+  String get oracleRequestError =>
+      'Could not get an oracle answer. Check your connection and API settings.';
+
+  @override
+  String oracleHttpError(int status) {
+    return 'Provider returned HTTP $status. Check your API key, model ID and account balance.';
+  }
+
+  @override
+  String get oracleInvalidResponse =>
+      'The oracle answer did not match the skill’s allowed results and was not accepted.';
+
+  @override
+  String get decisionFailed =>
+      'Could not get a local decision. Check that a CMF Decision model and skill are loaded.';
 }

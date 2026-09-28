@@ -184,7 +184,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get modelsUnload => 'Expulsar';
 
   @override
-  String get modelsUnloadHint => 'Libera memoria y ahorra batería';
+  String get modelsUnloadHint => 'Libera la memoria del modelo';
 
   @override
   String get modelsDeleteTitle => 'Eliminar modelo';
@@ -256,7 +256,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get importNoResults => 'No se encontraron modelos.';
 
   @override
-  String get importGatedBadge => 'gated';
+  String get importGatedBadge => 'acceso restringido';
 
   @override
   String get importGatedHint =>
@@ -364,7 +364,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get serverSubtitle =>
-      'Sirve el modelo cargado a tu red mediante el protocolo CMF (API compatible con OpenAI).';
+      'Comparte el modelo cargado en la red: API de chat o de decisiones, según el modelo.';
 
   @override
   String get serverStart => 'Iniciar servidor';
@@ -422,7 +422,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get serverNoRequestsYet =>
-      'Aún no hay peticiones. Apunta cualquier cliente compatible con OpenAI a este teléfono.';
+      'Aún no hay solicitudes. Conecta un cliente mediante los puntos de acceso que aparecen abajo.';
 
   @override
   String get serverKeepAwakeNote =>
@@ -484,7 +484,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsUseGpuHint =>
-      'Activar la GPU discreta (se aplica en la próxima carga del modelo). La primera respuesta con GPU compila los sombreadores del controlador: puede tardar varios minutos, una sola vez; el resultado se guarda en caché.';
+      'Usa la GPU del dispositivo para modelos de chat (en la próxima carga). El primer inicio puede tardar varios minutos en compilar y guardar los sombreadores. CMF Decision usa actualmente la CPU en los teléfonos.';
 
   @override
   String get settingsUseGpuNeedsBackend =>
@@ -772,10 +772,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get decisionBalanced => 'Equilibrada';
 
   @override
-  String get decisionCareful => 'Prudente — abstenerse ante dudas';
+  String get decisionCareful => 'Abstenerse ante dudas';
 
   @override
-  String get decisionBestEffort => 'Mejor estimación — acepta incertidumbre';
+  String get decisionBestEffort => 'Permitir incertidumbre';
 
   @override
   String get decisionRun => 'Decidir';
@@ -794,10 +794,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get decisionConfidence => 'Puntuación de confianza';
 
   @override
-  String get decisionTotal => 'Solicitud completa';
+  String get decisionTotal => 'Tiempo total';
 
   @override
-  String get decisionResonance => 'Solo resonancia';
+  String get decisionResonance => 'Tiempo de resonancia';
 
   @override
   String get decisionExplain => '¿Por qué esta decisión?';
@@ -853,4 +853,67 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get oracleManual =>
       'Desactivado por defecto · confirmar cada solicitud';
+
+  @override
+  String get modelKindDecision => 'Decisiones';
+
+  @override
+  String get modelKindChat => 'Chat';
+
+  @override
+  String get modelDecisionHelp =>
+      'Elige una opción o se abstiene. No genera respuestas de chat.';
+
+  @override
+  String get modelChatHelp => 'Genera texto y responde a los mensajes.';
+
+  @override
+  String get modelOpenDecisions => 'Abrir decisiones';
+
+  @override
+  String get skillBanking => 'Consultas bancarias';
+
+  @override
+  String get skillAssistant => 'Peticiones al asistente';
+
+  @override
+  String get skillCommands => 'Órdenes al dispositivo';
+
+  @override
+  String get oracleApiUrl => 'URL base de la API';
+
+  @override
+  String get oracleApiKey => 'Clave de API';
+
+  @override
+  String get oracleStorageError =>
+      'El almacenamiento seguro no está disponible. Inténtalo de nuevo.';
+
+  @override
+  String get oracleUrlError =>
+      'Usa una URL base HTTPS sin credenciales, parámetros ni fragmento.';
+
+  @override
+  String get oracleModelError =>
+      'Introduce un ID de modelo de hasta 200 caracteres.';
+
+  @override
+  String get oracleKeyError => 'Introduce una clave de API sin espacios.';
+
+  @override
+  String get oracleRequestError =>
+      'No se pudo obtener una respuesta del oráculo. Revisa la conexión y la configuración de la API.';
+
+  @override
+  String oracleHttpError(int status) {
+    return 'El proveedor devolvió HTTP $status. Revisa la clave de API, el ID del modelo y el saldo.';
+  }
+
+  @override
+  String get oracleInvalidResponse =>
+      'La respuesta del oráculo no cumple los resultados permitidos de la habilidad y no se ha aceptado.';
+
+  @override
+  String get decisionFailed =>
+      'No se pudo obtener una decisión local. Comprueba que hay un modelo CMF Decision y una habilidad cargados.';
 }

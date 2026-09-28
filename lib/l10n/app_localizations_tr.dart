@@ -182,7 +182,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get modelsUnload => 'Bellekten çıkar';
 
   @override
-  String get modelsUnloadHint => 'Belleği boşaltır, pil tasarrufu sağlar';
+  String get modelsUnloadHint => 'Modelin kullandığı belleği boşaltır';
 
   @override
   String get modelsDeleteTitle => 'Modeli sil';
@@ -254,7 +254,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get importNoResults => 'Model bulunamadı.';
 
   @override
-  String get importGatedBadge => 'gated';
+  String get importGatedBadge => 'kısıtlı erişim';
 
   @override
   String get importGatedHint =>
@@ -361,7 +361,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get serverSubtitle =>
-      'Yüklü modeli CMF protokolüyle (OpenAI uyumlu API) ağınıza sunun.';
+      'Yüklü modeli ağınızda paylaşın: modele göre sohbet veya karar API’si.';
 
   @override
   String get serverStart => 'Sunucuyu başlat';
@@ -419,7 +419,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get serverNoRequestsYet =>
-      'Henüz istek yok. OpenAI uyumlu herhangi bir istemciyi bu telefona yönlendirin.';
+      'Henüz istek yok. Aşağıdaki uç noktalar üzerinden bir istemci bağlayın.';
 
   @override
   String get serverKeepAwakeNote => 'Sunucu çalışırken ekran açık kalır.';
@@ -480,7 +480,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsUseGpuHint =>
-      'Ayrık GPU\'yu etkinleştir (bir sonraki model yüklemesinde geçerli olur). Cihazdaki ilk GPU yanıtı sürücünün gölgelendiricilerini derler — bu bir kereliğine birkaç dakika sürebilir; sonuç önbelleğe alınır.';
+      'Sohbet modelleri için cihazın GPU’sunu kullanın (sonraki yüklemede uygulanır). İlk çalıştırmada gölgelendiricilerin derlenip önbelleğe alınması birkaç dakika sürebilir. CMF Decision şu anda telefonlarda CPU kullanır.';
 
   @override
   String get settingsUseGpuNeedsBackend =>
@@ -767,10 +767,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get decisionBalanced => 'Dengeli';
 
   @override
-  String get decisionCareful => 'Temkinli — belirsizlikte karar verme';
+  String get decisionCareful => 'Belirsizlikte karar verme';
 
   @override
-  String get decisionBestEffort => 'En iyi tahmin — belirsizliği kabul et';
+  String get decisionBestEffort => 'Belirsizliğe izin ver';
 
   @override
   String get decisionRun => 'Karar ver';
@@ -789,10 +789,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get decisionConfidence => 'Güven puanı';
 
   @override
-  String get decisionTotal => 'Tüm istek';
+  String get decisionTotal => 'Toplam süre';
 
   @override
-  String get decisionResonance => 'Yalnızca rezonans';
+  String get decisionResonance => 'Rezonans süresi';
 
   @override
   String get decisionExplain => 'Neden bu karar?';
@@ -847,4 +847,67 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get oracleManual => 'Varsayılan olarak kapalı · her istekte onay';
+
+  @override
+  String get modelKindDecision => 'Kararlar';
+
+  @override
+  String get modelKindChat => 'Sohbet';
+
+  @override
+  String get modelDecisionHelp =>
+      'Bir seçenek seçer veya karar vermez. Sohbet yanıtı yazmaz.';
+
+  @override
+  String get modelChatHelp => 'Metin üretir ve mesajları yanıtlar.';
+
+  @override
+  String get modelOpenDecisions => 'Kararları aç';
+
+  @override
+  String get skillBanking => 'Banka desteği';
+
+  @override
+  String get skillAssistant => 'Asistan istekleri';
+
+  @override
+  String get skillCommands => 'Cihaz komutları';
+
+  @override
+  String get oracleApiUrl => 'API temel URL’si';
+
+  @override
+  String get oracleApiKey => 'API anahtarı';
+
+  @override
+  String get oracleStorageError =>
+      'Güvenli depolama kullanılamıyor. Yeniden deneyin.';
+
+  @override
+  String get oracleUrlError =>
+      'Kimlik bilgisi, sorgu parametresi veya parça içermeyen bir HTTPS temel URL’si kullanın.';
+
+  @override
+  String get oracleModelError =>
+      'En fazla 200 karakterden oluşan bir model kimliği girin.';
+
+  @override
+  String get oracleKeyError => 'Boşluk içermeyen bir API anahtarı girin.';
+
+  @override
+  String get oracleRequestError =>
+      'Oracle yanıtı alınamadı. Bağlantınızı ve API ayarlarını kontrol edin.';
+
+  @override
+  String oracleHttpError(int status) {
+    return 'Sağlayıcı HTTP $status döndürdü. API anahtarını, model kimliğini ve bakiyeyi kontrol edin.';
+  }
+
+  @override
+  String get oracleInvalidResponse =>
+      'Oracle yanıtı becerinin izin verdiği sonuçlara uymadığı için kabul edilmedi.';
+
+  @override
+  String get decisionFailed =>
+      'Yerel karar alınamadı. Bir CMF Decision modeli ve beceri yüklendiğinden emin olun.';
 }
