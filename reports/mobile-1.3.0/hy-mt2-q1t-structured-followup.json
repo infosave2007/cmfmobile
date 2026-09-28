@@ -1,0 +1,40 @@
+{
+  "model": "hy-mt2-1.8b-q1t",
+  "file_bytes": 694894587,
+  "file_sha256": "aeb52bf287fb52f6e67f452dd72302087420f3b9e2081ed0cb86fd65cf289424",
+  "runtime": "0.8.0",
+  "app_code_commit": "c415256",
+  "app_version": "1.3.0-dev+47",
+  "backend": "CPU (GPU setting disabled)",
+  "transport": "Wi-Fi HTTP SSE",
+  "sampling": {
+    "temperature": 0,
+    "top_p": 1,
+    "max_tokens": 192
+  },
+  "scope": "six short smoke cases, no quality benchmark; first request is cold",
+  "cases": [
+    {
+      "case": "json-en-de",
+      "source": "{\"message\":\"Hello, {user_name}. Your order {order_id} is ready.\",\"count\":3}",
+      "prompt": "### Translation job\nConvert user-visible JSON values to German.\n### Constraints\nKeep all field names, braces, indentation, numeric values and variable placeholders unchanged. Do not translate or explain these rules. Return only valid JSON.\n### JSON input\n{\"message\":\"Hello, {user_name}. Your order {order_id} is ready.\",\"count\":3}",
+      "translation": "{\n  \"message\": \"Hallo {user_name}. Ihr Bestellungsaufenthalt {order_id} ist fertig.\", \"count\": 3\n}",
+      "http_status": 200,
+      "sse_done": true,
+      "finish_reason": "stop",
+      "ttft_s": 7.091046917,
+      "total_s": 7.091812958,
+      "last_token_s": 7.091750833,
+      "usage": {
+        "prompt_tokens": 82,
+        "completion_tokens": 36,
+        "total_tokens": 118
+      },
+      "nonempty": true,
+      "output_tokens_per_total_second": 5.076276011959648,
+      "sse_content_delivery_span_s": 0.0007039159999999711,
+      "decode_rate_measured": false,
+      "structure_preserved": true
+    }
+  ]
+}

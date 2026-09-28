@@ -1,0 +1,26 @@
+{
+  "app_version": "1.3.0+47",
+  "commit": "34785c05187d5da3f79e25910677a8c75df41dab",
+  "merge_commit": "7e8e60a1e84ebcae3f8f087e367722a2d5a88c92",
+  "apple": {
+    "run": 36402081972,
+    "build": "47",
+    "build_id": "44e0b7e0-52f7-455d-9b31-669c6196ec94",
+    "processing_state": "VALID",
+    "public_store_release": false
+  },
+  "google": {
+    "run": 36402086193,
+    "version": "1.3.0",
+    "version_code": 47,
+    "track": "internal",
+    "status": "completed",
+    "public_store_release": false
+  },
+  "ci": {
+    "run": 36401940089,
+    "result": "success",
+    "tests_passed": 181,
+    "ios_build_host": "GitHub Actions"
+  }
+}
