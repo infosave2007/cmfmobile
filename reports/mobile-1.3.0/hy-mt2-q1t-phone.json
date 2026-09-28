@@ -1,0 +1,146 @@
+{
+  "model": "hy-mt2-1.8b-q1t",
+  "file_bytes": 694894587,
+  "file_sha256": "aeb52bf287fb52f6e67f452dd72302087420f3b9e2081ed0cb86fd65cf289424",
+  "runtime": "0.8.0",
+  "app_code_commit": "c415256",
+  "app_version": "1.3.0-dev+47",
+  "backend": "CPU (GPU setting disabled)",
+  "transport": "Wi-Fi HTTP SSE",
+  "sampling": {
+    "temperature": 0,
+    "top_p": 1,
+    "max_tokens": 192
+  },
+  "scope": "six short smoke cases, no quality benchmark; first request is cold",
+  "cases": [
+    {
+      "case": "ru-en",
+      "source": "Посылка прибудет завтра после 15:00. Пожалуйста, позвоните перед доставкой.",
+      "prompt": "Translate the following text into English. Note that you should only output the translated result without any additional explanation:\n\nПосылка прибудет завтра после 15:00. Пожалуйста, позвоните перед доставкой.",
+      "translation": "The package will arrive tomorrow after 3 PM. Please call before it arrives.",
+      "http_status": 200,
+      "sse_done": true,
+      "finish_reason": "stop",
+      "ttft_s": 5.02396175,
+      "total_s": 5.024324125,
+      "last_token_s": 5.024264333,
+      "usage": {
+        "prompt_tokens": 52,
+        "completion_tokens": 17,
+        "total_tokens": 69
+      },
+      "nonempty": true,
+      "output_tokens_per_total_second": 3.383539671617026,
+      "sse_content_delivery_span_s": 0.0003025829999998564,
+      "decode_rate_measured": false
+    },
+    {
+      "case": "en-ru",
+      "source": "Your appointment is on 12 October at 14:30. Please bring your passport.",
+      "prompt": "Translate the following text into Russian. Note that you should only output the translated result without any additional explanation:\n\nYour appointment is on 12 October at 14:30. Please bring your passport.",
+      "translation": "Ваша встреча состоится 12 октября в 14:30. Пожалуйста, принесите свой паспорт.",
+      "http_status": 200,
+      "sse_done": true,
+      "finish_reason": "stop",
+      "ttft_s": 5.998331375,
+      "total_s": 5.999157417,
+      "last_token_s": 5.999080834,
+      "usage": {
+        "prompt_tokens": 51,
+        "completion_tokens": 38,
+        "total_tokens": 89
+      },
+      "nonempty": true,
+      "output_tokens_per_total_second": 6.334222851415469,
+      "sse_content_delivery_span_s": 0.0007494589999996748,
+      "decode_rate_measured": false
+    },
+    {
+      "case": "zh-en",
+      "source": "请在周五之前发送发票，并保留订单编号 AB-123。",
+      "prompt": "Translate the following text into English. Note that you should only output the translated result without any additional explanation:\n\n请在周五之前发送发票，并保留订单编号 AB-123。",
+      "translation": "Please send the invoice by Friday, and keep the order number AB-123.",
+      "http_status": 200,
+      "sse_done": true,
+      "finish_reason": "stop",
+      "ttft_s": 3.4929401249999987,
+      "total_s": 3.493318083,
+      "last_token_s": 3.493255291999999,
+      "usage": {
+        "prompt_tokens": 40,
+        "completion_tokens": 17,
+        "total_tokens": 57
+      },
+      "nonempty": true,
+      "output_tokens_per_total_second": 4.866433458415759,
+      "sse_content_delivery_span_s": 0.0003151670000001161,
+      "decode_rate_measured": false
+    },
+    {
+      "case": "de-ru",
+      "source": "Die Lieferung verspätet sich um zwei Tage. Die Sendungsnummer bleibt unverändert.",
+      "prompt": "Translate the following text into Russian. Note that you should only output the translated result without any additional explanation:\n\nDie Lieferung verspätet sich um zwei Tage. Die Sendungsnummer bleibt unverändert.",
+      "translation": "Поставка задерживается на два дня. Номер отправки остается неизменным.",
+      "http_status": 200,
+      "sse_done": true,
+      "finish_reason": "stop",
+      "ttft_s": 5.063411042000002,
+      "total_s": 5.063927291999999,
+      "last_token_s": 5.063873417,
+      "usage": {
+        "prompt_tokens": 54,
+        "completion_tokens": 27,
+        "total_tokens": 81
+      },
+      "nonempty": true,
+      "output_tokens_per_total_second": 5.331830107958826,
+      "sse_content_delivery_span_s": 0.00046237499999790543,
+      "decode_rate_measured": false
+    },
+    {
+      "case": "tr-ru",
+      "source": "Toplantı yarın saat 10.00'da başlayacak.",
+      "prompt": "Translate the following text into Russian. Note that you should only output the translated result without any additional explanation:\n\nToplantı yarın saat 10.00'da başlayacak.",
+      "translation": "Встреча начнется завтра в 10:00.",
+      "http_status": 200,
+      "sse_done": true,
+      "finish_reason": "stop",
+      "ttft_s": 3.431462584000002,
+      "total_s": 3.4318060000000017,
+      "last_token_s": 3.4317348340000002,
+      "usage": {
+        "prompt_tokens": 43,
+        "completion_tokens": 16,
+        "total_tokens": 59
+      },
+      "nonempty": true,
+      "output_tokens_per_total_second": 4.662268205137468,
+      "sse_content_delivery_span_s": 0.00027224999999830857,
+      "decode_rate_measured": false
+    },
+    {
+      "case": "json-en-de",
+      "source": "{\"message\":\"Hello, {user_name}. Your order {order_id} is ready.\",\"count\":3}",
+      "prompt": "Translate the following text into German. Note that you should only output the translated result without any additional explanation: Preserve the JSON structure, keys, numbers, {user_name} and {order_id} exactly.\n\n{\"message\":\"Hello, {user_name}. Your order {order_id} is ready.\",\"count\":3}",
+      "translation": "Bewahren Sie die JSON-Struktur, die Schlüssel, die Zahlen sowie {user_name} und {order_id} genau bei.",
+      "http_status": 200,
+      "sse_done": true,
+      "finish_reason": "stop",
+      "ttft_s": 6.672588167000001,
+      "total_s": 6.6732196670000015,
+      "last_token_s": 6.673158084000001,
+      "usage": {
+        "prompt_tokens": 72,
+        "completion_tokens": 33,
+        "total_tokens": 105
+      },
+      "nonempty": true,
+      "structure_preserved": false,
+      "output_tokens_per_total_second": 4.945139175200478,
+      "sse_content_delivery_span_s": 0.0005699169999999754,
+      "decode_rate_measured": false
+    }
+  ],
+  "timing_note": "SSE deltas arrived in one burst; arrival spacing cannot measure native decoding. HTTP total includes prefill and generation. Original response text and times are retained."
+}

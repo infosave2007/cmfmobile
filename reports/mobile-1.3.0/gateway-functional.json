@@ -1,0 +1,187 @@
+{
+  "transport": "HTTP over Wi-Fi LAN",
+  "host": "192.168.1.48",
+  "port": 8080,
+  "mode": "functional",
+  "oracle_calls": 0,
+  "timestamp_utc": "2026-09-28T09:28:00Z",
+  "all_passed": true,
+  "records": [
+    {
+      "test": "health_public",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "http_ms": 194.888083,
+      "response_bytes": 15
+    },
+    {
+      "test": "missing_token",
+      "status": 401,
+      "expected": 401,
+      "pass": true,
+      "http_ms": 95.933167,
+      "response_bytes": 55
+    },
+    {
+      "test": "wrong_token",
+      "status": 401,
+      "expected": 401,
+      "pass": true,
+      "http_ms": 15.596375,
+      "response_bytes": 55
+    },
+    {
+      "test": "models",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "http_ms": 99.174625,
+      "response_bytes": 1237
+    },
+    {
+      "test": "skills",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "http_ms": 38.237584,
+      "response_bytes": 5509
+    },
+    {
+      "test": "banking77",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "http_ms": 171.645875,
+      "response_bytes": 7414
+    },
+    {
+      "test": "clinc150",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "http_ms": 88.218166,
+      "response_bytes": 9865
+    },
+    {
+      "test": "massive",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "http_ms": 97.310042,
+      "response_bytes": 5374
+    },
+    {
+      "test": "abstention",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "http_ms": 142.587417,
+      "response_bytes": 7417
+    },
+    {
+      "test": "rubric",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "http_ms": 183.838083,
+      "response_bytes": 27182
+    },
+    {
+      "test": "typed_/v1/decisions",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "http_ms": 85.676875,
+      "response_bytes": 4245
+    },
+    {
+      "test": "typed_/api/alpha/decisions",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "http_ms": 66.709625,
+      "response_bytes": 4244
+    },
+    {
+      "test": "empty_text",
+      "status": 400,
+      "expected": 400,
+      "pass": true,
+      "http_ms": 10.676875,
+      "response_bytes": 167
+    },
+    {
+      "test": "unknown_skill",
+      "status": 404,
+      "expected": 404,
+      "pass": true,
+      "http_ms": 70.671083,
+      "response_bytes": 141
+    },
+    {
+      "test": "invalid_profile",
+      "status": 400,
+      "expected": 400,
+      "pass": true,
+      "http_ms": 46.834541,
+      "response_bytes": 221
+    },
+    {
+      "test": "unexpected_field",
+      "status": 400,
+      "expected": 400,
+      "pass": true,
+      "http_ms": 54.77075,
+      "response_bytes": 214
+    },
+    {
+      "test": "too_long_text",
+      "status": 400,
+      "expected": 400,
+      "pass": true,
+      "http_ms": 54.7475,
+      "response_bytes": 167
+    },
+    {
+      "test": "invalid_json",
+      "status": 400,
+      "expected": 400,
+      "pass": true,
+      "http_ms": 11.178458,
+      "response_bytes": 118
+    },
+    {
+      "test": "not_an_object",
+      "status": 400,
+      "expected": 400,
+      "pass": true,
+      "http_ms": 108.029333,
+      "response_bytes": 124
+    },
+    {
+      "test": "oracle_blocked",
+      "status": 400,
+      "expected": 400,
+      "pass": true,
+      "http_ms": 16.606375,
+      "response_bytes": 171
+    },
+    {
+      "test": "wrong_model_chat",
+      "status": 409,
+      "expected": 409,
+      "pass": true,
+      "http_ms": 18.7555,
+      "response_bytes": 145
+    },
+    {
+      "test": "recovery_after_errors",
+      "status": 200,
+      "expected": 200,
+      "pass": true,
+      "http_ms": 86.592167,
+      "response_bytes": 7412
+    }
+  ]
+}

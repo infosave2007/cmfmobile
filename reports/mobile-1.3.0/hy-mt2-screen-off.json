@@ -1,0 +1,39 @@
+{
+  "model": "hy-mt2-1.8b-q1t",
+  "file_bytes": 694894587,
+  "file_sha256": "aeb52bf287fb52f6e67f452dd72302087420f3b9e2081ed0cb86fd65cf289424",
+  "runtime": "0.8.0",
+  "app_code_commit": "c415256",
+  "app_version": "1.3.0-dev+47",
+  "backend": "CPU (GPU setting disabled)",
+  "transport": "Wi-Fi HTTP SSE",
+  "sampling": {
+    "temperature": 0,
+    "top_p": 1,
+    "max_tokens": 192
+  },
+  "scope": "six short smoke cases, no quality benchmark; first request is cold",
+  "cases": [
+    {
+      "case": "tr-ru",
+      "source": "Toplantı yarın saat 10.00'da başlayacak.",
+      "prompt": "Translate the following text into Russian. Note that you should only output the translated result without any additional explanation:\n\nToplantı yarın saat 10.00'da başlayacak.",
+      "translation": "Встреча начнется завтра в 10:00.",
+      "http_status": 200,
+      "sse_done": true,
+      "finish_reason": "stop",
+      "ttft_s": 4.267552166,
+      "total_s": 4.268056625,
+      "last_token_s": 4.267906875,
+      "usage": {
+        "prompt_tokens": 43,
+        "completion_tokens": 16,
+        "total_tokens": 59
+      },
+      "nonempty": true,
+      "output_tokens_per_total_second": 3.748778754780462,
+      "sse_content_delivery_span_s": 0.00035470900000067473,
+      "decode_rate_measured": false
+    }
+  ]
+}
