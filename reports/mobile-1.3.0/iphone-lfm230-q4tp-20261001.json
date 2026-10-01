@@ -1,0 +1,130 @@
+{
+  "schema": "cortiq-mobile-ui-throughput/v1",
+  "date": "2026-10-01",
+  "device": {
+    "model": "iPhone 16",
+    "soc": "A18"
+  },
+  "app": {
+    "channel": "TestFlight",
+    "version": "1.3.0",
+    "build": 47
+  },
+  "model": {
+    "repo": "infosave/LFM2.5-cmf",
+    "file": "lfm2.5-230m-q4tp.cmf",
+    "file_bytes": 132082125,
+    "hub_lfs_sha256": "889fa1e3a133004f9fab273e24a355b51056c5e349f9efd4552892a440c42f9a",
+    "quantization": "Q4TP",
+    "layers": 14,
+    "context_tokens": 128000,
+    "estimated_ram_mib": 622
+  },
+  "settings": {
+    "temperature": 0.1,
+    "top_p": 0.95,
+    "max_tokens": 128,
+    "cpu_threads": "auto (5)",
+    "gpu_toggle": false
+  },
+  "method": {
+    "surface": "phone chat UI",
+    "prompt": "Explain how CMF task masks work",
+    "prompt_tokens_ui": 7,
+    "warmup_excluded": true,
+    "measurement": "UI-reported completion tokens / full measured request time; prompt processing included",
+    "timing_precision": "UI-rounded values",
+    "exploratory_other_models_note": "Their completion counts exceed the controlled LFM max_tokens cap; exact generation cap and sampling settings were not recorded, so these are not directly comparable with LFM."
+  },
+  "runs": [
+    {
+      "id": 0,
+      "state": "warmup",
+      "prompt_tokens": 7,
+      "completion_tokens": 128,
+      "latency_s_display": 0.8,
+      "tokens_per_second_ui": 168.4
+    },
+    {
+      "id": 1,
+      "state": "warm",
+      "prompt_tokens": 7,
+      "completion_tokens": 37,
+      "latency_s_display": 0.3,
+      "tokens_per_second_ui": 144.5
+    },
+    {
+      "id": 2,
+      "state": "warm",
+      "prompt_tokens": 7,
+      "completion_tokens": 37,
+      "latency_s_display": 0.3,
+      "tokens_per_second_ui": 145.7
+    },
+    {
+      "id": 3,
+      "state": "warm",
+      "prompt_tokens": 7,
+      "completion_tokens": 125,
+      "latency_s_display": 0.8,
+      "tokens_per_second_ui": 166.0
+    }
+  ],
+  "warm_aggregate": {
+    "range_tokens_per_second_ui": [
+      144.5,
+      166.0
+    ],
+    "median_tokens_per_second_ui": 145.7,
+    "mean_tokens_per_second_ui": 152.07,
+    "runs_over_60_tokens_per_second": 3,
+    "runs_total": 3
+  },
+  "additional_ui_capture": {
+    "prompt": "Write a SQL query for monthly revenue",
+    "prompt_tokens": 9,
+    "completion_tokens": 95,
+    "latency_s_display": 0.6,
+    "tokens_per_second_ui": 162.1,
+    "asset": "assets/15_lfm230_iphone_speed.png",
+    "note": "Interactive evidence capture; not included in the controlled aggregate because the prompt differs."
+  },
+  "exploratory_other_models": [
+    {
+      "model": "bonsai-1.7b-q1.cmf",
+      "gpu_toggle": false,
+      "completion_tokens": 541,
+      "latency_s_display": 11.3,
+      "tokens_per_second_ui": 47.9,
+      "prompt": "Explain how CMF task masks work",
+      "series": "exploratory; separate configuration from the controlled LFM runs",
+      "inference_mode": "Chat UI with generic ChatML fallback; shipped CMF header has no tokenizer_config.chat_template",
+      "generation_settings": "not recorded; separate from controlled LFM settings"
+    },
+    {
+      "model": "bonsai-1.7b-q1.cmf",
+      "gpu_toggle": true,
+      "completion_tokens": 261,
+      "latency_s_display": 13.6,
+      "tokens_per_second_ui": 19.2,
+      "prompt": "Explain how CMF task masks work",
+      "series": "exploratory; separate configuration from the controlled LFM runs",
+      "note": "GPU toggle was enabled before reload; execution backend was not traced.",
+      "inference_mode": "Chat UI with generic ChatML fallback; shipped CMF header has no tokenizer_config.chat_template",
+      "generation_settings": "not recorded; separate from controlled LFM settings"
+    }
+  ],
+  "restored_phone_state": {
+    "active_model": "MiniCPM5-2B-q4tp",
+    "temperature": 0.7,
+    "top_p": 0.95,
+    "max_tokens": 1024,
+    "gpu_toggle": false,
+    "language": "system (Russian)"
+  },
+  "limits": [
+    "Not a thermal, battery, long-context, or quality evaluation.",
+    "Result is specific to the device, build, model, settings, and prompt.",
+    "Do not generalize the LFM result to every model in the catalog."
+  ]
+}
