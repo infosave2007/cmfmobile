@@ -4,7 +4,7 @@
 
 Мы проверили это на подключённом **iPhone 16 (A18)** с TestFlight-сборкой **1.3.0 (47)**. Компактная `lfm2.5-230m-q4tp` в трёх тёплых прогонах выдала **144,5–166,0 tok/s**, медиана — **145,7 tok/s**. Это не лабораторный «decode-only» счётчик: это цифра, которую показывает чат самого приложения для полного пользовательского запроса. Переключатель GPU был выключен, пул CPU — `Auto (5)`.
 
-![LFM2.5 230M Q4TP on iPhone — 162.1 tok/s in the Cortiq chat](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/8fa65cfa303890f04b8ecb3d66a263cdc05839ef/assets/15_lfm230_iphone_speed.png)
+![LFM2.5 230M Q4TP on iPhone — 162.1 tok/s in the Cortiq chat](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/fc4d4ff0d4c0121544c662fc8490b3cc7d915e07/assets/15_lfm230_iphone_speed.png)
 
 *Реальный экран iPhone: интерфейс показывает `lfm2.5-230m-q4tp`, 95 токенов ответа, 0,6 с и 162,1 tok/s. Задержка в UI округлена.*
 
@@ -43,7 +43,7 @@
 Для LFM получились три повторных тёплых наблюдения в одной UI-сессии: новый пустой чат, встроенный запрос `Explain how CMF task masks work`, один прогрев и три повтора через regenerate; `temperature: 0.10`, `top_p: 0.95`, `max_tokens: 128`. Интерфейс показывал семь токенов входа для каждого прогона. Его `tok/s` включает обработку запроса, поэтому это консервативная, пользовательская цифра, а не завышенная скорость чистого декодера.
 Строки не образуют одну шкалу производительности: LFM измерена по счётчику чат-UI, Hy-MT2 — по нативной скорости вывода на специализированной переводческой задаче; полное LAN-время для неё опубликовано отдельно. Два Bonsai-прогона — первичная разведка в Chat UI с generic ChatML fallback: их отдельные параметры генерации не зафиксированы, а эффект GPU toggle не подтверждён серией. Эти числа помогают выбрать направление проверки, а не ранжировать модели по одному числу.
 
-Полный [отчёт LFM2.5](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/8fa65cfa303890f04b8ecb3d66a263cdc05839ef/reports/iphone-lfm230-q4tp-20261001.md) и [машиночитаемая запись](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/8fa65cfa303890f04b8ecb3d66a263cdc05839ef/reports/iphone-lfm230-q4tp-20261001.json) содержат все видимые счётчики, настройки, прогрев, диапазон и отдельные Bonsai-прогоны.
+Полный [отчёт LFM2.5](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/fc4d4ff0d4c0121544c662fc8490b3cc7d915e07/reports/iphone-lfm230-q4tp-20261001.md) и [машиночитаемая запись](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/fc4d4ff0d4c0121544c662fc8490b3cc7d915e07/reports/iphone-lfm230-q4tp-20261001.json) содержат все видимые счётчики, настройки, прогрев, диапазон и отдельные Bonsai-прогоны.
 
 ### Почему 230M-модель здесь уместна
 
@@ -68,13 +68,13 @@ RU → EN
 → “The package will arrive tomorrow after 15:00. Please call before delivery.”
 ```
 
-JSON-сценарий EN→DE тоже вернулся валидным: ключи, `count` и плейсхолдеры `{user_name}` / `{order_id}` сохранились. Все семь входов, ответы и неокруглённые времена опубликованы в [iPhone Q4TP-отчёте](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/8fa65cfa303890f04b8ecb3d66a263cdc05839ef/reports/iphone-hymt2-q4tp-20261001.md) и [JSON](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/8fa65cfa303890f04b8ecb3d66a263cdc05839ef/reports/iphone-hymt2-q4tp-20261001.json).
+JSON-сценарий EN→DE тоже вернулся валидным: ключи, `count` и плейсхолдеры `{user_name}` / `{order_id}` сохранились. Все семь входов, ответы и неокруглённые времена опубликованы в [iPhone Q4TP-отчёте](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/fc4d4ff0d4c0121544c662fc8490b3cc7d915e07/reports/iphone-hymt2-q4tp-20261001.md) и [JSON](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/fc4d4ff0d4c0121544c662fc8490b3cc7d915e07/reports/iphone-hymt2-q4tp-20261001.json).
 
 ## CMF: каталог объясняет модель до загрузки
 
 В основе Cortiq — [CMF](https://github.com/infosave2007/cmf), самоописывающийся контейнер. Помимо весов в нём лежат архитектура, токенизатор и сведения о задачах; для моделей с заданным шаблоном — также шаблон чата. Пользователь получает не безымянный файл, а карточку с квантизацией, слоями, контекстом и ожидаемой RAM.
 
-![Ready CMF catalogue in Cortiq Mobile](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/8fa65cfa303890f04b8ecb3d66a263cdc05839ef/assets/08_ready_cmf_decision.png)
+![Ready CMF catalogue in Cortiq Mobile](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/fc4d4ff0d4c0121544c662fc8490b3cc7d915e07/assets/08_ready_cmf_decision.png)
 
 *Ready CMF-каталог: отдельные файлы явно помечены как `Chat` или `Decisions`; рядом видны варианты Hy-MT2.*
 
@@ -82,7 +82,7 @@ JSON-сценарий EN→DE тоже вернулся валидным: клю
 
 - готовый `.cmf` скачивается одним действием, а прерванная загрузка продолжается с последнего байта;
 - перед запуском видна оценка RAM, а не только размер архива;
-- репозиторий Hugging Face с safetensors можно конвертировать в CMF прямо на телефоне, если его архитектура и раскладка тензоров поддерживаются конвертером и runtime;
+- поддерживаемый репозиторий Hugging Face с safetensors конвертируется в CMF прямо на телефоне; GGUF CMF toolchain импортирует через `cortiq import-gguf`, после чего готовый `.cmf` можно перенести в приложение;
 - один контейнер понимают мобильное приложение и Rust-движок на других платформах.
 
 ## Decision API: не текст, а исполнимый контракт
@@ -93,7 +93,7 @@ CMF описывает не только чат. Для CMF Decision прило�
 {"accepted": true, "choice": "card_arrival", "confidence": 0.998}
 ```
 
-![Local CMF Decision accepted on iPhone](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/8fa65cfa303890f04b8ecb3d66a263cdc05839ef/assets/09_decision_accepted.png)
+![Local CMF Decision accepted on iPhone](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/fc4d4ff0d4c0121544c662fc8490b3cc7d915e07/assets/09_decision_accepted.png)
 
 *На iPhone локальная Decision-модель приняла `card_arrival`, показав confidence и тайминги выполнения.*
 
@@ -121,7 +121,7 @@ CMF описывает не только чат. Для CMF Decision прило�
 | Companion | Телефон + спаренный компьютер | Обмен между этими устройствами |
 | Optional Oracle | Выбранный HTTPS-провайдер | Только после ручного включения и подтверждения |
 
-![Optional Oracle is off by default](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/8fa65cfa303890f04b8ecb3d66a263cdc05839ef/assets/12_oracle_off.png)
+![Optional Oracle is off by default](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/fc4d4ff0d4c0121544c662fc8490b3cc7d915e07/assets/12_oracle_off.png)
 
 *Optional Oracle выключен по умолчанию; внешний клиент не может включить его через API телефона.*
 
@@ -144,7 +144,7 @@ Cortiq Mobile уже можно описывать не как эксперим�
 ## Ссылки и методика
 
 - [Hugging Face Space со страницей приложения и актуальной галереей](https://huggingface.co/spaces/infosave/cortiq-mobile)
-- [LFM2.5 230M: полный iPhone-отчёт](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/8fa65cfa303890f04b8ecb3d66a263cdc05839ef/reports/iphone-lfm230-q4tp-20261001.md) · [JSON](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/8fa65cfa303890f04b8ecb3d66a263cdc05839ef/reports/iphone-lfm230-q4tp-20261001.json)
-- [Hy-MT2 Q4TP: полный iPhone-отчёт](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/8fa65cfa303890f04b8ecb3d66a263cdc05839ef/reports/iphone-hymt2-q4tp-20261001.md) · [JSON](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/8fa65cfa303890f04b8ecb3d66a263cdc05839ef/reports/iphone-hymt2-q4tp-20261001.json)
-- [Новый LFM-скриншот со скоростью](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/8fa65cfa303890f04b8ecb3d66a263cdc05839ef/assets/15_lfm230_iphone_speed.png) · [каталог CMF](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/8fa65cfa303890f04b8ecb3d66a263cdc05839ef/assets/08_ready_cmf_decision.png) · [Decision](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/8fa65cfa303890f04b8ecb3d66a263cdc05839ef/assets/09_decision_accepted.png) · [Oracle](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/8fa65cfa303890f04b8ecb3d66a263cdc05839ef/assets/12_oracle_off.png)
+- [LFM2.5 230M: полный iPhone-отчёт](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/fc4d4ff0d4c0121544c662fc8490b3cc7d915e07/reports/iphone-lfm230-q4tp-20261001.md) · [JSON](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/fc4d4ff0d4c0121544c662fc8490b3cc7d915e07/reports/iphone-lfm230-q4tp-20261001.json)
+- [Hy-MT2 Q4TP: полный iPhone-отчёт](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/fc4d4ff0d4c0121544c662fc8490b3cc7d915e07/reports/iphone-hymt2-q4tp-20261001.md) · [JSON](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/fc4d4ff0d4c0121544c662fc8490b3cc7d915e07/reports/iphone-hymt2-q4tp-20261001.json)
+- [Новый LFM-скриншот со скоростью](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/fc4d4ff0d4c0121544c662fc8490b3cc7d915e07/assets/15_lfm230_iphone_speed.png) · [каталог CMF](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/fc4d4ff0d4c0121544c662fc8490b3cc7d915e07/assets/08_ready_cmf_decision.png) · [Decision](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/fc4d4ff0d4c0121544c662fc8490b3cc7d915e07/assets/09_decision_accepted.png) · [Oracle](https://huggingface.co/spaces/infosave/cortiq-mobile/resolve/fc4d4ff0d4c0121544c662fc8490b3cc7d915e07/assets/12_oracle_off.png)
 - [CMF: формат и runtime](https://github.com/infosave2007/cmf) · [LFM2.5 CMF](https://huggingface.co/infosave/LFM2.5-cmf) · [Hy-MT2 CMF](https://huggingface.co/infosave/Hy-MT2-cmf) · [профиль infosave](https://huggingface.co/infosave)
