@@ -1,0 +1,177 @@
+{
+  "model": "hy-mt2-1.8b-q4tp",
+  "transport": "protected local TestFlight API over Wi-Fi",
+  "sampling": {
+    "temperature": 0,
+    "top_p": 1,
+    "max_tokens": 192
+  },
+  "cases": [
+    {
+      "case": "ru-en",
+      "run": "cold",
+      "translation": "The package will arrive tomorrow after 15:00. Please call before delivery.",
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 52,
+        "completion_tokens": 17,
+        "total_tokens": 69
+      },
+      "native_tokens_per_second": 15.0,
+      "total_roundtrip_s": 1.143938,
+      "nonempty": true,
+      "source": "Посылка прибудет завтра после 15:00. Пожалуйста, позвоните перед доставкой.",
+      "target_language": "en"
+    },
+    {
+      "case": "en-ru",
+      "run": "warm",
+      "translation": "Ваш код проверки истекает через 10 минут. Не передавайте его никому.",
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 52,
+        "completion_tokens": 29,
+        "total_tokens": 81
+      },
+      "native_tokens_per_second": 21.8,
+      "total_roundtrip_s": 1.3400152079999998,
+      "nonempty": true,
+      "source": "Your verification code expires in 10 minutes. Do not share it with anyone.",
+      "target_language": "ru"
+    },
+    {
+      "case": "de-ru",
+      "run": "warm",
+      "translation": "Доставка задерживается на два дня. Номер отправки остается неизменным.",
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 54,
+        "completion_tokens": 27,
+        "total_tokens": 81
+      },
+      "native_tokens_per_second": 18.4,
+      "total_roundtrip_s": 1.500754792,
+      "nonempty": true,
+      "source": "Die Lieferung verspätet sich um zwei Tage. Die Sendungsnummer bleibt unverändert.",
+      "target_language": "ru"
+    },
+    {
+      "case": "tr-ru",
+      "run": "warm",
+      "translation": "Встреча начнется завтра в 10:00.",
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 43,
+        "completion_tokens": 16,
+        "total_tokens": 59
+      },
+      "native_tokens_per_second": 16.1,
+      "total_roundtrip_s": 1.0003544159999995,
+      "nonempty": true,
+      "source": "Toplantı yarın saat 10.00'da başlayacak.",
+      "target_language": "ru"
+    },
+    {
+      "case": "zh-en",
+      "run": "warm",
+      "translation": "Please send the invoice by Friday and keep the order number AB-123.",
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 40,
+        "completion_tokens": 16,
+        "total_tokens": 56
+      },
+      "native_tokens_per_second": 16.2,
+      "total_roundtrip_s": 0.9960813339999994,
+      "nonempty": true,
+      "source": "请在周五之前发送发票，并保留订单编号 AB-123。",
+      "target_language": "en"
+    },
+    {
+      "case": "idiom-en-ru",
+      "run": "warm",
+      "translation": "Отчет должен быть представлен до пятницы, но команда все еще решает некоторые проблемы.",
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 52,
+        "completion_tokens": 32,
+        "total_tokens": 84
+      },
+      "native_tokens_per_second": 19.6,
+      "total_roundtrip_s": 1.642229125,
+      "nonempty": true,
+      "source": "The report is due Friday, but the team is still ironing out a few issues.",
+      "target_language": "ru"
+    },
+    {
+      "case": "json-en-de",
+      "run": "warm",
+      "translation": "{\"message\":\"Hallo, {user_name}. Ihr Auftrag {order_id} ist fertig.\",\"count\":3}",
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 82,
+        "completion_tokens": 29,
+        "total_tokens": 111
+      },
+      "native_tokens_per_second": 14.4,
+      "total_roundtrip_s": 2.0153592909999993,
+      "nonempty": true,
+      "json_valid": true,
+      "keys_preserved": true,
+      "count_preserved": true,
+      "placeholders_preserved": true,
+      "source": "{\"message\":\"Hello, {user_name}. Your order {order_id} is ready.\",\"count\":3}",
+      "target_language": "de"
+    }
+  ],
+  "server_status": {
+    "active_layers": 32,
+    "execution_mode": "Mobile { engine: cortiq-native 0.8.0 · 5 threads · neon · gpu }",
+    "tokens_generated": 166,
+    "avg_tokens_per_sec": 16.4,
+    "execution_mode_note": "The value is runtime metadata. It should not be interpreted as an individual request GPU trace."
+  },
+  "report_schema": "cortiq-mobile-iphone-smoke-v1",
+  "date": "2026-10-01",
+  "device": {
+    "model": "iPhone 16",
+    "soc": "A18"
+  },
+  "app": {
+    "channel": "TestFlight",
+    "version": "1.3.0 (47)"
+  },
+  "execution": {
+    "threads": "CPU Auto (5)",
+    "gpu_setting": "off before model load",
+    "gpu_status_note": "The status API describes a linked/available GPU backend, not a per-request hardware trace; it is not used as proof of hardware utilisation."
+  },
+  "method": {
+    "scope": "seven short translation smoke cases after a fresh model load; not a quality, thermal, battery, long-context, or cross-device benchmark",
+    "network": "bearer-protected local phone API over Wi-Fi; total round-trip includes client, Wi-Fi, prompt processing, and generation",
+    "warm_definition": "all cases after the first completed request in the same loaded-model session",
+    "uncontrolled_variables": [
+      "ambient temperature",
+      "battery state",
+      "charger state",
+      "long-run thermal behaviour"
+    ]
+  },
+  "aggregates": {
+    "completed_nonempty": {
+      "numerator": 7,
+      "denominator": 7,
+      "finish_reason": "stop"
+    },
+    "warm_native_tokens_per_second": {
+      "min": 14.4,
+      "max": 21.8,
+      "mean": 17.75
+    },
+    "warm_total_roundtrip_s": {
+      "min": 0.9960813339999994,
+      "max": 2.0153592909999993,
+      "mean": 1.415799
+    }
+  }
+}
