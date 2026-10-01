@@ -32,7 +32,7 @@
     "prompt": "Explain how CMF task masks work",
     "prompt_tokens_ui": 7,
     "warmup_excluded": true,
-    "measurement": "UI-reported completion tokens / full measured request time; prompt processing included",
+    "measurement": "UI-reported completion tokens / full execution interval measured by the engine after generation starts; prompt processing and model response included, queue wait excluded; UI display is rounded",
     "timing_precision": "UI-rounded values",
     "exploratory_other_models_note": "Their completion counts exceed the controlled LFM max_tokens cap; exact generation cap and sampling settings were not recorded, so these are not directly comparable with LFM."
   },
