@@ -25,9 +25,12 @@ converter, and an OpenAI-compatible server speaking the CMF protocol.
 
 ### Decisions and an optional oracle
 
-Cortiq Mobile 1.3.1 supports **CMF Decision / Cortiq 0.8.12** alongside chat models.
+Cortiq Mobile 1.3.2 supports **CMF Decision / Cortiq 0.8.12** alongside chat models.
 The library labels **Chat**, **Decisions** and non-standalone **Skill add-ons**.
 Loading a decision model opens its skills instead of a chat input.
+
+It also accepts CMF chat models with native **SlidingAttention** layers, such
+as Spark-X2.5 q4mix, while keeping the structural Q/K/V/O preflight.
 
 - Local decisions use reconstruction error, with a visible abstention when uncertain.
 - **Settings → Oracle**: optional HTTPS provider, model ID and securely stored API key.

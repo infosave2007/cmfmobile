@@ -207,6 +207,58 @@ void main() {
 
       expect(await CmfValidator.validate(path), isEmpty);
     });
+
+    test('validator accepts SlidingAttention QKV tensor layout', () async {
+      final dir = await Directory.systemTemp.createTemp('cmf_sliding_attn');
+      final path = '${dir.path}/sliding-attention.cmf';
+      addTearDown(() => dir.delete(recursive: true));
+
+      // SlidingAttention has the same projection tensors as FullAttention;
+      // the native runtime gets its causal window from arch.sliding_window.
+      final tensors =
+          [
+                'model.embed_tokens.weight',
+                'model.layers.0.self_attn.q_proj.weight',
+                'model.layers.0.self_attn.k_proj.weight',
+                'model.layers.0.self_attn.v_proj.weight',
+                'model.layers.0.self_attn.o_proj.weight',
+              ]
+              .map(
+                (name) => CmfTensorSpec(
+                  name: name,
+                  dtype: Cmf.dtF16,
+                  shape: [1],
+                  nbytes: 2,
+                ),
+              )
+              .toList();
+      final writer = CmfWriter(
+        outputPath: path,
+        headerJson: {
+          'format': 'cmf',
+          'version': 2,
+          'arch': {
+            'arch_name': 'spark2_5',
+            'hidden_size': 1,
+            'num_layers': 1,
+            'vocab_size': 1,
+            'layer_types': ['SlidingAttention'],
+            'sliding_window': 512,
+            'tie_word_embeddings': true,
+          },
+          'quant_type': 'F16',
+        },
+        tensors: tensors,
+      );
+      await writer.begin();
+      for (var i = 0; i < tensors.length; i++) {
+        await writer.nextTensor();
+        await writer.writeTensorChunk(Uint8List(2));
+      }
+      await writer.finish();
+
+      expect(await CmfValidator.validate(path), isEmpty);
+    });
   });
 
   group('safetensors', () {
