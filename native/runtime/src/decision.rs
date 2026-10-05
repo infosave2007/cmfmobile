@@ -1,4 +1,4 @@
-//! Mobile adapter over the unmodified cortiq-decision 0.8.0 service.
+//! Mobile adapter over the unmodified cortiq-decision 0.8.12 service.
 //! Opaque handles must not be freed while a call is in flight. All native
 //! operations run on a Dart worker, never the platform UI thread.
 use super::{set_error, set_last_json};

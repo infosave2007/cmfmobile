@@ -6,6 +6,11 @@ cd "$(dirname "$0")/.."
 export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$PWD/native/runtime/target}"
 root="$PWD"
 manifest="$root/native/runtime/Cargo.toml"
+# Keep C/C++ dependencies inside the Rust archive compatible with Runner's
+# IPHONEOS_DEPLOYMENT_TARGET. Without this, clang defaults them to the SDK's
+# newest iOS version, making a source-built archive unsuitable
+# for the app's iOS 15.0 deployment target.
+readonly IOS_DEPLOYMENT_TARGET=15.0
 cd "$root/native/runtime"
 case "${1:-}" in
   android|android-arm64)
@@ -22,6 +27,7 @@ case "${1:-}" in
     fi
     ;;
   ios|ios-sim)
+    export IPHONEOS_DEPLOYMENT_TARGET="$IOS_DEPLOYMENT_TARGET"
     if [[ "$1" == ios ]]; then target=aarch64-apple-ios; output=libcortiq_ffi.a
     else target=aarch64-apple-ios-sim; output=libcortiq_ffi_sim.a; fi
     rustup target add "$target"

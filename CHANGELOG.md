@@ -1,3 +1,14 @@
+# 1.3.1 — Cortiq 0.8.12 on mobile
+
+- Rebuilt the Android and iOS native runtime from pinned Cortiq 0.8.12 source,
+  retaining the app's local Decision adapter rather than substituting the
+  upstream FFI archive.
+- Includes Spark-X2.5 long-context improvements from the runtime: bounded
+  sliding-window KV storage, the Metal chunk-prefill allocation fix, and the
+  Vulkan prompt-ingest path on capable Android devices.
+- A Companion session that reaches a trimmed Spark-X2.5 KV tail must run
+  Cortiq 0.8.12 at both ends; older peers reject the new wire record.
+
 # 1.3.0 — CMF Decision on mobile
 
 - Cortiq 0.8.0 built from pinned source for Android and Apple in CI.

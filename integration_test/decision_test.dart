@@ -28,7 +28,7 @@ void main() {
       final engine = container.read(engineProvider);
       expect(engine.isAvailable, true);
       expect(engine.supportsDecisions, true);
-      expect(engine.name, contains('0.8.0'));
+      expect(engine.name, contains('0.8.12'));
       final directory = await getApplicationDocumentsDirectory();
       final file = File('${directory.path}/decision-test.cmf');
       expect(
@@ -164,16 +164,22 @@ void main() {
         find.byKey(const Key('decision-input')),
         'I still have not received my new card',
       );
-      await tester.ensureVisible(find.byKey(const Key('decision-run')));
-      await tester.tap(find.byKey(const Key('decision-run')));
-      for (
-        var i = 0;
-        i < 100 && find.text('card_arrival').evaluate().isEmpty;
-        i++
-      ) {
-        await tester.pump(const Duration(milliseconds: 100));
+      // `enterText` changes the controller immediately, but the button's
+      // enabled state is rebuilt on the next frame.
+      await tester.pump();
+      final run = find.byKey(const Key('decision-run'));
+      expect(tester.widget<FilledButton>(run).onPressed, isNotNull);
+      await tester.ensureVisible(run);
+      await tester.tap(run);
+      final choice = find.byKey(const Key('decision-choice'));
+      for (var i = 0; i < 100 && choice.evaluate().isEmpty; i++) {
+        // Decision inference runs in a worker isolate. Advancing the widget
+        // test's fake clock does not give that isolate wall-clock time.
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        await tester.pump();
       }
-      expect(find.text('card_arrival'), findsOneWidget);
+      expect(choice, findsOneWidget);
+      expect(tester.widget<SelectableText>(choice).data, 'card_arrival');
       expect(tester.takeException(), isNull);
       if (Platform.isAndroid) await binding.convertFlutterSurfaceToImage();
       await tester.pump();

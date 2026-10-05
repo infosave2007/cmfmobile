@@ -1,5 +1,5 @@
 name: Native CMF runtime
-description: Build the pinned CMF 0.8.0 runtime with decision and chat ABIs
+description: Build the pinned CMF 0.8.12 runtime with decision and chat ABIs
 inputs:
   platform:
     description: android, android-arm64, ios or ios-sim

@@ -1,6 +1,6 @@
-# Native Cortiq runtime (0.8.0)
+# Native Cortiq runtime (0.8.12)
 
-Mobile 1.3 builds a single `libcortiq_ffi` from `native/runtime`, preserving
+Mobile 1.3.1 builds a single `libcortiq_ffi` from `native/runtime`, preserving
 all chat/companion exports and adding `cortiq_decision_load`,
 `cortiq_decision_request` and `cortiq_decision_free`. Decision handles must
 never be passed to chat functions. Returned JSON is borrowed thread-local
@@ -14,12 +14,16 @@ scripts/build_native.sh android-arm64  # connected-phone development
 ```
 
 The script selects 16 KB ELF alignment on Android. `native/runtime/Cargo.lock`
-pins dependencies. See [provenance](runtime/UPSTREAM.md) and the
+pins dependencies. Its iOS path also pins native dependencies to the Runner
+deployment target (iOS 15.0), rather than the installed Xcode SDK version.
+See [provenance](runtime/UPSTREAM.md) and the
 [mobile Decision guide](../docs/mobile-decision.md). Generated native libraries
 are intentionally not stored in Git. Build them before a local Flutter build.
 
-The material below records the previous 0.5.82 packaging and companion setup;
-use the source-build commands above for 1.3+, not the old prebuilt libraries.
+> **Archived reference only — do not follow these as build instructions.** The
+> material below records the retired 0.5.82 packaging and historical Companion
+> measurements. For Mobile 1.3+, use the source-build commands above; the
+> generated libraries are ignored and must never be copied or committed.
 
 ---
 
@@ -75,7 +79,7 @@ what is left open in the engine.
 When the library is missing the app falls back to a clearly-labeled
 **demo engine**.
 
-## Android
+## Archived Android packaging notes (0.5.82)
 
 All three ABIs are checked into `android/app/src/main/jniLibs/`
 (arm64-v8a, armeabi-v7a, x86_64), built from the cmf release tag
@@ -111,7 +115,7 @@ llvm-nm --defined-only jniLibs/arm64-v8a/libcortiq_ffi.so \
   | grep -c cortiq_set_peer                        # the ABI you expect to bind
 ```
 
-## iOS
+## Archived iOS linking notes (0.5.82)
 
 `ios/Frameworks/libcortiq_ffi.a` (arm64, from the same release) is linked
 via `ios/Flutter/Cortiq.xcconfig`. Getting it into the binary takes three
@@ -177,7 +181,7 @@ where `probe.c` declares the entry points and references them from `main` —
 a missing symbol fails the link, which is the same thing the app's own build
 would hit.
 
-## Companion: the network split (0.5.70+)
+## Archived Companion protocol notes (historical measurements)
 
 `cortiq_set_peer` routes every later generation through a desktop holding
 the **same** `.cmf` file, and `cortiq_worker_start` does the reverse — this

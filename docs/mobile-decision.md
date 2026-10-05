@@ -1,6 +1,6 @@
 # CMF Decision on your phone
 
-Cortiq Mobile 1.3 uses **Cortiq 0.8.0**. Chat models still generate text;
+Cortiq Mobile 1.3.1 uses **Cortiq 0.8.12**. Chat models still generate text;
 Decision models choose from a skill's labels using reconstruction error.
 
 ## Three steps
@@ -55,7 +55,7 @@ before accepting a Decision file.
 
 Decision evaluation currently uses **CPU on Android/iOS**. The existing GPU
 setting still controls generative chat. The desktop Decision Metal backend
-is macOS-only in upstream 0.8.0; it is not advertised as an iPhone GPU backend.
+is macOS-only in upstream 0.8.12; it is not advertised as an iPhone GPU backend.
 Measured stages are shown separately, without fixed speed claims.
 
 All native libraries are built from pinned source in GitHub Actions. Apple
@@ -90,3 +90,20 @@ Fixture SHA-256: `ed9b8ec2bbfe9e9fd30f14a5eaf82314f38bc7e7510a39772baa2de3801d79
 The test asserts three known labels, abstention, bearer authentication, typed
 API, wrong-model rejection, native ABI availability, secure-storage round trip
 and the real decision screen. It makes **no paid oracle calls**.
+
+Flutter removes its temporary `.dev` integration-test package when a run
+finishes. Reinstall the APK and seed the fixture again before a separate test
+invocation.
+
+For a generic chat-path smoke test, copy the verified
+`hy-mt2-1.8b-q1t.cmf` fixture (SHA-256
+`aeb52bf287fb52f6e67f452dd72302087420f3b9e2081ed0cb86fd65cf289424`) to
+`app_flutter/generation-test.cmf`, then run:
+
+```bash
+flutter test integration_test/generative_smoke_test.dart -d DEVICE_ID
+```
+
+It verifies the fixture hash, a streamed local response, and the expected
+English-to-Russian translation before reporting end-to-end timing. Its reported
+tokens/sec includes prompt prefill, so it is not a decode-throughput benchmark.
