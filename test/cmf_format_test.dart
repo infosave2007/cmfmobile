@@ -259,6 +259,41 @@ void main() {
 
       expect(await CmfValidator.validate(path), isEmpty);
     });
+
+    test(
+      'validator rejects SlidingAttention without a positive window',
+      () async {
+        final dir = await Directory.systemTemp.createTemp('cmf_sliding_window');
+        final path = '${dir.path}/missing-window.cmf';
+        addTearDown(() => dir.delete(recursive: true));
+
+        // The validator rejects this before looking at layer tensor names: the
+        // native runtime needs a non-zero KV cache window for this operator.
+        final writer = CmfWriter(
+          outputPath: path,
+          headerJson: {
+            'format': 'cmf',
+            'version': 2,
+            'arch': {
+              'arch_name': 'spark2_5',
+              'hidden_size': 1,
+              'num_layers': 1,
+              'vocab_size': 1,
+              'layer_types': ['SlidingAttention'],
+              'tie_word_embeddings': true,
+            },
+            'quant_type': 'F16',
+          },
+          tensors: const [],
+        );
+        await writer.begin();
+        await writer.finish();
+
+        expect(await CmfValidator.validate(path), [
+          'SlidingAttention layers require a positive arch.sliding_window',
+        ]);
+      },
+    );
   });
 
   group('safetensors', () {
