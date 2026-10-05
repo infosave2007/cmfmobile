@@ -343,6 +343,14 @@ abstract final class CmfValidator {
       final moe = arch['moe'] as Map<String, dynamic>?;
       final numExperts = moe?['num_experts'] as int? ?? 0;
       final tied = arch['tie_word_embeddings'] == true;
+      if (layerTypes.contains('SlidingAttention')) {
+        final slidingWindow = arch['sliding_window'];
+        if (slidingWindow is! int || slidingWindow <= 0) {
+          return const [
+            'SlidingAttention layers require a positive arch.sliding_window',
+          ];
+        }
+      }
 
       // Tensor names from the directory pool.
       if (env.dirLen < 16 || env.dirLen > 64 * 1024 * 1024) {
