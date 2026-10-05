@@ -354,6 +354,7 @@ class _DecisionScreenState extends ConsumerState<DecisionScreen> {
                       result['accepted'] == true
                           ? '${result['choice']}'
                           : l.decisionAbstainBody,
+                      key: const Key('decision-choice'),
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 12),

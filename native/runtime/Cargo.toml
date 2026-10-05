@@ -1,6 +1,6 @@
 [package]
 name = "cmf-mobile-runtime"
-version = "0.8.0"
+version = "0.8.12"
 edition = "2024"
 rust-version = "1.88"
 license = "Apache-2.0"
@@ -14,10 +14,10 @@ crate-type = ["cdylib", "staticlib", "rlib"]
 gpu = ["cortiq-engine/gpu"]
 
 [dependencies]
-cortiq-core = "=0.8.0"
-cortiq-engine = "=0.8.0"
-cortiq-net = "=0.8.0"
-cortiq-decision = "=0.8.0"
+cortiq-core = "=0.8.12"
+cortiq-engine = "=0.8.12"
+cortiq-net = "=0.8.12"
+cortiq-decision = "=0.8.12"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 

@@ -324,7 +324,7 @@ class NativeCortiqEngine extends InferenceEngine {
       model.filePath,
     )).isDecision;
     if (isDecision && !supportsDecisions) {
-      throw UnsupportedError('CMF Decision requires the mobile 0.8.0 runtime');
+      throw UnsupportedError('CMF Decision requires the mobile 0.8.12 runtime');
     }
     final address = await Isolate.run(() {
       final lib = _openLibrary();

@@ -25,7 +25,7 @@ converter, and an OpenAI-compatible server speaking the CMF protocol.
 
 ### Decisions and an optional oracle
 
-Cortiq Mobile 1.3 supports **CMF Decision / Cortiq 0.8.0** alongside chat models.
+Cortiq Mobile 1.3.1 supports **CMF Decision / Cortiq 0.8.12** alongside chat models.
 The library labels **Chat**, **Decisions** and non-standalone **Skill add-ons**.
 Loading a decision model opens its skills instead of a chat input.
 
@@ -129,14 +129,13 @@ flutter gen-l10n
 flutter run
 ```
 
-**The app ships with the real cortiq runtime** —
-`libcortiq_ffi` v0.5.82 (arm64-v8a, armeabi-v7a, x86_64 + iOS static lib) from the [cmf releases](https://github.com/infosave2007/cmf/releases)
-is bundled in `android/app/src/main/jniLibs/`, so chat and the server run
-actual on-device inference out of the box (verified end-to-end: qwen3-5-4b
-Q8_2F streams through the same binding — see `tool/ffi_smoke.dart`).
-The iOS static lib is linked via `ios/Flutter/Cortiq.xcconfig`. Where the
-library is absent the app falls back to a clearly-labeled **demo engine**;
-details in [native/README.md](native/README.md).
+**The app ships with the real Cortiq runtime** — Android and iOS artifacts are
+built from the pinned **Cortiq 0.8.12** source in CI, including this app's
+Decision adapter. Generated `.so` and `.a` files are intentionally not stored
+in Git; the shared native-build action produces every Android ABI and the iOS
+static library before packaging. If a development build lacks that library,
+the app falls back to a clearly labelled **demo engine**; details are in
+[native/README.md](native/README.md).
 
 ## Architecture
 
