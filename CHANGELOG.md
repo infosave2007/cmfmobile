@@ -1,3 +1,10 @@
+# 1.3.2 — Spark-X2.5 mobile compatibility
+
+- Fixed the shared CMF structural preflight: `SlidingAttention` is a native
+  Q/K/V/O attention layer in Cortiq 0.8.12, not an unsupported model type.
+  This unblocks Spark-X2.5 q4mix on Android and iOS while retaining the
+  projection-tensor checks.
+
 # 1.3.1 — Cortiq 0.8.12 on mobile
 
 - Rebuilt the Android and iOS native runtime from pinned Cortiq 0.8.12 source,

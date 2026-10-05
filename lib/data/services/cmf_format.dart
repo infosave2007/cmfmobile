@@ -385,7 +385,12 @@ abstract final class CmfValidator {
         );
       }
       for (var i = 0; i < layerTypes.length; i++) {
-        if (layerTypes[i] == 'FullAttention') {
+        // SlidingAttention is still the canonical Q/K/V/O attention
+        // operator; its window is configured by the architecture header and
+        // applied by the native KV cache. It therefore has the same tensor
+        // contract as FullAttention (see the runtime's layer loader).
+        if (layerTypes[i] == 'FullAttention' ||
+            layerTypes[i] == 'SlidingAttention') {
           final missing = ['q_proj', 'k_proj', 'v_proj', 'o_proj']
               .where(
                 (n) => !names.contains('model.layers.$i.self_attn.$n.weight'),
@@ -393,7 +398,7 @@ abstract final class CmfValidator {
               .toList();
           if (missing.isNotEmpty) {
             problems.add(
-              'layer $i is FullAttention but is missing '
+              'layer $i is ${layerTypes[i]} but is missing '
               'self_attn.${missing.join('/')} weights',
             );
             break; // one clear message beats sixty
