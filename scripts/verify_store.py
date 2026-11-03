@@ -10,6 +10,46 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 
+_GOOGLE_RETRYABLE_STATUSES = {429, 500, 502, 503, 504}
+_GOOGLE_RETRY_DELAYS = (2, 4, 8, 16, 30)
+
+
+def _google_request(session, method, url, **kwargs):
+    """Make a Play Developer API request, retrying only transient failures."""
+    import requests
+
+    response = None
+    for attempt in range(len(_GOOGLE_RETRY_DELAYS) + 1):
+        try:
+            response = getattr(session, method)(url, **kwargs)
+        except requests.RequestException as error:
+            if attempt == len(_GOOGLE_RETRY_DELAYS):
+                raise
+            detail = type(error).__name__
+        else:
+            if response.status_code not in _GOOGLE_RETRYABLE_STATUSES:
+                response.raise_for_status()
+                return response
+            if attempt == len(_GOOGLE_RETRY_DELAYS):
+                response.raise_for_status()
+            detail = f'HTTP {response.status_code}'
+
+        delay = _GOOGLE_RETRY_DELAYS[attempt]
+        print(
+            json.dumps(
+                {
+                    'store': 'google',
+                    'operation': method.upper(),
+                    'transient_error': detail,
+                    'attempt': attempt + 1,
+                    'retry_in_seconds': delay,
+                }
+            ),
+            flush=True,
+        )
+        time.sleep(delay)
+
+
 def apple():
     import jwt
     deadline = time.monotonic() + 25 * 60
@@ -52,12 +92,15 @@ def google():
         scopes=['https://www.googleapis.com/auth/androidpublisher'])
     session = AuthorizedSession(creds)
     root = 'https://androidpublisher.googleapis.com/androidpublisher/v3/applications/ai.cortiq.cmf_mobile/edits'
-    response = session.post(root, json={}, timeout=30)
-    response.raise_for_status()
+    response = _google_request(session, 'post', root, json={}, timeout=30)
     edit = response.json()['id']
     try:
-        response = session.get(f"{root}/{edit}/tracks/{os.environ.get('PLAY_TRACK', 'internal')}", timeout=30)
-        response.raise_for_status()
+        response = _google_request(
+            session,
+            'get',
+            f"{root}/{edit}/tracks/{os.environ.get('PLAY_TRACK', 'internal')}",
+            timeout=30,
+        )
         releases = response.json().get('releases', [])
         wanted = os.environ['BUILD_NUMBER']
         matches = [r for r in releases if wanted in r.get('versionCodes', [])]
@@ -67,7 +110,7 @@ def google():
                           'releases':matches}), flush=True)
     finally:
         # Discard the read-only verification edit. Never commit it.
-        session.delete(f'{root}/{edit}', timeout=30).raise_for_status()
+        _google_request(session, 'delete', f'{root}/{edit}', timeout=30)
         session.close()
 
 
