@@ -62,6 +62,21 @@ String quantLabelFor(String? largestCmfName, List<String> tags) {
   return '';
 }
 
+/// Ready files in a repository, ordered so a phone-safe variant is selected
+/// before its larger counterparts. The file path is the tiebreaker, making
+/// the default deterministic when a publisher accidentally duplicates sizes.
+List<HfFileEntry> readyCmfFiles(Iterable<HfFileEntry> files) {
+  final cmf = files
+      .where((file) => file.path.toLowerCase().endsWith('.cmf'))
+      .where((file) => file.size > 0)
+      .toList();
+  cmf.sort((a, b) {
+    final bySize = a.size.compareTo(b.size);
+    return bySize != 0 ? bySize : a.path.compareTo(b.path);
+  });
+  return cmf;
+}
+
 class _FeaturedEntry {
   const _FeaturedEntry(
     this.model,
@@ -287,9 +302,9 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
         model: model,
         resolveFiles: () =>
             ref.read(hfApiProvider).listFiles(model.id, token: token),
-        onDownloadReady: () {
+        onDownloadReady: (cmfPath) {
           Navigator.pop(sheetContext);
-          _startDirect(model);
+          _startDirect(model, cmfPath: cmfPath);
         },
         onStartConvert: (quant, name) async {
           Navigator.pop(sheetContext);
@@ -815,7 +830,7 @@ class _RepoSheet extends StatefulWidget {
 
   final HfModel model;
   final Future<List<HfFileEntry>> Function() resolveFiles;
-  final VoidCallback onDownloadReady;
+  final ValueChanged<String> onDownloadReady;
   final void Function(QuantType quant, String name) onStartConvert;
 
   @override
@@ -829,6 +844,7 @@ class _RepoSheetState extends State<_RepoSheet> {
   QuantType _quant = QuantType.q4tp;
 
   List<HfFileEntry>? _files;
+  String? _selectedReadyCmfPath;
   String? _error;
 
   @override
@@ -837,7 +853,12 @@ class _RepoSheetState extends State<_RepoSheet> {
     widget
         .resolveFiles()
         .then((files) {
-          if (mounted) setState(() => _files = files);
+          if (!mounted) return;
+          final ready = readyCmfFiles(files);
+          setState(() {
+            _files = files;
+            _selectedReadyCmfPath = ready.isEmpty ? null : ready.first.path;
+          });
         })
         .catchError((Object e) {
           if (mounted) setState(() => _error = e.toString());
@@ -850,13 +871,17 @@ class _RepoSheetState extends State<_RepoSheet> {
     super.dispose();
   }
 
-  HfFileEntry? get _readyCmf {
-    final cmf = _files
-        ?.where((f) => f.path.toLowerCase().endsWith('.cmf'))
-        .toList();
-    if (cmf == null || cmf.isEmpty) return null;
-    cmf.sort((a, b) => b.size.compareTo(a.size));
-    return cmf.first;
+  List<HfFileEntry> get _readyCmfs =>
+      readyCmfFiles(_files ?? const <HfFileEntry>[]);
+
+  HfFileEntry? get _selectedReadyCmf {
+    final ready = _readyCmfs;
+    if (ready.isEmpty) return null;
+    final selected = _selectedReadyCmfPath;
+    return ready.firstWhere(
+      (file) => file.path == selected,
+      orElse: () => ready.first,
+    );
   }
 
   /// Source weight bytes = every safetensors shard in the repo root.
@@ -900,7 +925,7 @@ class _RepoSheetState extends State<_RepoSheet> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                _readyCmf != null
+                _selectedReadyCmf != null
                     ? l.importReadyCmfTitle
                     : l.importConfigureTitle,
                 style: Theme.of(context).textTheme.titleMedium,
@@ -933,7 +958,7 @@ class _RepoSheetState extends State<_RepoSheet> {
                     ),
                   ],
                 )
-              else if (_readyCmf != null)
+              else if (_selectedReadyCmf != null)
                 ..._buildReadyPanel(l, scheme)
               else
                 ..._buildConvertPanel(l, scheme),
@@ -945,52 +970,75 @@ class _RepoSheetState extends State<_RepoSheet> {
   }
 
   List<Widget> _buildReadyPanel(AppLocalizations l, ColorScheme scheme) {
-    final file = _readyCmf!;
+    final file = _selectedReadyCmf!;
+    final files = _readyCmfs;
     return [
       Text(l.importReadyCmfBody, style: const TextStyle(fontSize: 13)),
       const SizedBox(height: 12),
-      Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: scheme.primary.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.insert_drive_file_outlined,
-              size: 18,
-              color: scheme.primary,
+      if (files.length == 1)
+        _readyFileSummary(file, scheme)
+      else
+        ...files.map(
+          (candidate) => RadioListTile<String>(
+            value: candidate.path,
+            // ignore: deprecated_member_use
+            groupValue: file.path,
+            // ignore: deprecated_member_use
+            onChanged: (path) => setState(() => _selectedReadyCmfPath = path),
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            title: Text(
+              candidate.path,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                file.path,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
+            subtitle: Text(
+              formatBytes(candidate.size),
+              style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
             ),
-            if (file.size > 0)
-              Text(
-                formatBytes(file.size),
-                style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
-              ),
-          ],
+          ),
         ),
-      ),
       const SizedBox(height: 16),
       SizedBox(
         width: double.infinity,
         child: FilledButton.icon(
           icon: const Icon(Icons.download_for_offline_outlined),
           label: Text(l.importDownloadButton),
-          onPressed: widget.onDownloadReady,
+          onPressed: () => widget.onDownloadReady(file.path),
         ),
       ),
     ];
+  }
+
+  Widget _readyFileSummary(HfFileEntry file, ColorScheme scheme) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: scheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.insert_drive_file_outlined,
+            size: 18,
+            color: scheme.primary,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              file.path,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Text(
+            formatBytes(file.size),
+            style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
   }
 
   List<Widget> _buildConvertPanel(AppLocalizations l, ColorScheme scheme) {

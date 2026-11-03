@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       build_number:
-        description: "versionCode (целое число), например 50"
+        description: "versionCode (целое число), например 51"
         required: true
-        default: "50"
+        default: "51"
       track:
         description: "Трек Play: internal | alpha | beta | production"
         required: true
