@@ -207,6 +207,153 @@ void main() {
 
       expect(await CmfValidator.validate(path), isEmpty);
     });
+
+    test('validator accepts SlidingAttention QKV tensor layout', () async {
+      final dir = await Directory.systemTemp.createTemp('cmf_sliding_attn');
+      final path = '${dir.path}/sliding-attention.cmf';
+      addTearDown(() => dir.delete(recursive: true));
+
+      // SlidingAttention has the same projection tensors as FullAttention;
+      // the native runtime gets its causal window from arch.sliding_window.
+      final tensors =
+          [
+                'model.embed_tokens.weight',
+                'model.layers.0.self_attn.q_proj.weight',
+                'model.layers.0.self_attn.k_proj.weight',
+                'model.layers.0.self_attn.v_proj.weight',
+                'model.layers.0.self_attn.o_proj.weight',
+              ]
+              .map(
+                (name) => CmfTensorSpec(
+                  name: name,
+                  dtype: Cmf.dtF16,
+                  shape: [1],
+                  nbytes: 2,
+                ),
+              )
+              .toList();
+      final writer = CmfWriter(
+        outputPath: path,
+        headerJson: {
+          'format': 'cmf',
+          'version': 2,
+          'arch': {
+            'arch_name': 'spark2_5',
+            'hidden_size': 1,
+            'num_layers': 1,
+            'vocab_size': 1,
+            'layer_types': ['SlidingAttention'],
+            'sliding_window': 512,
+            'tie_word_embeddings': true,
+          },
+          'quant_type': 'F16',
+        },
+        tensors: tensors,
+      );
+      await writer.begin();
+      for (var i = 0; i < tensors.length; i++) {
+        await writer.nextTensor();
+        await writer.writeTensorChunk(Uint8List(2));
+      }
+      await writer.finish();
+
+      expect(await CmfValidator.validate(path), isEmpty);
+    });
+
+    test('validator accepts a ready-to-run LFM3 text CMF layout', () async {
+      final dir = await Directory.systemTemp.createTemp('cmf_lfm3');
+      final path = '${dir.path}/lfm3.cmf';
+      addTearDown(() => dir.delete(recursive: true));
+
+      // LFM3 text CMFs combine ordinary attention, windowed attention and
+      // ShortConv. They are downloaded as preconverted CMFs; this check
+      // protects the mobile preflight from rejecting their native layout.
+      final tensors =
+          [
+                'model.embed_tokens.weight',
+                'model.layers.0.self_attn.q_proj.weight',
+                'model.layers.0.self_attn.k_proj.weight',
+                'model.layers.0.self_attn.v_proj.weight',
+                'model.layers.0.self_attn.o_proj.weight',
+                'model.layers.1.self_attn.q_proj.weight',
+                'model.layers.1.self_attn.k_proj.weight',
+                'model.layers.1.self_attn.v_proj.weight',
+                'model.layers.1.self_attn.o_proj.weight',
+                'model.layers.2.short_conv.in_proj.weight',
+                'model.layers.2.short_conv.conv.weight',
+                'model.layers.2.short_conv.out_proj.weight',
+              ]
+              .map(
+                (name) => CmfTensorSpec(
+                  name: name,
+                  dtype: Cmf.dtF16,
+                  shape: [1],
+                  nbytes: 2,
+                ),
+              )
+              .toList();
+      final writer = CmfWriter(
+        outputPath: path,
+        headerJson: {
+          'format': 'cmf',
+          'version': 2,
+          'arch': {
+            'arch_name': 'lfm3',
+            'hidden_size': 1,
+            'num_layers': 3,
+            'vocab_size': 1,
+            'layer_types': ['FullAttention', 'SlidingAttention', 'ShortConv'],
+            'sliding_window': 512,
+            'tie_word_embeddings': true,
+          },
+          'quant_type': 'F16',
+        },
+        tensors: tensors,
+      );
+      await writer.begin();
+      for (var i = 0; i < tensors.length; i++) {
+        await writer.nextTensor();
+        await writer.writeTensorChunk(Uint8List(2));
+      }
+      await writer.finish();
+
+      expect(await CmfValidator.validate(path), isEmpty);
+    });
+
+    test(
+      'validator rejects SlidingAttention without a positive window',
+      () async {
+        final dir = await Directory.systemTemp.createTemp('cmf_sliding_window');
+        final path = '${dir.path}/missing-window.cmf';
+        addTearDown(() => dir.delete(recursive: true));
+
+        // The validator rejects this before looking at layer tensor names: the
+        // native runtime needs a non-zero KV cache window for this operator.
+        final writer = CmfWriter(
+          outputPath: path,
+          headerJson: {
+            'format': 'cmf',
+            'version': 2,
+            'arch': {
+              'arch_name': 'spark2_5',
+              'hidden_size': 1,
+              'num_layers': 1,
+              'vocab_size': 1,
+              'layer_types': ['SlidingAttention'],
+              'tie_word_embeddings': true,
+            },
+            'quant_type': 'F16',
+          },
+          tensors: const [],
+        );
+        await writer.begin();
+        await writer.finish();
+
+        expect(await CmfValidator.validate(path), [
+          'SlidingAttention layers require a positive arch.sliding_window',
+        ]);
+      },
+    );
   });
 
   group('safetensors', () {

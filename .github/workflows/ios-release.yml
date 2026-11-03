@@ -5,9 +5,9 @@ on:
   workflow_dispatch:
     inputs:
       build_number:
-        description: "Номер сборки (CFBundleVersion), например 47"
+        description: "Номер сборки (CFBundleVersion), например 50"
         required: true
-        default: "47"
+        default: "50"
 
 jobs:
   build-and-upload:
