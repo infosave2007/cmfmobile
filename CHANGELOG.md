@@ -1,3 +1,10 @@
+# 1.3.4 — safer ready-CMF downloads
+
+- Ready-CMF repositories now present every available `.cmf` variant before
+  downloading. The smallest file is preselected, and the download uses the
+  exact selected path. This keeps a phone-safe Q4TP option from silently being
+  replaced by a larger quantization.
+
 # 1.3.3 — Cortiq 0.8.54 runtime and LFM3 text models
 
 - Rebuilt every Android ABI and the iOS static runtime from pinned Cortiq
