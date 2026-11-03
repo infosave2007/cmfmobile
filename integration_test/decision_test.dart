@@ -28,7 +28,7 @@ void main() {
       final engine = container.read(engineProvider);
       expect(engine.isAvailable, true);
       expect(engine.supportsDecisions, true);
-      expect(engine.name, contains('0.8.12'));
+      expect(engine.name, contains('0.8.54'));
       final directory = await getApplicationDocumentsDirectory();
       final file = File('${directory.path}/decision-test.cmf');
       expect(

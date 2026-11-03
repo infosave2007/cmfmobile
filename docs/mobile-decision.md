@@ -1,6 +1,6 @@
 # CMF Decision on your phone
 
-Cortiq Mobile 1.3.1 uses **Cortiq 0.8.12**. Chat models still generate text;
+Cortiq Mobile 1.3.3 uses **Cortiq 0.8.54**. Chat models still generate text;
 Decision models choose from a skill's labels using reconstruction error.
 
 ## Three steps
@@ -55,7 +55,7 @@ before accepting a Decision file.
 
 Decision evaluation currently uses **CPU on Android/iOS**. The existing GPU
 setting still controls generative chat. The desktop Decision Metal backend
-is macOS-only in upstream 0.8.12; it is not advertised as an iPhone GPU backend.
+is not advertised as an iPhone GPU backend.
 Measured stages are shown separately, without fixed speed claims.
 
 All native libraries are built from pinned source in GitHub Actions. Apple

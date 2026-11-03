@@ -1,11 +1,15 @@
-# Native Cortiq runtime (0.8.12)
+# Native Cortiq runtime (0.8.54)
 
-Mobile 1.3.1 builds a single `libcortiq_ffi` from `native/runtime`, preserving
+Mobile 1.3.3 builds a single `libcortiq_ffi` from `native/runtime`, preserving
 all chat/companion exports and adding `cortiq_decision_load`,
 `cortiq_decision_request` and `cortiq_decision_free`. Decision handles must
 never be passed to chat functions. Returned JSON is borrowed thread-local
 memory and must be copied before another native JSON call. Unload waits for
 queued requests before freeing a handle.
+
+Compatible ready-to-run LFM3 text CMFs use the existing chat ABI. This mobile
+build accepts text prompts only; raw LFM3 conversion and visual or audio inputs
+are not exposed here.
 
 ```bash
 scripts/build_native.sh android        # all 3 ABIs; arm64/x86_64 retain GPU

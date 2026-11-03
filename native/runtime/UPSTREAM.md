@@ -1,12 +1,12 @@
 # Source provenance
 
-`src/lib.rs` is the C ABI from `infosave2007/cmf` tag `v0.8.12`
-(commit `746df3c3943dc4b4a2a2183937a598e840a14add`), with one module declaration
+`src/lib.rs` is the C ABI from `infosave2007/cmf` tag `v0.8.54`
+(commit `d979ebfe00079e9f8edee080b766935268c96df5`), with one module declaration
 added for `decision.rs`. Upstream Apache-2.0 license is retained in `LICENSE`.
 
 `decision.rs` is the mobile adapter. Core parsing, encoder, reconstruction,
 confidence gates, skill rubrics and typed decision protocol come from the
-published **cortiq-decision =0.8.12** crate, not a reimplementation or a text
+published **cortiq-decision =0.8.54** crate, not a reimplementation or a text
 classification prompt. The adapter disables native cloud calls and learning.
 
 A single static/shared Rust library contains both ABIs. Linking two Rust

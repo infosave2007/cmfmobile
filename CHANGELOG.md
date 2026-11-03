@@ -1,3 +1,14 @@
+# 1.3.3 — Cortiq 0.8.54 runtime and LFM3 text models
+
+- Rebuilt every Android ABI and the iOS static runtime from pinned Cortiq
+  0.8.54 source in GitHub Actions; generated native artifacts remain out of
+  Git and are verified before packaging.
+- Adds support for compatible, ready-to-run LFM3 text CMF models. Download a
+  preconverted `.cmf` for LFM3: the on-device converter does not yet convert
+  raw LFM3 checkpoints. The mobile FFI and UI accept text prompts only, so
+  this release does not expose image, OCR or audio inputs.
+- Retains the local CMF Decision adapter and its offline-only policy.
+
 # 1.3.2 — Spark-X2.5 mobile compatibility
 
 - Fixed the shared CMF structural preflight: `SlidingAttention` is a native

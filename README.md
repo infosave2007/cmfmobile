@@ -25,12 +25,15 @@ converter, and an OpenAI-compatible server speaking the CMF protocol.
 
 ### Decisions and an optional oracle
 
-Cortiq Mobile 1.3.2 supports **CMF Decision / Cortiq 0.8.12** alongside chat models.
+Cortiq Mobile 1.3.3 supports **CMF Decision / Cortiq 0.8.54** alongside chat models.
 The library labels **Chat**, **Decisions** and non-standalone **Skill add-ons**.
 Loading a decision model opens its skills instead of a chat input.
 
 It also accepts CMF chat models with native **SlidingAttention** layers, such
-as Spark-X2.5 q4mix, while keeping the structural Q/K/V/O preflight.
+as Spark-X2.5 q4mix. Cortiq 0.8.54 adds support for compatible ready-to-run
+**LFM3 text CMFs** while keeping the structural Q/K/V/O preflight. Download a
+preconverted `.cmf` for LFM3: on-device conversion of raw LFM3 checkpoints is
+not available yet, and the mobile chat interface accepts text prompts only.
 
 - Local decisions use reconstruction error, with a visible abstention when uncertain.
 - **Settings → Oracle**: optional HTTPS provider, model ID and securely stored API key.
@@ -133,7 +136,7 @@ flutter run
 ```
 
 **The app ships with the real Cortiq runtime** — Android and iOS artifacts are
-built from the pinned **Cortiq 0.8.12** source in CI, including this app's
+built from the pinned **Cortiq 0.8.54** source in CI, including this app's
 Decision adapter. Generated `.so` and `.a` files are intentionally not stored
 in Git; the shared native-build action produces every Android ABI and the iOS
 static library before packaging. If a development build lacks that library,
