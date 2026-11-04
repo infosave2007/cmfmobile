@@ -39,15 +39,30 @@ class CmfMetadata {
   /// Task-mask names baked into the file (virtual sparsity skills).
   final List<String> tasks;
 
-  /// Skills this file *is*, as declared in its header. Non-empty means the
-  /// file is a skill cut from a base model, not a model that can run alone.
+  /// Skills this file *is*, as declared in its header: standalone records
+  /// cut against a base model (`base_dir_hash`). Non-empty means the file
+  /// is a skill that plugs into that base, not a model that can run alone.
+  /// Skills a model carries inside itself — Embryo's lookup records — are
+  /// not listed here; see `cmfHeaderSkills`.
   final List<String> skills;
   final int requiredFeatures;
 
-  /// A skill plugs into a base model; it cannot be loaded and chatted with.
-  bool get isDecision => (requiredFeatures & 0x800) != 0;
+  /// Envelope feature bit 6, `SKILL_FILE` (CMF_V2_SPEC §9.1): the file is a
+  /// standalone skill. A writer raises it for any `base_dir_hash` record, so
+  /// on a well-formed file it agrees with [skills]; both are checked so a
+  /// file carrying only one of the two signals still stays out of Chat.
+  static const int featureSkillFile = 1 << 6;
 
-  bool get isSkill => !isDecision && skills.isNotEmpty;
+  /// Envelope feature bit 11: a CMF Decision file, served by the decision
+  /// ABI and without a chat head.
+  static const int featureDecision = 1 << 11;
+
+  bool get isDecision => (requiredFeatures & featureDecision) != 0;
+
+  /// A skill plugs into a base model; it cannot be loaded and chatted with.
+  bool get isSkill =>
+      !isDecision &&
+      ((requiredFeatures & featureSkillFile) != 0 || skills.isNotEmpty);
 
   /// Text attachments are inlined into the prompt, so any chat model with a
   /// template and a reasonable context window can accept them.

@@ -19,12 +19,55 @@ void main() {
           {
             'id': 'code',
             'name': 'Coding specialist (Python/JS/systems)',
+            'layers': [0, 1, 2, 3, 4, 5],
+            'base_dir_hash': '9f22593eb458bc6f',
             'base_arch': 'nanbeige',
             'task': 'specialist',
           }
         ],
       };
       expect(cmfHeaderSkills(header), ['Coding specialist (Python/JS/systems)']);
+    });
+
+    test('skills committed into their own model do not make a skill file',
+        () {
+      // Shape taken from infosave/Embryo-56M-cmf, embryo-56m.cmf: the genome
+      // and its lookup records travel in one file, each record bound to that
+      // genome. No base_dir_hash, no feature bit 6 — a complete chat model
+      // that 1.3.4 showed as "Skill add-on" and would not open as Chat.
+      Map<String, dynamic> bound(String id) => {
+            'id': id,
+            'name': id,
+            'layers': const [],
+            'kind': 'lookup',
+            'lookup': {'entries': 4265, 'keys': 11893},
+            'bound': {
+              'genome_id': 'embryo-chat-56m',
+              'generation': 0,
+              'master_trunk_hash': 'a6004f1eab966694',
+            },
+            'status': 'active',
+          };
+      final header = <String, dynamic>{
+        'version': 2,
+        'format': 'cmf',
+        'arch': {'arch_name': 'cortiq_embryo', 'num_layers': 8},
+        'genome': {'id': 'embryo-chat-56m', 'status': 'sealed'},
+        'skills': [bound('herbs'), bound('countries'), bound('dontknow')],
+      };
+      expect(cmfHeaderSkills(header), isEmpty);
+    });
+
+    test('only the standalone records count when both kinds are present',
+        () {
+      final header = <String, dynamic>{
+        'skills': [
+          {'id': 'herbs', 'bound': {'genome_id': 'embryo-chat-56m'}},
+          {'id': 'gfx-html', 'base_dir_hash': '9f22593eb458bc6f'},
+          {'id': 'blank-hash', 'base_dir_hash': ''},
+        ],
+      };
+      expect(cmfHeaderSkills(header), ['gfx-html']);
     });
 
     test('a model header declares none', () {
@@ -42,7 +85,7 @@ void main() {
     test('falls back to the id when a skill has no name', () {
       final header = <String, dynamic>{
         'skills': [
-          {'id': 'gfx'}
+          {'id': 'gfx', 'base_dir_hash': '9f22593eb458bc6f'}
         ],
       };
       expect(cmfHeaderSkills(header), ['gfx']);
@@ -244,6 +287,73 @@ void main() {
             'vocab_size': 1,
             'layer_types': ['SlidingAttention'],
             'sliding_window': 512,
+            'tie_word_embeddings': true,
+          },
+          'quant_type': 'F16',
+        },
+        tensors: tensors,
+      );
+      await writer.begin();
+      for (var i = 0; i < tensors.length; i++) {
+        await writer.nextTensor();
+        await writer.writeTensorChunk(Uint8List(2));
+      }
+      await writer.finish();
+
+      expect(await CmfValidator.validate(path), isEmpty);
+    });
+
+    test('validator accepts the Embryo linear + bounded attention layout',
+        () async {
+      final dir = await Directory.systemTemp.createTemp('cmf_embryo');
+      final path = '${dir.path}/embryo.cmf';
+      addTearDown(() => dir.delete(recursive: true));
+
+      // Tensor names from infosave/Embryo-56M-cmf: gated-delta-net linear
+      // layers, and BoundedAttention anchor layers that carry the four
+      // projections plus learned sinks. The preflight used to stop at
+      // "unsupported type BoundedAttention", so the 0.8.54 runtime — which
+      // runs the file — was never asked.
+      final tensors =
+          [
+                'model.embed_tokens.weight',
+                'model.norm.weight',
+                'model.layers.0.linear_attn.in_proj_qkv.weight',
+                'model.layers.0.linear_attn.in_proj_z.weight',
+                'model.layers.0.linear_attn.in_proj_a.weight',
+                'model.layers.0.linear_attn.in_proj_b.weight',
+                'model.layers.0.linear_attn.out_proj.weight',
+                'model.layers.0.linear_attn.conv1d.weight',
+                'model.layers.0.linear_attn.A_log',
+                'model.layers.0.linear_attn.dt_bias',
+                'model.layers.0.linear_attn.norm.weight',
+                'model.layers.1.self_attn.q_proj.weight',
+                'model.layers.1.self_attn.k_proj.weight',
+                'model.layers.1.self_attn.v_proj.weight',
+                'model.layers.1.self_attn.o_proj.weight',
+                'model.layers.1.self_attn.sink_k.weight',
+                'model.layers.1.self_attn.sink_v.weight',
+              ]
+              .map(
+                (name) => CmfTensorSpec(
+                  name: name,
+                  dtype: Cmf.dtF16,
+                  shape: [1],
+                  nbytes: 2,
+                ),
+              )
+              .toList();
+      final writer = CmfWriter(
+        outputPath: path,
+        headerJson: {
+          'format': 'cmf',
+          'version': 2,
+          'arch': {
+            'arch_name': 'cortiq_embryo',
+            'hidden_size': 1,
+            'num_layers': 2,
+            'vocab_size': 1,
+            'layer_types': ['LinearAttention', 'BoundedAttention'],
             'tie_word_embeddings': true,
           },
           'quant_type': 'F16',

@@ -1,3 +1,18 @@
+# 1.3.5 — Embryo-56M opens as Chat
+
+- A model that carries its own skills is no longer mistaken for a skill
+  add-on. `infosave/Embryo-56M-cmf` commits its lookup records (herbs,
+  countries, elements, …) into the same file as its genome, so the header's
+  `skills` list is non-empty; 1.3.4 read that as "a skill cut from a base
+  model", showed the card as "Skill add-on" and hid "Load into engine". Only
+  a standalone skill — a record bound to a base by `base_dir_hash`, which
+  also raises envelope feature bit 6 (`SKILL_FILE`) — is an add-on now. Both
+  signals are checked on device; the ready-CMF catalog and the direct
+  download use the same rule.
+- The structural preflight accepts `BoundedAttention` layers (Embryo's anchor
+  layers: Q/K/V/O projections plus learned sinks), which it used to refuse as
+  an unsupported type before the 0.8.54 runtime could load the file.
+
 # 1.3.4 — safer ready-CMF downloads
 
 - Ready-CMF repositories now present every available `.cmf` variant before
