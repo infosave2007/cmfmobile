@@ -1,3 +1,13 @@
+# 1.3.7 — microphone optional on Android
+
+- 1.3.6 added the `RECORD_AUDIO` permission for dictation, which Play reads
+  as "this app requires a microphone" and so dropped 21 device models that
+  have none (mostly TV boxes and a few tablets and phones) from the
+  supported list. The manifest now declares the microphone as an optional
+  feature: those devices get the update again, and on one of them the
+  record button reports the failure instead of doing nothing. No other
+  change from 1.3.6; the iOS build is identical apart from the number.
+
 # 1.3.6 — Cortiq 0.8.56: Embryo answers from its records, Whisper dictation
 
 - The mobile runtime is now built from Cortiq 0.8.56. Chat requests go
