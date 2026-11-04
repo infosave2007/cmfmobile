@@ -274,5 +274,19 @@
   "oracleInvalidResponse": "La respuesta del oráculo no cumple los resultados permitidos de la habilidad y no se ha aceptado.",
   "decisionFailed": "No se pudo obtener una decisión local. Comprueba que hay un modelo CMF Decision y una habilidad cargados.",
   "modelKindSkill": "Complemento",
-  "modelSkillHelp": "Complemento para un modelo de chat base, no un modelo independiente. No se puede abrir como chat ni como modelo de decisiones."
+  "modelSkillHelp": "Complemento para un modelo de chat base, no un modelo independiente. No se puede abrir como chat ni como modelo de decisiones.",
+  "modelKindSpeech": "Reconocimiento de voz",
+  "modelSpeechHelp": "Convierte la voz en texto en este dispositivo. Cargue el modelo y luego dicte al micrófono en el Chat o transcriba un archivo WAV.",
+  "chatSpeechHint": "Toque el micrófono y hable",
+  "chatRecordStart": "Grabar",
+  "chatRecordStop": "Detener la grabación",
+  "chatRecording": "Grabando… {seconds} s",
+  "chatTranscribing": "Transcribiendo… puede tardar hasta un minuto",
+  "chatVoiceNote": "Nota de voz · {seconds} s",
+  "chatMicDenied": "Se denegó el acceso al micrófono. Permítalo en los ajustes del sistema.",
+  "chatRecordingTooShort": "La grabación es demasiado corta.",
+  "chatAttachAudio": "Transcribir un archivo WAV",
+  "chatAudioUnreadable": "No es un archivo WAV que la aplicación pueda leer.",
+  "statsAudio": "{seconds} s de audio",
+  "statsRecord": "ficha {id}"
 }

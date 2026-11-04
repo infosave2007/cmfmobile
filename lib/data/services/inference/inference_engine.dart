@@ -36,6 +36,14 @@ class GenerationEvent {
   final GenerationStats? stats;
 }
 
+/// One speech-to-text result.
+class TranscriptionResult {
+  const TranscriptionResult({required this.text, required this.elapsedMs});
+
+  final String text;
+  final int elapsedMs;
+}
+
 /// Abstraction over the local inference runtime.
 ///
 /// [NativeCortiqEngine] binds to the cortiq-engine Rust runtime over FFI
@@ -72,6 +80,25 @@ abstract class InferenceEngine {
 
   bool get supportsDecisions => false;
   bool get isDecisionModel => loadedModel?.meta?.isDecision == true;
+
+  // --- speech-to-text (mobile runtime >= 0.8.56) ---------------------------
+
+  /// True when the runtime carries the Whisper ABI (`cortiq_stt_*`).
+  bool get supportsTranscription => false;
+  bool get isSpeechModel => loadedModel?.meta?.isSpeechToText == true;
+
+  /// Transcribes one WAV file with the loaded speech model. [language] is a
+  /// Whisper code ("en", "ru", …); [task] "transcribe" or "translate";
+  /// [maxTokens] bounds each 30 s window; [trimEncoder] runs the encoder over
+  /// the audio prefix only (seconds instead of a minute per clip on a phone;
+  /// callers pad clips shorter than ~10 s with silence first, or it loops).
+  Future<TranscriptionResult> transcribe(
+    String wavPath, {
+    required String language,
+    String task = 'transcribe',
+    int maxTokens = 200,
+    bool trimEncoder = true,
+  }) => Future.error(UnsupportedError('speech-to-text is not available'));
 
   /// Native service envelope: {status: HTTP status, body: JSON object}.
   Future<Map<String, dynamic>> decisionRequest(

@@ -76,6 +76,19 @@ typedef _WorkerStartDart = int Function(ffi.Pointer<Utf8>);
 typedef _SetPeerNative = ffi.Int32 Function(ffi.Pointer<Utf8>);
 typedef _SetPeerDart = int Function(ffi.Pointer<Utf8>);
 typedef _PeerStatsNative = ffi.Pointer<Utf8> Function();
+typedef _LastRouteNative = ffi.Pointer<Utf8> Function(ffi.Pointer<ffi.Void>);
+typedef _SttTranscribeNative =
+    ffi.Pointer<Utf8> Function(
+      ffi.Pointer<ffi.Void>,
+      ffi.Pointer<Utf8>,
+      ffi.Pointer<Utf8>,
+    );
+typedef _SttTranscribeDart =
+    ffi.Pointer<Utf8> Function(
+      ffi.Pointer<ffi.Void>,
+      ffi.Pointer<Utf8>,
+      ffi.Pointer<Utf8>,
+    );
 
 typedef _DecisionNative =
     ffi.Pointer<Utf8> Function(
@@ -118,6 +131,17 @@ class NativeCortiqEngine extends InferenceEngine {
         );
       } catch (_) {
         _decisionFree = null;
+      }
+      try {
+        // Mobile runtime >= 0.8.56: the Whisper handle (cortiq_stt_*), a
+        // handle type of its own like decisions.
+        lib.lookup('cortiq_stt_load');
+        lib.lookup('cortiq_stt_transcribe');
+        _sttFree = lib.lookupFunction<_FreeNative, _FreeDart>(
+          'cortiq_stt_free',
+        );
+      } catch (_) {
+        _sttFree = null;
       }
       _version = lib
           .lookupFunction<_VersionNative, _VersionNative>('cortiq_version')()
@@ -201,12 +225,18 @@ class NativeCortiqEngine extends InferenceEngine {
   ffi.DynamicLibrary? _lib;
   _FreeDart? _free;
   _FreeDart? _decisionFree;
+  _FreeDart? _sttFree;
   bool _decision = false;
+  bool _speech = false;
   bool _unloading = false;
   @override
   bool get supportsDecisions => _decisionFree != null;
   @override
   bool get isDecisionModel => _decision;
+  @override
+  bool get supportsTranscription => _sttFree != null;
+  @override
+  bool get isSpeechModel => _speech;
   _SetOptionsDart? _setOptions;
   _SetGpuDart? _setGpu;
   _GpuAvailableDart? _gpuAvailable;
@@ -320,17 +350,26 @@ class NativeCortiqEngine extends InferenceEngine {
     }
     // mmap + header parse can take a moment on big files — off the UI
     // isolate; the returned pointer is process-wide.
-    final isDecision = (await CmfReader.readMetadata(
-      model.filePath,
-    )).isDecision;
+    final meta = await CmfReader.readMetadata(model.filePath);
+    final isDecision = meta.isDecision;
+    final isSpeech = meta.isSpeechToText;
     if (isDecision && !supportsDecisions) {
       throw UnsupportedError('CMF Decision requires the mobile 0.8.54 runtime');
     }
+    if (isSpeech && !supportsTranscription) {
+      throw UnsupportedError(
+        'speech-to-text requires the mobile 0.8.56 runtime',
+      );
+    }
+    // Three handle types, one per loader; they must never be mixed.
+    final loadSymbol = isDecision
+        ? 'cortiq_decision_load'
+        : isSpeech
+        ? 'cortiq_stt_load'
+        : 'cortiq_load';
     final address = await Isolate.run(() {
       final lib = _openLibrary();
-      final load = lib.lookupFunction<_LoadNative, _LoadDart>(
-        isDecision ? 'cortiq_decision_load' : 'cortiq_load',
-      );
+      final load = lib.lookupFunction<_LoadNative, _LoadDart>(loadSymbol);
       final lastError = lib.lookupFunction<_LastErrorNative, _LastErrorNative>(
         'cortiq_last_error',
       );
@@ -338,7 +377,7 @@ class NativeCortiqEngine extends InferenceEngine {
       try {
         final handle = load(pathPtr);
         if (handle == ffi.nullptr) {
-          throw StateError('cortiq_load: ${lastError().toDartString()}');
+          throw StateError('$loadSymbol: ${lastError().toDartString()}');
         }
         return handle.address;
       } finally {
@@ -346,6 +385,7 @@ class NativeCortiqEngine extends InferenceEngine {
       }
     });
     _decision = isDecision;
+    _speech = isSpeech;
     _handle = ffi.Pointer.fromAddress(address);
     _loaded = model;
     // The pool exists only once a model is loaded, so this is the first
@@ -501,8 +541,13 @@ class NativeCortiqEngine extends InferenceEngine {
     cancel();
     await _generations;
     if (_handle != ffi.nullptr) {
-      (_decision ? _decisionFree! : _free!)(_handle);
+      (_decision
+          ? _decisionFree!
+          : _speech
+          ? _sttFree!
+          : _free!)(_handle);
       _decision = false;
+      _speech = false;
       _handle = ffi.nullptr;
       _loaded = null;
       _poolThreads = null;
@@ -554,8 +599,14 @@ class NativeCortiqEngine extends InferenceEngine {
 
   @override
   Stream<GenerationEvent> generate(GenerationRequest request) {
-    if (_decision || _unloading) {
-      return Stream.error(StateError('Use /v1/decide for a decision model'));
+    if (_decision || _speech || _unloading) {
+      return Stream.error(
+        StateError(
+          _speech
+              ? 'a speech model takes audio, not chat'
+              : 'Use /v1/decide for a decision model',
+        ),
+      );
     }
     if (_handle == ffi.nullptr) {
       return Stream.error(StateError('no model loaded'));
@@ -614,9 +665,20 @@ class NativeCortiqEngine extends InferenceEngine {
             PerformanceHint.report(now.difference(cycleStart));
             cycleStart = now;
           }
-        case ('done', final int count):
+        case ('done', final int count, final String route):
           final elapsed = DateTime.now().difference(started);
           final tokens = count >= 0 ? count : completionTokens;
+          // The runtime's routing decision (`x_cortiq_route`): on a hit the
+          // reply is a lookup record word for word and count is 0.
+          String? recordId;
+          try {
+            final decoded = jsonDecode(route);
+            if (decoded is Map && decoded['lookup_hit'] == true) {
+              recordId = decoded['target']?.toString();
+            }
+          } catch (_) {
+            recordId = null;
+          }
           controller.add(
             GenerationEvent(
               done: true,
@@ -629,6 +691,7 @@ class NativeCortiqEngine extends InferenceEngine {
                 latencyMs: elapsed.inMilliseconds,
                 finishReason: cancelFlag.value != 0 ? 'cancelled' : 'stop',
                 taskUsed: request.task,
+                recordId: recordId,
               ),
             ),
           );
@@ -697,7 +760,12 @@ class NativeCortiqEngine extends InferenceEngine {
     // isolate: the ABI documents the flag as thread-safe and expects the
     // call from a thread other than the blocked one.
     final cancelNative = _cancelNative;
-    if (cancelNative != null && _handle != ffi.nullptr && !_decision) {
+    // Only a chat handle has a cancel flag; the decision and speech handles
+    // are other structs behind the same pointer type.
+    if (cancelNative != null &&
+        _handle != ffi.nullptr &&
+        !_decision &&
+        !_speech) {
       cancelNative(_handle);
     }
   }
@@ -739,6 +807,70 @@ class NativeCortiqEngine extends InferenceEngine {
             method,
             path,
             jsonEncode(body),
+          ),
+        );
+        reply.complete(await done.future);
+      } catch (e, s) {
+        reply.completeError(e, s);
+      } finally {
+        _onWorkerLost = null;
+        port.close();
+      }
+    });
+    return reply.future;
+  }
+
+  @override
+  Future<TranscriptionResult> transcribe(
+    String wavPath, {
+    required String language,
+    String task = 'transcribe',
+    int maxTokens = 200,
+    bool trimEncoder = true,
+  }) {
+    if (!_speech || _unloading || _handle == ffi.nullptr) {
+      return Future.error(StateError('no speech model loaded'));
+    }
+    final reply = Completer<TranscriptionResult>();
+    // Queued behind generations like a decision request: the worker runs
+    // one blocking native call at a time, and unload waits on this chain.
+    _generations = _generations.then((_) async {
+      final port = ReceivePort();
+      final done = Completer<TranscriptionResult>();
+      _onWorkerLost = (message) {
+        if (!done.isCompleted) done.completeError(StateError(message));
+      };
+      port.listen((message) {
+        if (done.isCompleted) return;
+        if (message case ('transcript', final String value)) {
+          try {
+            final json = jsonDecode(value) as Map<String, dynamic>;
+            done.complete(
+              TranscriptionResult(
+                text: json['text'] as String? ?? '',
+                elapsedMs: (json['elapsed_ms'] as num?)?.toInt() ?? 0,
+              ),
+            );
+          } catch (e, s) {
+            done.completeError(e, s);
+          }
+        } else if (message case ('error', final String error)) {
+          done.completeError(StateError(error));
+        }
+      });
+      try {
+        final commands = await _workerCommands();
+        commands.send(
+          _TranscribeArgs(
+            port.sendPort,
+            _handle.address,
+            wavPath,
+            jsonEncode({
+              'language': language,
+              'task': task,
+              'max_tokens': maxTokens,
+              'trim_encoder': trimEncoder,
+            }),
           ),
         );
         reply.complete(await done.future);
@@ -825,6 +957,18 @@ class _DecisionArgs {
   final String method, path, body;
 }
 
+class _TranscribeArgs {
+  const _TranscribeArgs(
+    this.sendPort,
+    this.handle,
+    this.wavPath,
+    this.optionsJson,
+  );
+  final SendPort sendPort;
+  final int handle;
+  final String wavPath, optionsJson;
+}
+
 class _GenArgs {
   const _GenArgs({
     required this.sendPort,
@@ -865,8 +1009,42 @@ void _generateWorker(SendPort handshake) {
     gen = lib.lookupFunction<_GenNative, _GenDart>('cortiq_chat');
     multiTurn = false;
   }
+  _LastRouteNative? lastRoute;
+  try {
+    // cortiq-ffi >= 0.8.56: which lookup record (if any) answered.
+    lastRoute = lib.lookupFunction<_LastRouteNative, _LastRouteNative>(
+      'cortiq_last_route',
+    );
+  } catch (_) {
+    lastRoute = null;
+  }
 
   jobs.listen((message) {
+    if (message is _TranscribeArgs) {
+      final wav = message.wavPath.toNativeUtf8();
+      final options = message.optionsJson.toNativeUtf8();
+      try {
+        final call = lib
+            .lookupFunction<_SttTranscribeNative, _SttTranscribeDart>(
+              'cortiq_stt_transcribe',
+            );
+        final result = call(
+          ffi.Pointer.fromAddress(message.handle),
+          wav,
+          options,
+        );
+        if (result == ffi.nullptr) {
+          throw StateError('transcribe: ${lastError().toDartString()}');
+        }
+        message.sendPort.send(('transcript', result.toDartString()));
+      } catch (e) {
+        message.sendPort.send(('error', e.toString()));
+      } finally {
+        calloc.free(wav);
+        calloc.free(options);
+      }
+      return;
+    }
     if (message is _DecisionArgs) {
       final method = message.method.toNativeUtf8();
       final path = message.path.toNativeUtf8();
@@ -919,7 +1097,12 @@ void _generateWorker(SendPort handshake) {
         if (count < 0 && cancelFlag.value == 0) {
           port.send(('error', 'generate: ${lastError().toDartString()}'));
         } else {
-          port.send(('done', count));
+          var route = '{}';
+          if (lastRoute != null) {
+            final ptr = lastRoute(ffi.Pointer.fromAddress(args.handleAddress));
+            if (ptr != ffi.nullptr) route = ptr.toDartString();
+          }
+          port.send(('done', count, route));
         }
       } finally {
         calloc.free(payloadPtr);

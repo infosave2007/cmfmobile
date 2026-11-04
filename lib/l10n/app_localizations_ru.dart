@@ -919,4 +919,57 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get modelSkillHelp =>
       'Дополнение к базовой чат-модели, а не самостоятельная модель. Его нельзя открыть как чат или модель решений.';
+
+  @override
+  String get modelKindSpeech => 'Распознавание речи';
+
+  @override
+  String get modelSpeechHelp =>
+      'Превращает речь в текст на этом устройстве. Загрузите модель, затем надиктуйте в микрофон во вкладке «Чат» или распознайте WAV-файл.';
+
+  @override
+  String get chatSpeechHint => 'Нажмите на микрофон и говорите';
+
+  @override
+  String get chatRecordStart => 'Записать';
+
+  @override
+  String get chatRecordStop => 'Остановить запись';
+
+  @override
+  String chatRecording(String seconds) {
+    return 'Запись… $seconds с';
+  }
+
+  @override
+  String get chatTranscribing => 'Распознавание… это может занять до минуты';
+
+  @override
+  String chatVoiceNote(String seconds) {
+    return 'Голосовая заметка · $seconds с';
+  }
+
+  @override
+  String get chatMicDenied =>
+      'Доступ к микрофону запрещён. Разрешите его в настройках системы.';
+
+  @override
+  String get chatRecordingTooShort => 'Запись слишком короткая.';
+
+  @override
+  String get chatAttachAudio => 'Распознать WAV-файл';
+
+  @override
+  String get chatAudioUnreadable =>
+      'Это не WAV-файл, который приложение может прочитать.';
+
+  @override
+  String statsAudio(String seconds) {
+    return '$seconds с аудио';
+  }
+
+  @override
+  String statsRecord(String id) {
+    return 'запись $id';
+  }
 }

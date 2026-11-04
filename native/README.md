@@ -1,4 +1,4 @@
-# Native Cortiq runtime (0.8.54)
+# Native Cortiq runtime (0.8.56)
 
 Mobile 1.3.3 builds a single `libcortiq_ffi` from `native/runtime`, preserving
 all chat/companion exports and adding `cortiq_decision_load`,
@@ -7,9 +7,22 @@ never be passed to chat functions. Returned JSON is borrowed thread-local
 memory and must be copied before another native JSON call. Unload waits for
 queued requests before freeing a handle.
 
-Compatible ready-to-run LFM3 text CMFs use the existing chat ABI. This mobile
-build accepts text prompts only; raw LFM3 conversion and visual or audio inputs
-are not exposed here.
+Mobile 1.3.6 (runtime 0.8.56) adds two things on top:
+
+- `cortiq_chat*` route a question through the model's lookup records first
+  (Embryo-56M's herbs, countries, …, and its "I don't know" record). A hit
+  returns the record text through the token callback with a token count of
+  0; `cortiq_last_route(handle)` tells which (`{"target", "lookup_hit"}`).
+- A third handle type for speech-to-text: `cortiq_stt_load(path)` opens a
+  Whisper CMF, `cortiq_stt_transcribe(handle, wav_path, options_json)`
+  returns `{"text", "elapsed_ms", …}` for one WAV file (PCM or float, any
+  rate; options `language`, `task`, `max_tokens`, `trim_encoder`), and
+  `cortiq_stt_free(handle)` releases it. Like decision handles, an STT handle
+  must never reach the chat functions. The adapter is `src/transcribe.rs`.
+
+Compatible ready-to-run LFM3 text CMFs use the existing chat ABI. The chat
+path accepts text prompts only; raw LFM3 conversion and visual inputs are not
+exposed here. Audio goes through the STT handle, not through chat.
 
 ```bash
 scripts/build_native.sh android        # all 3 ABIs; arm64/x86_64 retain GPU

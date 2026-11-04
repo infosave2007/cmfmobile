@@ -1,3 +1,27 @@
+# 1.3.6 — Cortiq 0.8.56: Embryo answers from its records, Whisper dictation
+
+- The mobile runtime is now built from Cortiq 0.8.56. Chat requests go
+  through the model's lookup records before the network, the way `cortiq
+  run` does on a desktop, so `infosave/Embryo-56M-cmf` answers its herb and
+  country questions word for word from its tables and says "I don't know"
+  where the records have nothing, instead of improvising from the 56M
+  network. The stats line under such a reply names the record
+  (`record herbs`), and the in-app server reports it as `x_cortiq_route`.
+- Speech-to-text models (Whisper CMF files, such as
+  `whisper-large-v3-turbo` q4t) load into the engine as their own model kind.
+  With one loaded, Chat shows a microphone instead of the text field: tap to
+  record, tap again to stop (60 s at most), and the transcript arrives as the
+  reply with the clip length in its stats line. The clip button next to it
+  transcribes a WAV file. Everything runs on the device; the recording is a
+  temporary file deleted after the run. The language follows the app's
+  locale. Clips shorter than ten seconds are padded with silence first:
+  Whisper loops on very short audio, and a padded clip still transcribes in
+  a few seconds with the encoder trimmed to the audio, against about a
+  minute for a full 30 s window on a mid-range phone.
+- Android asks for the microphone the first time you record; iOS shows the
+  new usage description. The runtime exports `cortiq_stt_load`,
+  `cortiq_stt_transcribe`, `cortiq_stt_free` and `cortiq_last_route`.
+
 # 1.3.5 — Embryo-56M opens as Chat
 
 - A model that carries its own skills is no longer mistaken for a skill

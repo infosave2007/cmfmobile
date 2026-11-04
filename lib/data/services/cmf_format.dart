@@ -355,6 +355,11 @@ abstract final class CmfValidator {
           jsonDecode(utf8.decode(await raf.read(env.headerLen)))
               as Map<String, dynamic>;
       final arch = header['arch'] as Map<String, dynamic>? ?? const {};
+      // Whisper is an audio encoder/decoder (model.encoder.*, model.decoder.*)
+      // with none of the chat tensors below; the speech loader checks it.
+      if ((arch['arch_name'] as String?)?.toLowerCase() == 'whisper') {
+        return const [];
+      }
       final layerTypes =
           (arch['layer_types'] as List?)?.cast<String>() ?? const [];
       final moe = arch['moe'] as Map<String, dynamic>?;

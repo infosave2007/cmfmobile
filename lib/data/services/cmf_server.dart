@@ -761,6 +761,7 @@ class CmfServer {
       latencyMs: s.latencyMs,
       finishReason: 'stop',
       taskUsed: s.taskUsed,
+      recordId: s.recordId,
     );
   }
 
@@ -801,6 +802,10 @@ class CmfServer {
         'task_used': s.taskUsed ?? 'general',
         'execution_mode': 'Mobile { engine: ${engine.name} }',
         'tokens_per_second': double.parse(s.tokensPerSecond.toStringAsFixed(1)),
+        // Same shape as the desktop server's route label: the lookup record
+        // that answered word for word, when one did (runtime >= 0.8.56).
+        if (s.recordId != null)
+          'x_cortiq_route': {'target': s.recordId, 'lookup_hit': true},
       },
     });
     return (s.promptTokens, s.completionTokens);

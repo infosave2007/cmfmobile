@@ -274,5 +274,19 @@
   "oracleInvalidResponse": "Die Orakelantwort entspricht nicht den zulässigen Ergebnissen der Fähigkeit und wurde abgelehnt.",
   "decisionFailed": "Keine lokale Entscheidung möglich. Prüfe, ob ein CMF-Decision-Modell und eine Fähigkeit geladen sind.",
   "modelKindSkill": "Fähigkeitserweiterung",
-  "modelSkillHelp": "Eine Erweiterung für ein Basis-Chatmodell, kein eigenständiges Modell. Nicht als Chat oder Entscheidungsmodell startbar."
+  "modelSkillHelp": "Eine Erweiterung für ein Basis-Chatmodell, kein eigenständiges Modell. Nicht als Chat oder Entscheidungsmodell startbar.",
+  "modelKindSpeech": "Spracherkennung",
+  "modelSpeechHelp": "Wandelt Sprache auf diesem Gerät in Text um. Laden Sie das Modell, dann diktieren Sie im Chat ins Mikrofon oder transkribieren Sie eine WAV-Datei.",
+  "chatSpeechHint": "Tippen Sie auf das Mikrofon und sprechen Sie",
+  "chatRecordStart": "Aufnehmen",
+  "chatRecordStop": "Aufnahme beenden",
+  "chatRecording": "Aufnahme… {seconds} s",
+  "chatTranscribing": "Transkription… das kann bis zu einer Minute dauern",
+  "chatVoiceNote": "Sprachnotiz · {seconds} s",
+  "chatMicDenied": "Der Mikrofonzugriff wurde verweigert. Erlauben Sie ihn in den Systemeinstellungen.",
+  "chatRecordingTooShort": "Die Aufnahme ist zu kurz.",
+  "chatAttachAudio": "WAV-Datei transkribieren",
+  "chatAudioUnreadable": "Das ist keine WAV-Datei, die die App lesen kann.",
+  "statsAudio": "{seconds} s Audio",
+  "statsRecord": "Eintrag {id}"
 }

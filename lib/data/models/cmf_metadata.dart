@@ -64,6 +64,11 @@ class CmfMetadata {
       !isDecision &&
       ((requiredFeatures & featureSkillFile) != 0 || skills.isNotEmpty);
 
+  /// A Whisper speech-to-text file (`arch_name` "whisper"): an encoder /
+  /// decoder over audio, run through the runtime's speech ABI, not the chat
+  /// pipeline. In Chat it takes the microphone or a WAV file, not text.
+  bool get isSpeechToText => archName.toLowerCase() == 'whisper';
+
   /// Text attachments are inlined into the prompt, so any chat model with a
   /// template and a reasonable context window can accept them.
   bool get supportsAttachments => hasChatTemplate && contextLength >= 2048;

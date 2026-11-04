@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- HuggingFace downloads + the on-device CMF server. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Dictation into a loaded speech-to-text model; audio stays on the device. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <!-- LAN address discovery for the server screen (network_info_plus). -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>

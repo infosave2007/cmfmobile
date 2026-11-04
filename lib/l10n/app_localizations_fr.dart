@@ -925,4 +925,58 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get modelSkillHelp =>
       'Une extension pour un modèle de chat de base, pas un modèle autonome. Elle ne s’ouvre pas comme un chat ou un modèle de décision.';
+
+  @override
+  String get modelKindSpeech => 'Reconnaissance vocale';
+
+  @override
+  String get modelSpeechHelp =>
+      'Transforme la parole en texte sur cet appareil. Chargez le modèle, puis dictez au micro dans le Chat ou transcrivez un fichier WAV.';
+
+  @override
+  String get chatSpeechHint => 'Touchez le micro et parlez';
+
+  @override
+  String get chatRecordStart => 'Enregistrer';
+
+  @override
+  String get chatRecordStop => 'Arrêter l’enregistrement';
+
+  @override
+  String chatRecording(String seconds) {
+    return 'Enregistrement… $seconds s';
+  }
+
+  @override
+  String get chatTranscribing =>
+      'Transcription… cela peut prendre jusqu’à une minute';
+
+  @override
+  String chatVoiceNote(String seconds) {
+    return 'Note vocale · $seconds s';
+  }
+
+  @override
+  String get chatMicDenied =>
+      'L’accès au micro a été refusé. Autorisez-le dans les réglages du système.';
+
+  @override
+  String get chatRecordingTooShort => 'L’enregistrement est trop court.';
+
+  @override
+  String get chatAttachAudio => 'Transcrire un fichier WAV';
+
+  @override
+  String get chatAudioUnreadable =>
+      'Ce n’est pas un fichier WAV que l’application peut lire.';
+
+  @override
+  String statsAudio(String seconds) {
+    return '$seconds s d’audio';
+  }
+
+  @override
+  String statsRecord(String id) {
+    return 'fiche $id';
+  }
 }

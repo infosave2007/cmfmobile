@@ -31,6 +31,18 @@ void cortiq_decision_free(void *handle);
 const char *cortiq_decision_request(void *handle, const char *method,
                                    const char *path, const char *json_body);
 
+/* Speech-to-text ABI (mobile runtime): a separate handle type for Whisper
+ * CMFs (arch "whisper"), which the chat pipeline cannot build. Never pass
+ * it to the chat functions. cortiq_stt_transcribe blocks for seconds to
+ * minutes — call it off the UI thread. options_json (may be NULL):
+ * {"language":"ru","task":"transcribe","max_tokens":200,"trim_encoder":true}.
+ * Result JSON {"text":…,"elapsed_ms":…} is borrowed until the next JSON
+ * getter on this thread; NULL on error (cortiq_last_error). */
+void *cortiq_stt_load(const char *path);
+void cortiq_stt_free(void *handle);
+const char *cortiq_stt_transcribe(void *handle, const char *wav_path,
+                                  const char *options_json);
+
 /* Open a .cmf file (memory-mapped — keep it on storage). NULL on error. */
 void *cortiq_load(const char *path);
 
@@ -89,6 +101,13 @@ int32_t cortiq_complete(void *handle, const char *prompt,
 int32_t cortiq_chat_messages(void *handle, const char *messages_json,
                              uint32_t max_tokens, cortiq_token_cb cb,
                              void *user);
+
+/* The routing decision of the last generate on this handle, as JSON — the
+ * object `cortiq serve` returns as x_cortiq_route (cortiq-ffi >= 0.8.56).
+ * "target" is the record id or "backbone"; "lookup_hit" true means the
+ * answer came from that record word for word (the generate returned 0).
+ * "{}" when nothing was routed. Borrowed until the next JSON getter. */
+const char *cortiq_last_route(void *handle);
 
 /* Partial sampler options as JSON — absent keys keep their current
  * values; applies to every later generate on this handle. Keys:

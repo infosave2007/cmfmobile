@@ -38,6 +38,9 @@ const _nonTextTags = {
 };
 
 bool isTextGenerationRepo(HfModel model) =>
+    // A speech-to-text repo is tagged `audio` too, and since 1.3.6 the app
+    // runs it (dictation in Chat), so it stays recommended.
+    model.tags.contains('automatic-speech-recognition') ||
     model.tags.toSet().intersection(_nonTextTags).isEmpty;
 
 /// The quantization a ready-CMF repo carries, best effort: the file name is

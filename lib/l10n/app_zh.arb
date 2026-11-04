@@ -274,5 +274,19 @@
   "oracleInvalidResponse": "预言机回答不符合此技能允许的结果，未被接受。",
   "decisionFailed": "无法获取本地决策。请确认已加载 CMF Decision 模型和技能。",
   "modelKindSkill": "技能扩展",
-  "modelSkillHelp": "这是基础聊天模型的扩展，不是独立模型，不能作为聊天或决策模型打开。"
+  "modelSkillHelp": "这是基础聊天模型的扩展，不是独立模型，不能作为聊天或决策模型打开。",
+  "modelKindSpeech": "语音识别",
+  "modelSpeechHelp": "在本设备上把语音转成文字。加载模型后，在“聊天”中对着麦克风口述，或转写一个 WAV 文件。",
+  "chatSpeechHint": "点击麦克风并说话",
+  "chatRecordStart": "录音",
+  "chatRecordStop": "停止录音",
+  "chatRecording": "录音中… {seconds} 秒",
+  "chatTranscribing": "正在转写… 可能需要一分钟",
+  "chatVoiceNote": "语音 · {seconds} 秒",
+  "chatMicDenied": "麦克风权限被拒绝。请在系统设置中允许。",
+  "chatRecordingTooShort": "录音太短。",
+  "chatAttachAudio": "转写 WAV 文件",
+  "chatAudioUnreadable": "这不是应用能读取的 WAV 文件。",
+  "statsAudio": "{seconds} 秒音频",
+  "statsRecord": "记录 {id}"
 }

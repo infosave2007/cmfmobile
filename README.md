@@ -35,6 +35,16 @@ as Spark-X2.5 q4mix. Cortiq 0.8.54 adds support for compatible ready-to-run
 preconverted `.cmf` for LFM3: on-device conversion of raw LFM3 checkpoints is
 not available yet, and the mobile chat interface accepts text prompts only.
 
+### Record routing and speech-to-text (1.3.6, Cortiq 0.8.56)
+
+A chat model that carries lookup records, such as `infosave/Embryo-56M-cmf`,
+answers from those records first, word for word, and says "I don't know"
+where they have nothing; the stats line under such a reply names the record.
+**Whisper** CMF files load as **Speech-to-text** models: with one loaded, the
+Chat tab shows a microphone instead of the text field (tap to record, tap to
+stop) and a button that transcribes a WAV file. Everything runs on the
+device; the recording is a temporary file deleted after the run.
+
 - Local decisions use reconstruction error, with a visible abstention when uncertain.
 - **Settings → Oracle**: optional HTTPS provider, model ID and securely stored API key.
   Off by default; every external request requires confirmation and may incur charges.
@@ -136,8 +146,8 @@ flutter run
 ```
 
 **The app ships with the real Cortiq runtime** — Android and iOS artifacts are
-built from the pinned **Cortiq 0.8.54** source in CI, including this app's
-Decision adapter. Generated `.so` and `.a` files are intentionally not stored
+built from the pinned **Cortiq 0.8.56** source in CI, including this app's
+Decision and speech-to-text adapters. Generated `.so` and `.a` files are intentionally not stored
 in Git; the shared native-build action produces every Android ABI and the iOS
 static library before packaging. If a development build lacks that library,
 the app falls back to a clearly labelled **demo engine**; details are in

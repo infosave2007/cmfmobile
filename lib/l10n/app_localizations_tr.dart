@@ -917,4 +917,57 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get modelSkillHelp =>
       'Temel sohbet modeli için bir eklentidir; bağımsız model değildir. Sohbet veya karar modeli olarak açılamaz.';
+
+  @override
+  String get modelKindSpeech => 'Konuşma tanıma';
+
+  @override
+  String get modelSpeechHelp =>
+      'Konuşmayı bu cihazda metne çevirir. Modeli yükleyin, sonra Sohbet’te mikrofona dikte edin veya bir WAV dosyasını yazıya dökün.';
+
+  @override
+  String get chatSpeechHint => 'Mikrofona dokunun ve konuşun';
+
+  @override
+  String get chatRecordStart => 'Kaydet';
+
+  @override
+  String get chatRecordStop => 'Kaydı durdur';
+
+  @override
+  String chatRecording(String seconds) {
+    return 'Kayıt… $seconds sn';
+  }
+
+  @override
+  String get chatTranscribing => 'Yazıya dökülüyor… bir dakika kadar sürebilir';
+
+  @override
+  String chatVoiceNote(String seconds) {
+    return 'Sesli not · $seconds sn';
+  }
+
+  @override
+  String get chatMicDenied =>
+      'Mikrofon erişimi reddedildi. Sistem ayarlarından izin verin.';
+
+  @override
+  String get chatRecordingTooShort => 'Kayıt çok kısa.';
+
+  @override
+  String get chatAttachAudio => 'WAV dosyasını yazıya dök';
+
+  @override
+  String get chatAudioUnreadable =>
+      'Bu, uygulamanın okuyabileceği bir WAV dosyası değil.';
+
+  @override
+  String statsAudio(String seconds) {
+    return '$seconds sn ses';
+  }
+
+  @override
+  String statsRecord(String id) {
+    return 'kayıt $id';
+  }
 }
