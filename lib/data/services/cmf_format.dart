@@ -4,22 +4,39 @@ import 'dart:typed_data';
 
 import '../models/cmf_metadata.dart';
 
-/// Names of the skills a CMF header declares, empty for a plain model.
+/// Names of the standalone skills a CMF header declares, empty for a model.
 ///
-/// A skill is a task-mask file cut from a base model: it plugs into that
-/// model instead of running on its own. The header says so outright —
-/// `"skills": [{"id": "code", "base_arch": "nanbeige", ...}]` — and nothing
+/// Two kinds of record live under `"skills"`. A standalone skill is a
+/// partial tensor set cut against a specific base and bound to it by
+/// `base_dir_hash` (CMF_V2_SPEC §9.1): it plugs into that model instead of
+/// running on its own, and any such record raises envelope feature bit 6.
+/// Nanbeige4.2 ships them next to the model — `"skills": [{"id": "code",
+/// "base_dir_hash": "9f22…", "base_arch": "nanbeige", …}]` — and nothing
 /// else separates the two: a skill carries the base model's full `arch`, and
-/// in Nanbeige4.2 a skill and the model are both 2.36 GB. Judging by file
-/// name would be guesswork; this is the declaration.
+/// there a skill and the model are both 2.36 GB. Judging by file name would
+/// be guesswork; this is the declaration.
+///
+/// A model may also *carry* skills. Embryo-56M commits its lookup records
+/// (herbs, countries, …) into the same file as its genome; each record is
+/// `bound` to that genome, none has a `base_dir_hash`, and the file is a
+/// complete chat model. Only the first kind marks the file as an add-on;
+/// counting the second had the Models tab refusing to open Embryo as Chat.
 List<String> cmfHeaderSkills(Map<String, dynamic> header) {
   final raw = header['skills'];
   if (raw is! List) return const [];
   return raw
       .whereType<Map>()
+      .where(cmfSkillRecordIsStandalone)
       .map((s) => (s['name'] ?? s['id'] ?? '').toString())
       .where((s) => s.isNotEmpty)
       .toList();
+}
+
+/// Whether one `"skills"` record describes a standalone skill file rather
+/// than a skill committed into its own base model (see [cmfHeaderSkills]).
+bool cmfSkillRecordIsStandalone(Map record) {
+  final hash = record['base_dir_hash'];
+  return hash is String && hash.isNotEmpty;
 }
 
 /// CMF v2 binary format (see cmfpublic/docs/CMF_V2_SPEC.md).
@@ -395,10 +412,14 @@ abstract final class CmfValidator {
       for (var i = 0; i < layerTypes.length; i++) {
         // SlidingAttention is still the canonical Q/K/V/O attention
         // operator; its window is configured by the architecture header and
-        // applied by the native KV cache. It therefore has the same tensor
-        // contract as FullAttention (see the runtime's layer loader).
+        // applied by the native KV cache. BoundedAttention — Embryo's anchor
+        // layers: a window plus learned sink_k/sink_v, so the state stays
+        // constant — carries the same four projections. Both therefore have
+        // the same tensor contract as FullAttention (see the runtime's layer
+        // loader).
         if (layerTypes[i] == 'FullAttention' ||
-            layerTypes[i] == 'SlidingAttention') {
+            layerTypes[i] == 'SlidingAttention' ||
+            layerTypes[i] == 'BoundedAttention') {
           final missing = ['q_proj', 'k_proj', 'v_proj', 'o_proj']
               .where(
                 (n) => !names.contains('model.layers.$i.self_attn.$n.weight'),
