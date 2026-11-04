@@ -223,6 +223,8 @@ class _ModelCard extends ConsumerWidget {
                     ? l.modelDecisionHelp
                     : meta.isSkill
                     ? l.modelSkillHelp
+                    : meta.isSpeechToText
+                    ? l.modelSpeechHelp
                     : l.modelChatHelp,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
@@ -236,11 +238,15 @@ class _ModelCard extends ConsumerWidget {
                         ? l.modelKindDecision
                         : meta.isSkill
                         ? l.modelKindSkill
+                        : meta.isSpeechToText
+                        ? l.modelKindSpeech
                         : l.modelKindChat,
                     icon: meta.isDecision
                         ? Icons.account_tree_outlined
                         : meta.isSkill
                         ? Icons.extension_outlined
+                        : meta.isSpeechToText
+                        ? Icons.mic_outlined
                         : Icons.chat_bubble_outline,
                     highlight: true,
                   ),

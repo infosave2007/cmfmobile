@@ -79,7 +79,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Cortiq does not use the camera and never requests access to it; this declaration is required by a bundled component.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Cortiq does not use the microphone and never requests access to it; this declaration is required by a bundled component.</string>
+	<string>Cortiq uses the microphone only when you dictate to a speech-recognition model you loaded. The recording is transcribed on this device and never leaves it.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Cortiq does not request your location; this declaration is required by the networking component that displays the local server address.</string>
 </dict>

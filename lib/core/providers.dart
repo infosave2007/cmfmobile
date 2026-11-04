@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -21,6 +22,7 @@ import '../data/services/model_repository.dart';
 import '../data/services/settings_repository.dart';
 import 'util/foreground_task.dart';
 import 'util/keep_awake.dart';
+import 'util/transcript.dart';
 
 // ---------------------------------------------------------------------------
 // Services
@@ -463,6 +465,78 @@ class ChatController extends Notifier<ChatState> {
   }
 
   void stop() => ref.read(engineProvider).cancel();
+
+  /// A speech-to-text turn: the user turn is a voice note (or a WAV file)
+  /// and the reply is its transcript. [wavPath] is what the engine reads,
+  /// already padded by the caller; [audioSeconds] is the recording's own
+  /// length, shown under the reply. [language] is a Whisper code.
+  Future<void> transcribeVoice(
+    String wavPath, {
+    required String label,
+    required double audioSeconds,
+    required String language,
+    bool deleteAfter = false,
+  }) async {
+    final session = state.current;
+    if (session == null || state.generating) return;
+    final engine = ref.read(engineProvider);
+    session.messages.add(ChatMessage(role: ChatRole.user, content: label));
+    session.messages.add(
+      const ChatMessage(role: ChatRole.assistant, content: ''),
+    );
+    state = state.copyWith(sessions: [...state.sessions], generating: true);
+    unawaited(ref.read(chatStoreProvider).save(session));
+    void updateLast(ChatMessage msg) {
+      session.messages[session.messages.length - 1] = msg;
+      state = state.copyWith(sessions: [...state.sessions]);
+    }
+
+    try {
+      await ForegroundTask.acquire(ForegroundTask.generation);
+      // Whisper emits a few tokens per second of speech; the bound is per
+      // 30 s window, so a loop on a quiet clip ends early instead of
+      // filling the window.
+      final maxTokens = (audioSeconds * 8 + 16).round().clamp(32, 440);
+      final result = await engine.transcribe(
+        wavPath,
+        language: language,
+        maxTokens: maxTokens,
+      );
+      updateLast(
+        ChatMessage(
+          role: ChatRole.assistant,
+          content: collapseRepeatedSentences(result.text),
+          stats: GenerationStats(
+            promptTokens: 0,
+            completionTokens: 0,
+            tokensPerSecond: 0,
+            latencyMs: result.elapsedMs,
+            finishReason: 'stop',
+            audioSeconds: audioSeconds,
+          ),
+        ),
+      );
+    } catch (e) {
+      updateLast(
+        ChatMessage(
+          role: ChatRole.assistant,
+          content: '',
+          error: e.toString(),
+        ),
+      );
+    } finally {
+      state = state.copyWith(generating: false, sessions: [...state.sessions]);
+      await ForegroundTask.release(ForegroundTask.generation);
+      await ref.read(chatStoreProvider).save(session);
+      if (deleteAfter) {
+        try {
+          await File(wavPath).delete();
+        } catch (_) {
+          // A leftover recording in the cache directory is harmless.
+        }
+      }
+    }
+  }
 
   /// A reply that failed through the desktop is the split's problem, not the
   /// model's — tell the companion so its screen stops looking healthy.

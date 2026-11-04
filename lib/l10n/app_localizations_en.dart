@@ -914,4 +914,56 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get modelSkillHelp =>
       'An add-on for a base chat model, not a standalone model. It cannot be opened as Chat or Decisions.';
+
+  @override
+  String get modelKindSpeech => 'Speech-to-text';
+
+  @override
+  String get modelSpeechHelp =>
+      'Turns speech into text on this device. Load it, then dictate into the microphone in Chat or transcribe a WAV file.';
+
+  @override
+  String get chatSpeechHint => 'Tap the microphone and speak';
+
+  @override
+  String get chatRecordStart => 'Record';
+
+  @override
+  String get chatRecordStop => 'Stop recording';
+
+  @override
+  String chatRecording(String seconds) {
+    return 'Recording… $seconds s';
+  }
+
+  @override
+  String get chatTranscribing => 'Transcribing… this can take up to a minute';
+
+  @override
+  String chatVoiceNote(String seconds) {
+    return 'Voice note · $seconds s';
+  }
+
+  @override
+  String get chatMicDenied =>
+      'Microphone access was denied. Allow it in the system settings.';
+
+  @override
+  String get chatRecordingTooShort => 'The recording is too short.';
+
+  @override
+  String get chatAttachAudio => 'Transcribe a WAV file';
+
+  @override
+  String get chatAudioUnreadable => 'This is not a WAV file the app can read.';
+
+  @override
+  String statsAudio(String seconds) {
+    return '$seconds s of audio';
+  }
+
+  @override
+  String statsRecord(String id) {
+    return 'record $id';
+  }
 }

@@ -274,5 +274,19 @@
   "oracleInvalidResponse": "Oracle yanıtı becerinin izin verdiği sonuçlara uymadığı için kabul edilmedi.",
   "decisionFailed": "Yerel karar alınamadı. Bir CMF Decision modeli ve beceri yüklendiğinden emin olun.",
   "modelKindSkill": "Beceri eklentisi",
-  "modelSkillHelp": "Temel sohbet modeli için bir eklentidir; bağımsız model değildir. Sohbet veya karar modeli olarak açılamaz."
+  "modelSkillHelp": "Temel sohbet modeli için bir eklentidir; bağımsız model değildir. Sohbet veya karar modeli olarak açılamaz.",
+  "modelKindSpeech": "Konuşma tanıma",
+  "modelSpeechHelp": "Konuşmayı bu cihazda metne çevirir. Modeli yükleyin, sonra Sohbet’te mikrofona dikte edin veya bir WAV dosyasını yazıya dökün.",
+  "chatSpeechHint": "Mikrofona dokunun ve konuşun",
+  "chatRecordStart": "Kaydet",
+  "chatRecordStop": "Kaydı durdur",
+  "chatRecording": "Kayıt… {seconds} sn",
+  "chatTranscribing": "Yazıya dökülüyor… bir dakika kadar sürebilir",
+  "chatVoiceNote": "Sesli not · {seconds} sn",
+  "chatMicDenied": "Mikrofon erişimi reddedildi. Sistem ayarlarından izin verin.",
+  "chatRecordingTooShort": "Kayıt çok kısa.",
+  "chatAttachAudio": "WAV dosyasını yazıya dök",
+  "chatAudioUnreadable": "Bu, uygulamanın okuyabileceği bir WAV dosyası değil.",
+  "statsAudio": "{seconds} sn ses",
+  "statsRecord": "kayıt {id}"
 }

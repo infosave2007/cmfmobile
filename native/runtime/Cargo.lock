@@ -202,7 +202,7 @@ checksum = "f079e83a288787bcd14a6aea84cee5c87a67c5a3e660c30f557a3d24761b3527"
 
 [[package]]
 name = "cmf-mobile-runtime"
-version = "0.8.54"
+version = "0.8.56"
 dependencies = [
  "cortiq-core",
  "cortiq-decision",
@@ -258,9 +258,9 @@ dependencies = [
 
 [[package]]
 name = "cortiq-core"
-version = "0.8.54"
+version = "0.8.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d85d9de2680c1015536bc7cd656905f4d83aaf2a4919554ae0654ecc65162cbe"
+checksum = "7da71d5ce57a6c3dab416c3cb61b68bbf2ed7552fb37260fd416990ed7959d61"
 dependencies = [
  "bincode",
  "bytemuck",
@@ -275,9 +275,9 @@ dependencies = [
 
 [[package]]
 name = "cortiq-decision"
-version = "0.8.54"
+version = "0.8.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c4702a60b49ddd7e9d7a6355e34ade5354f4df96e742441468a5e902e42accc"
+checksum = "2d00a8e04e344829ef84536fb02e5d6f64b2b72ae8ad6e769d8b1da3ee7591b4"
 dependencies = [
  "anyhow",
  "bytemuck",
@@ -301,9 +301,9 @@ dependencies = [
 
 [[package]]
 name = "cortiq-engine"
-version = "0.8.54"
+version = "0.8.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a787197fcf50a8f47c0bfb93bd0ab7ec0b91f7e178fc64f2f9195ef16186bd6"
+checksum = "49a61f27c2ad8b42f0570a0dc92bf68148722dbf740572491a04d351bd17d4aa"
 dependencies = [
  "anyhow",
  "ash",
@@ -331,9 +331,9 @@ dependencies = [
 
 [[package]]
 name = "cortiq-net"
-version = "0.8.54"
+version = "0.8.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf826cb25d21f94bf2703d662b553d116fcbff647830d34eeed0ef9410c1241b"
+checksum = "13a1d2ac6b2c3c5c4bac760b06fd6d71a448545a11eecbb281469fc0ee569d36"
 dependencies = [
  "bincode",
  "cortiq-core",

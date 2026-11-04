@@ -1,12 +1,18 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
 
 import '../../core/providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/util/formats.dart';
+import '../../core/util/wav.dart';
 import '../../data/models/chat.dart';
 import '../../data/models/companion.dart';
 import '../../l10n/app_localizations.dart';
@@ -14,6 +20,13 @@ import 'model_picker_sheet.dart';
 import 'sessions_sheet.dart';
 
 const _attachmentTextLimit = 512 * 1024; // bytes of extracted text
+const _audioFileLimit = 64 * 1024 * 1024; // bytes of WAV (~35 min at 16 kHz)
+const _recordingLimit = Duration(seconds: 60);
+
+/// Clips shorter than this are padded with silence before transcription:
+/// Whisper loops or invents words on a few seconds of audio, and a padded
+/// clip still runs in a fraction of a full 30 s window on a phone.
+const _minClipSeconds = 10.0;
 
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key});
@@ -27,11 +40,155 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _scroll = ScrollController();
   final List<ChatAttachment> _pending = [];
 
+  // Dictation (speech-to-text models only).
+  AudioRecorder? _recorder;
+  Timer? _recordTimer;
+  DateTime? _recordStarted;
+  int _recordSeconds = 0;
+  bool get _recording => _recordStarted != null;
+
   @override
   void dispose() {
+    _recordTimer?.cancel();
+    final recorder = _recorder;
+    if (recorder != null) {
+      // Drop an unfinished recording and release the microphone.
+      unawaited(recorder.cancel().then((_) => recorder.dispose()));
+    }
     _input.dispose();
     _scroll.dispose();
     super.dispose();
+  }
+
+  String get _speechLanguage => Localizations.localeOf(context).languageCode;
+
+  Future<void> _startRecording() async {
+    final l = AppLocalizations.of(context);
+    if (_recording || ref.read(chatControllerProvider).generating) return;
+    final recorder = _recorder ??= AudioRecorder();
+    if (!await recorder.hasPermission()) {
+      if (mounted) _snack(l.chatMicDenied);
+      return;
+    }
+    final dir = await getTemporaryDirectory();
+    final path =
+        '${dir.path}/dictation-${DateTime.now().millisecondsSinceEpoch}.wav';
+    // 16 kHz mono PCM is what Whisper hears; recording it directly saves the
+    // engine a resample.
+    await recorder.start(
+      const RecordConfig(
+        encoder: AudioEncoder.wav,
+        sampleRate: 16000,
+        numChannels: 1,
+      ),
+      path: path,
+    );
+    if (!mounted) return;
+    setState(() {
+      _recordStarted = DateTime.now();
+      _recordSeconds = 0;
+    });
+    _recordTimer?.cancel();
+    _recordTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      final started = _recordStarted;
+      if (started == null) return;
+      final elapsed = DateTime.now().difference(started);
+      setState(() => _recordSeconds = elapsed.inSeconds);
+      if (elapsed >= _recordingLimit) _stopRecording();
+    });
+  }
+
+  Future<void> _stopRecording() async {
+    final l = AppLocalizations.of(context);
+    final recorder = _recorder;
+    if (!_recording || recorder == null) return;
+    _recordTimer?.cancel();
+    _recordTimer = null;
+    setState(() => _recordStarted = null);
+    final path = await recorder.stop();
+    if (path == null || !mounted) return;
+    final file = File(path);
+    final bytes = await file.readAsBytes();
+    // The note runs from tap to tap; only the speech in between matters.
+    final clip = trimWavSilence(bytes);
+    final info = parseWav(clip);
+    if (info == null || info.seconds < 0.5) {
+      _snack(l.chatRecordingTooShort);
+      unawaited(file.delete().catchError((_) => file));
+      return;
+    }
+    await _transcribeFile(
+      file,
+      bytes,
+      clip,
+      info,
+      label: l.chatVoiceNote(info.seconds.round().toString()),
+      deleteAfter: true,
+    );
+  }
+
+  /// Transcribes a WAV the user picked (speech models take audio, not text).
+  Future<void> _attachAudio() async {
+    final l = AppLocalizations.of(context);
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: const ['wav'],
+    );
+    final picked = result?.files.firstOrNull;
+    final path = picked?.path;
+    if (picked == null || path == null || !mounted) return;
+    if (picked.size > _audioFileLimit) {
+      _snack(l.chatAttachmentTooLarge(formatBytes(_audioFileLimit)));
+      return;
+    }
+    final file = File(path);
+    final bytes = await file.readAsBytes();
+    if (parseWav(bytes) == null) {
+      if (mounted) _snack(l.chatAudioUnreadable);
+      return;
+    }
+    final clip = trimWavSilence(bytes);
+    final info = parseWav(clip);
+    if (info == null || info.seconds <= 0) {
+      if (mounted) _snack(l.chatAudioUnreadable);
+      return;
+    }
+    await _transcribeFile(file, bytes, clip, info, label: picked.name);
+  }
+
+  /// Runs [clip] (what [file] holds, [original], with its silence cut)
+  /// through the speech model, padded to [_minClipSeconds] first when it is
+  /// shorter. A clip that differs from the file goes through a temporary
+  /// copy, deleted after the run; a picked file is left as it was.
+  Future<void> _transcribeFile(
+    File file,
+    Uint8List original,
+    Uint8List clip,
+    WavInfo info, {
+    required String label,
+    bool deleteAfter = false,
+  }) async {
+    var path = file.path;
+    final prepared = info.seconds < _minClipSeconds
+        ? padWavToSeconds(clip, _minClipSeconds)
+        : clip;
+    if (!identical(prepared, original)) {
+      final dir = await getTemporaryDirectory();
+      path = '${dir.path}/clip-${DateTime.now().millisecondsSinceEpoch}.wav';
+      await File(path).writeAsBytes(prepared, flush: true);
+      if (deleteAfter) unawaited(file.delete().catchError((_) => file));
+      deleteAfter = true;
+    }
+    if (!mounted) return;
+    await ref
+        .read(chatControllerProvider.notifier)
+        .transcribeVoice(
+          path,
+          label: label,
+          audioSeconds: info.seconds,
+          language: _speechLanguage,
+          deleteAfter: deleteAfter,
+        );
   }
 
   void _send() {
@@ -99,6 +256,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final session = chat.current;
     final messages = session?.messages ?? const <ChatMessage>[];
     final hasModel = engineState.loadedModel != null && !engineState.isLoading;
+    final isSpeech =
+        hasModel && engineState.loadedModel?.meta?.isSpeechToText == true;
 
     return Scaffold(
       appBar: AppBar(
@@ -135,6 +294,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             child: messages.isEmpty
                 ? _EmptyState(
                     hasModel: hasModel,
+                    speech: isSpeech,
                     onSuggestion: (s) => _input.text = s,
                   )
                 : ListView.builder(
@@ -153,7 +313,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         generating: chat.generating && isLast,
                         onRegenerate: isLast &&
                                 msg.role == ChatRole.assistant &&
-                                !chat.generating
+                                !chat.generating &&
+                                !isSpeech
                             ? () => ref
                                 .read(chatControllerProvider.notifier)
                                 .regenerate()
@@ -162,16 +323,26 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     },
                   ),
           ),
-          _InputBar(
-            controller: _input,
-            attachments: _pending,
-            generating: chat.generating,
-            enabled: hasModel,
-            onAttach: _attach,
-            onRemoveAttachment: (a) => setState(() => _pending.remove(a)),
-            onSend: _send,
-            onStop: () => ref.read(chatControllerProvider.notifier).stop(),
-          ),
+          if (isSpeech)
+            _SpeechBar(
+              recording: _recording,
+              recordSeconds: _recordSeconds,
+              transcribing: chat.generating,
+              onAttach: _attachAudio,
+              onRecord: _startRecording,
+              onStopRecording: _stopRecording,
+            )
+          else
+            _InputBar(
+              controller: _input,
+              attachments: _pending,
+              generating: chat.generating,
+              enabled: hasModel,
+              onAttach: _attach,
+              onRemoveAttachment: (a) => setState(() => _pending.remove(a)),
+              onSend: _send,
+              onStop: () => ref.read(chatControllerProvider.notifier).stop(),
+            ),
         ],
       ),
     );
@@ -253,10 +424,17 @@ class _ModelChip extends ConsumerWidget {
 }
 
 class _EmptyState extends ConsumerWidget {
-  const _EmptyState({required this.hasModel, required this.onSuggestion});
+  const _EmptyState({
+    required this.hasModel,
+    required this.onSuggestion,
+    this.speech = false,
+  });
 
   final bool hasModel;
   final ValueChanged<String> onSuggestion;
+
+  /// A speech-to-text model is loaded: no text suggestions, a mic hint.
+  final bool speech;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -283,7 +461,11 @@ class _EmptyState extends ConsumerWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  hasModel ? Icons.auto_awesome : Icons.download_outlined,
+                  !hasModel
+                      ? Icons.download_outlined
+                      : speech
+                      ? Icons.mic_outlined
+                      : Icons.auto_awesome,
                   size: 32,
                   color: scheme.primary,
                 ),
@@ -296,14 +478,20 @@ class _EmptyState extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                hasModel ? l.chatEmptyBody : l.chatNoModelBody,
+                !hasModel
+                    ? l.chatNoModelBody
+                    : speech
+                    ? l.chatSpeechHint
+                    : l.chatEmptyBody,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              if (!hasModel)
+              if (speech)
+                const SizedBox.shrink()
+              else if (!hasModel)
                 FilledButton.icon(
                   icon: const Icon(Icons.layers_outlined),
                   label: Text(l.chatGoToModels),
@@ -439,7 +627,9 @@ class _MessageBubble extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (message.stats != null)
-                  _StatsLine(stats: message.stats!),
+                  // Flexible: a long line (a record label, a clip length)
+                  // wraps under the bubble instead of overflowing the row.
+                  Flexible(child: _StatsLine(stats: message.stats!)),
                 IconButton(
                   icon: const Icon(Icons.copy, size: 15),
                   visualDensity: VisualDensity.compact,
@@ -555,13 +745,28 @@ class _StatsLine extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final style = AppTheme.mono(context,
         size: 11, color: scheme.onSurfaceVariant);
-    final parts = [
-      '${(stats.latencyMs / 1000).toStringAsFixed(1)}s',
-      '↑${formatCount(stats.promptTokens)}',
-      '↓${formatCount(stats.completionTokens)}',
-      l.statsTokensPerSecond(stats.tokensPerSecond.toStringAsFixed(1)),
-      if (stats.finishReason == 'length') l.statsFinishLength,
-    ];
+    final audio = stats.audioSeconds;
+    final parts = audio != null
+        // A transcript: the clip length says more than token counts.
+        ? [
+            '${(stats.latencyMs / 1000).toStringAsFixed(1)}s',
+            l.statsAudio(audio.toStringAsFixed(audio < 10 ? 1 : 0)),
+          ]
+        : stats.recordId != null
+        // The reply came word for word from a lookup record (Embryo): no
+        // tokens were generated, so the rate would only read 0.
+        ? [
+            '${(stats.latencyMs / 1000).toStringAsFixed(1)}s',
+            '↑${formatCount(stats.promptTokens)}',
+            l.statsRecord(stats.recordId!),
+          ]
+        : [
+            '${(stats.latencyMs / 1000).toStringAsFixed(1)}s',
+            '↑${formatCount(stats.promptTokens)}',
+            '↓${formatCount(stats.completionTokens)}',
+            l.statsTokensPerSecond(stats.tokensPerSecond.toStringAsFixed(1)),
+            if (stats.finishReason == 'length') l.statsFinishLength,
+          ];
     return Text(parts.join(' · '), style: style);
   }
 }
@@ -661,6 +866,116 @@ class _InputBar extends StatelessWidget {
                       ),
               ],
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The composer for a speech-to-text model: a microphone instead of a text
+/// field. Tap to record, tap again to stop; the transcript arrives as the
+/// reply. The clip button transcribes a WAV file instead.
+class _SpeechBar extends StatelessWidget {
+  const _SpeechBar({
+    required this.recording,
+    required this.recordSeconds,
+    required this.transcribing,
+    required this.onAttach,
+    required this.onRecord,
+    required this.onStopRecording,
+  });
+
+  final bool recording;
+  final int recordSeconds;
+  final bool transcribing;
+  final VoidCallback onAttach;
+  final VoidCallback onRecord;
+  final VoidCallback onStopRecording;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final String status;
+    if (recording) {
+      status = l.chatRecording(recordSeconds.toString());
+    } else if (transcribing) {
+      status = l.chatTranscribing;
+    } else {
+      status = l.chatSpeechHint;
+    }
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerLowest,
+          border: Border(
+            top: BorderSide(
+                color: scheme.outlineVariant.withValues(alpha: 0.3)),
+          ),
+        ),
+        child: Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.audio_file_outlined),
+              tooltip: l.chatAttachAudio,
+              onPressed: recording || transcribing ? null : onAttach,
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  children: [
+                    if (recording)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: Icon(
+                          Icons.fiber_manual_record,
+                          size: 12,
+                          color: scheme.error,
+                        ),
+                      )
+                    else if (transcribing)
+                      const Padding(
+                        padding: EdgeInsets.only(right: 8),
+                        child: SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    Expanded(
+                      child: Text(
+                        status,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (recording)
+              IconButton.filled(
+                icon: const Icon(Icons.stop),
+                tooltip: l.chatRecordStop,
+                style: IconButton.styleFrom(
+                  backgroundColor: scheme.error,
+                  foregroundColor: scheme.onError,
+                ),
+                onPressed: onStopRecording,
+              )
+            else
+              IconButton.filled(
+                icon: const Icon(Icons.mic),
+                tooltip: l.chatRecordStart,
+                onPressed: transcribing ? null : onRecord,
+              ),
           ],
         ),
       ),

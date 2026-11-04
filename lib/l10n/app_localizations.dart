@@ -1715,6 +1715,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'An add-on for a base chat model, not a standalone model. It cannot be opened as Chat or Decisions.'**
   String get modelSkillHelp;
+
+  /// No description provided for @modelKindSpeech.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech-to-text'**
+  String get modelKindSpeech;
+
+  /// No description provided for @modelSpeechHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Turns speech into text on this device. Load it, then dictate into the microphone in Chat or transcribe a WAV file.'**
+  String get modelSpeechHelp;
+
+  /// No description provided for @chatSpeechHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the microphone and speak'**
+  String get chatSpeechHint;
+
+  /// No description provided for @chatRecordStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Record'**
+  String get chatRecordStart;
+
+  /// No description provided for @chatRecordStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop recording'**
+  String get chatRecordStop;
+
+  /// No description provided for @chatRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording… {seconds} s'**
+  String chatRecording(String seconds);
+
+  /// No description provided for @chatTranscribing.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribing… this can take up to a minute'**
+  String get chatTranscribing;
+
+  /// No description provided for @chatVoiceNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice note · {seconds} s'**
+  String chatVoiceNote(String seconds);
+
+  /// No description provided for @chatMicDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone access was denied. Allow it in the system settings.'**
+  String get chatMicDenied;
+
+  /// No description provided for @chatRecordingTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'The recording is too short.'**
+  String get chatRecordingTooShort;
+
+  /// No description provided for @chatAttachAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribe a WAV file'**
+  String get chatAttachAudio;
+
+  /// No description provided for @chatAudioUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'This is not a WAV file the app can read.'**
+  String get chatAudioUnreadable;
+
+  /// No description provided for @statsAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds} s of audio'**
+  String statsAudio(String seconds);
+
+  /// No description provided for @statsRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'record {id}'**
+  String statsRecord(String id);
 }
 
 class _AppLocalizationsDelegate

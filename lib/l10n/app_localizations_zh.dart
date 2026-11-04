@@ -870,4 +870,55 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get modelSkillHelp => '这是基础聊天模型的扩展，不是独立模型，不能作为聊天或决策模型打开。';
+
+  @override
+  String get modelKindSpeech => '语音识别';
+
+  @override
+  String get modelSpeechHelp =>
+      '在本设备上把语音转成文字。加载模型后，在“聊天”中对着麦克风口述，或转写一个 WAV 文件。';
+
+  @override
+  String get chatSpeechHint => '点击麦克风并说话';
+
+  @override
+  String get chatRecordStart => '录音';
+
+  @override
+  String get chatRecordStop => '停止录音';
+
+  @override
+  String chatRecording(String seconds) {
+    return '录音中… $seconds 秒';
+  }
+
+  @override
+  String get chatTranscribing => '正在转写… 可能需要一分钟';
+
+  @override
+  String chatVoiceNote(String seconds) {
+    return '语音 · $seconds 秒';
+  }
+
+  @override
+  String get chatMicDenied => '麦克风权限被拒绝。请在系统设置中允许。';
+
+  @override
+  String get chatRecordingTooShort => '录音太短。';
+
+  @override
+  String get chatAttachAudio => '转写 WAV 文件';
+
+  @override
+  String get chatAudioUnreadable => '这不是应用能读取的 WAV 文件。';
+
+  @override
+  String statsAudio(String seconds) {
+    return '$seconds 秒音频';
+  }
+
+  @override
+  String statsRecord(String id) {
+    return '记录 $id';
+  }
 }

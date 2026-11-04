@@ -35,6 +35,8 @@ class GenerationStats {
     required this.latencyMs,
     this.finishReason,
     this.taskUsed,
+    this.recordId,
+    this.audioSeconds,
   });
 
   final int promptTokens;
@@ -43,6 +45,14 @@ class GenerationStats {
   final int latencyMs;
   final String? finishReason;
   final String? taskUsed;
+
+  /// The lookup record that answered word for word (Embryo's `herbs`,
+  /// `countries`, …), from the runtime's `x_cortiq_route`; null when the
+  /// network generated the reply.
+  final String? recordId;
+
+  /// Length of the audio a speech-to-text reply was transcribed from.
+  final double? audioSeconds;
 
   int get totalTokens => promptTokens + completionTokens;
 
@@ -53,6 +63,8 @@ class GenerationStats {
         'latencyMs': latencyMs,
         'finishReason': finishReason,
         'taskUsed': taskUsed,
+        if (recordId != null) 'recordId': recordId,
+        if (audioSeconds != null) 'audioSeconds': audioSeconds,
       };
 
   factory GenerationStats.fromJson(Map<String, dynamic> json) =>
@@ -63,6 +75,8 @@ class GenerationStats {
         latencyMs: json['latencyMs'] as int? ?? 0,
         finishReason: json['finishReason'] as String?,
         taskUsed: json['taskUsed'] as String?,
+        recordId: json['recordId'] as String?,
+        audioSeconds: (json['audioSeconds'] as num?)?.toDouble(),
       );
 }
 

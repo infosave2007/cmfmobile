@@ -423,5 +423,47 @@
     }
   },
   "modelKindSkill": "Skill add-on",
-  "modelSkillHelp": "An add-on for a base chat model, not a standalone model. It cannot be opened as Chat or Decisions."
+  "modelSkillHelp": "An add-on for a base chat model, not a standalone model. It cannot be opened as Chat or Decisions.",
+  "modelKindSpeech": "Speech-to-text",
+  "modelSpeechHelp": "Turns speech into text on this device. Load it, then dictate into the microphone in Chat or transcribe a WAV file.",
+  "chatSpeechHint": "Tap the microphone and speak",
+  "chatRecordStart": "Record",
+  "chatRecordStop": "Stop recording",
+  "chatRecording": "Recording… {seconds} s",
+  "@chatRecording": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "chatTranscribing": "Transcribing… this can take up to a minute",
+  "chatVoiceNote": "Voice note · {seconds} s",
+  "@chatVoiceNote": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "chatMicDenied": "Microphone access was denied. Allow it in the system settings.",
+  "chatRecordingTooShort": "The recording is too short.",
+  "chatAttachAudio": "Transcribe a WAV file",
+  "chatAudioUnreadable": "This is not a WAV file the app can read.",
+  "statsAudio": "{seconds} s of audio",
+  "@statsAudio": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "statsRecord": "record {id}",
+  "@statsRecord": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  }
 }
