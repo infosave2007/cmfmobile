@@ -75,14 +75,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         '${dir.path}/dictation-${DateTime.now().millisecondsSinceEpoch}.wav';
     // 16 kHz mono PCM is what Whisper hears; recording it directly saves the
     // engine a resample.
-    await recorder.start(
-      const RecordConfig(
-        encoder: AudioEncoder.wav,
-        sampleRate: 16000,
-        numChannels: 1,
-      ),
-      path: path,
-    );
+    try {
+      await recorder.start(
+        const RecordConfig(
+          encoder: AudioEncoder.wav,
+          sampleRate: 16000,
+          numChannels: 1,
+        ),
+        path: path,
+      );
+    } catch (e) {
+      // No microphone (the manifest marks it optional), or the platform
+      // refused the recorder: say so instead of a silent dead button.
+      if (mounted) _snack(cleanEngineError(e.toString()));
+      return;
+    }
     if (!mounted) return;
     setState(() {
       _recordStarted = DateTime.now();

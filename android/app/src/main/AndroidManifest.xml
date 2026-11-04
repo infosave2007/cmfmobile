@@ -3,6 +3,11 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Dictation into a loaded speech-to-text model; audio stays on the device. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <!-- RECORD_AUDIO alone makes Play treat the microphone as required and
+         drop devices without one (TV boxes, some tablets). Dictation is an
+         optional feature of speech models; everything else works without a
+         microphone. -->
+    <uses-feature android:name="android.hardware.microphone" android:required="false"/>
     <!-- LAN address discovery for the server screen (network_info_plus). -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
