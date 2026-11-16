@@ -1,3 +1,22 @@
+# 1.3.8 — Cortiq 0.9.2 runtime, faster GPU start on Adreno
+
+- The mobile runtime is built from Cortiq 0.9.2 (it was 0.8.56). The C ABI
+  is unchanged, so chat, record routing, decisions and Whisper dictation
+  work as in 1.3.7; the engine underneath carries the fixes and model
+  support of the releases in between, including the `glm5_next` stack and
+  LFM3 prompts read in chunks on Vulkan.
+- GPU switch on Adreno: two startup costs found while measuring this
+  release on a Snapdragon 778G (Adreno 642L) are fixed in the engine. The
+  compiled shaders of the prompt path are now kept after the first answer
+  even when the app is closed right after it, and kernels only GLM models
+  need are no longer compiled for every model. With the whole graph on the
+  GPU the first token of a fresh start came in 6.9 s instead of 41.4 s.
+- What the switch is worth on that phone, measured: the engine's probe
+  keeps matvec and the head on the CPU, and a warm answer runs at CPU speed
+  (LFM3-1.7B q4tp 12.4 tokens/s either way). The Adreno 642L itself decodes
+  4-bit weights about 3.5 times slower than the four big cores, in Vulkan
+  and in OpenCL alike, so the CPU is the right place for the work there.
+
 # 1.3.7 — microphone optional on Android
 
 - 1.3.6 added the `RECORD_AUDIO` permission for dictation, which Play reads
