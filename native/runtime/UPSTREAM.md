@@ -1,7 +1,7 @@
 # Source provenance
 
-`src/lib.rs` is the C ABI from `infosave2007/cmf` tag `v0.9.0`
-(commit `525a09ed`, crates.io `cortiq-ffi` 0.9.0; the file is unchanged since
+`src/lib.rs` is the C ABI from `infosave2007/cmf` tag `v0.9.2`
+(commit `14769cd0`, crates.io `cortiq-ffi` 0.9.2; the file is unchanged since
 `v0.8.56`), with two module declarations
 added at the end, for `decision.rs` and `transcribe.rs`. 0.8.56 brought the
 lookup-record router into `cortiq_chat*` (Embryo answers from its records) and
@@ -9,14 +9,14 @@ lookup-record router into `cortiq_chat*` (Embryo answers from its records) and
 
 `transcribe.rs` is the mobile speech-to-text adapter: `cortiq_stt_load`,
 `cortiq_stt_transcribe` and `cortiq_stt_free` over the published
-**cortiq-engine =0.9.0** Whisper path (`cortiq_engine::whisper::transcribe`,
+**cortiq-engine =0.9.2** Whisper path (`cortiq_engine::whisper::transcribe`,
 the same code `cortiq transcribe` runs). A Whisper file needs this handle
 type because `cortiq_load` builds the text pipeline, which that layout has
 no place in.
 
 `decision.rs` is the mobile adapter. Core parsing, encoder, reconstruction,
 confidence gates, skill rubrics and typed decision protocol come from the
-published **cortiq-decision =0.9.0** crate, not a reimplementation or a text
+published **cortiq-decision =0.9.2** crate, not a reimplementation or a text
 classification prompt. The adapter disables native cloud calls and learning.
 
 A single static/shared Rust library contains both ABIs. Linking two Rust
