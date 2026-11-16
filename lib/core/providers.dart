@@ -22,6 +22,7 @@ import '../data/services/model_repository.dart';
 import '../data/services/settings_repository.dart';
 import 'util/foreground_task.dart';
 import 'util/keep_awake.dart';
+import 'util/npu_support.dart';
 import 'util/transcript.dart';
 
 // ---------------------------------------------------------------------------
@@ -186,6 +187,12 @@ class EngineController extends Notifier<EngineState> {
       // against the CPU and keeps the winner, so the switch can be passed
       // through as the user set it.
       engine.setGpu(settings?.useGpu ?? false);
+      // The NPU lane is measured against the CPU on the first answer and
+      // kept only where it wins, so it too is passed through as set.
+      if (settings?.useNpu ?? false) {
+        await configureNpu(engine);
+      }
+      engine.setNpu(settings?.useNpu ?? false);
       await engine.loadModel(
         model,
         threads: settings?.threads ?? 0,

@@ -490,6 +490,35 @@ class AppLocalizationsDe extends AppLocalizations {
       'Erfordert eine Laufzeit mit Vulkan-/Metal-Backend — siehe native/TUNING.md.';
 
   @override
+  String get settingsUseNpu => 'NPU verwenden (Snapdragon Hexagon)';
+
+  @override
+  String get settingsUseNpuHint =>
+      'Rechnet einen Teil jeder Schicht auf dem Neuralprozessor des Telefons zusammen mit der CPU (gilt ab dem nächsten Laden). Die erste Antwort misst beide Wege; die NPU bleibt nur an, wenn sie schneller ist.';
+
+  @override
+  String get settingsNpuOff => 'NPU: aus.';
+
+  @override
+  String get settingsNpuUntested =>
+      'NPU: wird bei der ersten Antwort nach dem Laden eines Modells gemessen.';
+
+  @override
+  String settingsNpuFaster(String npu, String cpu) {
+    return 'NPU: in Verwendung — $npu ms gegenüber $cpu ms auf der CPU pro Schichtschritt.';
+  }
+
+  @override
+  String settingsNpuSlower(String npu, String cpu) {
+    return 'NPU: nicht verwendet — auf diesem Telefon ist die CPU schneller ($cpu ms gegenüber $npu ms mit der NPU).';
+  }
+
+  @override
+  String settingsNpuUnavailable(String error) {
+    return 'NPU: auf diesem Gerät nicht verfügbar — $error';
+  }
+
+  @override
   String get settingsDisableThinking => 'Denken deaktivieren';
 
   @override

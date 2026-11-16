@@ -1096,4 +1096,5 @@ pub extern "C" fn cortiq_peer_stats() -> *const c_char {
 }
 
 mod decision;
+mod npu;
 mod transcribe;

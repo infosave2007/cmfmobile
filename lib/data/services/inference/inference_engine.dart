@@ -66,6 +66,19 @@ abstract class InferenceEngine {
   /// anything acts on it). See native/TUNING.md.
   bool? get gpuBackendAvailable => null;
 
+  // --- NPU lane (Android, Snapdragon with Hexagon v68+) --------------------
+
+  /// Ask the runtime for its NPU lane, or switch it off. Applies on the next
+  /// load. The runtime measures the lane against the CPU on the first answer
+  /// and keeps it only where it is faster.
+  void setNpu(bool enable) {}
+
+  /// Where the NPU libraries live (the app's native library directory).
+  void configureNpu(String libDir) {}
+
+  /// The lane's state, or null when this runtime has no NPU lane at all.
+  NpuStatus? get npuStatus => null;
+
   /// [threads] sizes the native worker pool (0 = size it to the device's big
   /// cluster); [engineFlags] carries advanced `CMF_*=value` overrides. Both
   /// reach the runtime through the process environment — see
@@ -146,3 +159,54 @@ abstract class InferenceEngine {
   /// Cooperatively stops the current generation.
   void cancel();
 }
+
+/// State of the runtime's NPU lane (`cortiq_npu_status`).
+class NpuStatus {
+  const NpuStatus({
+    required this.requested,
+    required this.available,
+    required this.verdict,
+    required this.npuMicros,
+    required this.cpuMicros,
+    required this.lanes,
+    required this.calls,
+    required this.fallbacks,
+    required this.error,
+  });
+
+  factory NpuStatus.fromJson(Map<String, dynamic> j) => NpuStatus(
+        requested: j['requested'] == true,
+        available: j['available'] == true,
+        verdict: switch (j['verdict']) {
+          'npu' => NpuVerdict.npu,
+          'cpu' => NpuVerdict.cpu,
+          _ => NpuVerdict.untested,
+        },
+        npuMicros: (j['npu_us'] as num?)?.toInt() ?? 0,
+        cpuMicros: (j['cpu_us'] as num?)?.toInt() ?? 0,
+        lanes: (j['lanes'] as num?)?.toInt() ?? 0,
+        calls: (j['calls'] as num?)?.toInt() ?? 0,
+        fallbacks: (j['fallbacks'] as num?)?.toInt() ?? 0,
+        error: (j['error'] as String?) ?? '',
+      );
+
+  /// The switch is on.
+  final bool requested;
+
+  /// The NPU backend came up on this device.
+  final bool available;
+  final NpuVerdict verdict;
+
+  /// Median microseconds of one fused gate+up with the NPU / on the CPU.
+  final int npuMicros;
+  final int cpuMicros;
+  final int lanes;
+  final int calls;
+  final int fallbacks;
+
+  /// Why the backend is unavailable, when it is.
+  final String error;
+}
+
+/// What the runtime's trial decided.
+enum NpuVerdict { untested, npu, cpu }

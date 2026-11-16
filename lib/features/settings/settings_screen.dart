@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers.dart';
 import '../../core/util/formats.dart';
+import '../../core/util/npu_support.dart';
+import '../../data/services/inference/inference_engine.dart';
 import '../../data/models/settings.dart';
 import '../../data/services/inference/engine_tuning.dart';
 import '../../l10n/app_localizations.dart';
@@ -31,6 +33,7 @@ class SettingsScreen extends ConsumerWidget {
     final models = ref.watch(modelsProvider).value ?? const [];
     final engine = ref.watch(engineProvider);
     final gpuBackend = engine.gpuBackendAvailable;
+    final npu = engine.npuStatus;
     final appVersion = ref.watch(appVersionProvider).value ?? '';
     final storageBytes =
         models.fold<int>(0, (sum, m) => sum + m.sizeBytes);
@@ -158,6 +161,24 @@ class SettingsScreen extends ConsumerWidget {
                 engine.setGpu(v);
               },
             ),
+            // Only a runtime that carries the NPU lane (Android builds with
+            // the QNN libraries) shows the switch at all.
+            if (npu != null)
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l.settingsUseNpu),
+                subtitle: Text(
+                  '${l.settingsUseNpuHint}\n${_npuStatusLine(l, settings.useNpu, npu)}',
+                  style: const TextStyle(fontSize: 11),
+                ),
+                isThreeLine: true,
+                value: settings.useNpu,
+                onChanged: (v) async {
+                  notifier.updateSettings((s) => s.copyWith(useNpu: v));
+                  if (v) await configureNpu(engine);
+                  engine.setNpu(v);
+                },
+              ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(l.settingsDisableThinking),
@@ -332,4 +353,18 @@ class _SliderTile extends StatelessWidget {
       ],
     );
   }
+}
+
+/// One line saying what the NPU lane is doing, from the runtime's own report.
+String _npuStatusLine(AppLocalizations l, bool wanted, NpuStatus npu) {
+  if (!wanted) return l.settingsNpuOff;
+  if (npu.requested && !npu.available && npu.error.isNotEmpty) {
+    return l.settingsNpuUnavailable(npu.error);
+  }
+  String ms(int micros) => (micros / 1000).toStringAsFixed(2);
+  return switch (npu.verdict) {
+    NpuVerdict.untested => l.settingsNpuUntested,
+    NpuVerdict.npu => l.settingsNpuFaster(ms(npu.npuMicros), ms(npu.cpuMicros)),
+    NpuVerdict.cpu => l.settingsNpuSlower(ms(npu.npuMicros), ms(npu.cpuMicros)),
+  };
 }

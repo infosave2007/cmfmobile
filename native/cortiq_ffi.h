@@ -149,6 +149,16 @@ int32_t cortiq_set_peer(const char *config_json);
  * peer is connected. Valid until the next call on this thread. */
 const char *cortiq_peer_stats(void);
 
+/* NPU lane (mobile runtime >= 1.3.9, Android): the FFN's up matvec on the
+ * Hexagon NPU through QNN while the CPU computes gate. The engine times both
+ * ways on the first answer and keeps the NPU only where it is faster.
+ * cortiq_npu_status returns JSON valid until the next call from the thread:
+ * supported, requested, available, verdict ("untested" | "npu" | "cpu"),
+ * npu_us, cpu_us, lanes, weights_mb, calls, fallbacks, error. */
+void cortiq_set_npu(bool enable);
+void cortiq_npu_set_lib_dir(const char *dir);
+const char *cortiq_npu_status(void);
+
 #ifdef __cplusplus
 }
 #endif

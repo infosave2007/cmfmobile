@@ -966,6 +966,48 @@ abstract class AppLocalizations {
   /// **'Needs a runtime built with the Vulkan/Metal backend — see native/TUNING.md.'**
   String get settingsUseGpuNeedsBackend;
 
+  /// No description provided for @settingsUseNpu.
+  ///
+  /// In en, this message translates to:
+  /// **'Use NPU (Snapdragon Hexagon)'**
+  String get settingsUseNpu;
+
+  /// No description provided for @settingsUseNpuHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs part of each layer on the phone\'s neural processor together with the CPU (applies on next load). The first answer measures both ways; the NPU stays on only if it is faster.'**
+  String get settingsUseNpuHint;
+
+  /// No description provided for @settingsNpuOff.
+  ///
+  /// In en, this message translates to:
+  /// **'NPU: off.'**
+  String get settingsNpuOff;
+
+  /// No description provided for @settingsNpuUntested.
+  ///
+  /// In en, this message translates to:
+  /// **'NPU: will be measured on the first answer after loading a model.'**
+  String get settingsNpuUntested;
+
+  /// No description provided for @settingsNpuFaster.
+  ///
+  /// In en, this message translates to:
+  /// **'NPU: in use — {npu} ms against {cpu} ms on the CPU per layer step.'**
+  String settingsNpuFaster(String npu, String cpu);
+
+  /// No description provided for @settingsNpuSlower.
+  ///
+  /// In en, this message translates to:
+  /// **'NPU: not used — on this phone the CPU is faster ({cpu} ms against {npu} ms with the NPU).'**
+  String settingsNpuSlower(String npu, String cpu);
+
+  /// No description provided for @settingsNpuUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'NPU: unavailable on this device — {error}'**
+  String settingsNpuUnavailable(String error);
+
   /// No description provided for @settingsDisableThinking.
   ///
   /// In en, this message translates to:

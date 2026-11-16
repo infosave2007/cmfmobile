@@ -488,6 +488,35 @@ class AppLocalizationsRu extends AppLocalizations {
       'Нужна сборка движка с бэкендом Vulkan/Metal — см. native/TUNING.md.';
 
   @override
+  String get settingsUseNpu => 'Использовать NPU (Snapdragon Hexagon)';
+
+  @override
+  String get settingsUseNpuHint =>
+      'Часть каждого слоя считается на нейропроцессоре телефона вместе с CPU (применяется при следующей загрузке). Первый ответ замеряет оба способа; NPU остаётся включённым, только если он быстрее.';
+
+  @override
+  String get settingsNpuOff => 'NPU: выключен.';
+
+  @override
+  String get settingsNpuUntested =>
+      'NPU: будет замерен на первом ответе после загрузки модели.';
+
+  @override
+  String settingsNpuFaster(String npu, String cpu) {
+    return 'NPU: используется — $npu мс против $cpu мс на CPU за шаг слоя.';
+  }
+
+  @override
+  String settingsNpuSlower(String npu, String cpu) {
+    return 'NPU: не используется — на этом телефоне CPU быстрее ($cpu мс против $npu мс с NPU).';
+  }
+
+  @override
+  String settingsNpuUnavailable(String error) {
+    return 'NPU: недоступен на этом устройстве — $error';
+  }
+
+  @override
   String get settingsDisableThinking => 'Отключить рассуждения';
 
   @override

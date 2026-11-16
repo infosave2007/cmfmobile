@@ -282,3 +282,30 @@ Verified 2026-07-18 with qwen3-5-4b.cmf (Q8_2F), ffi 0.3.9 and 0.3.10
 
 Settings → About shows `engine: cortiq-native <version>` instead of
 `engine: demo`, and the demo banner disappears from the chat.
+
+## NPU lane (Android, optional)
+
+The runtime exports `cortiq_set_npu`, `cortiq_npu_set_lib_dir` and
+`cortiq_npu_status` (`runtime/src/npu.rs`) over `cortiq_engine::npu`. The lane
+needs, next to `libcortiq_ffi.so` in `jniLibs/arm64-v8a`:
+
+- `libcortiq_npu.so` — the engine's C++ shim over QNN
+  (`crates/cortiq-engine/npu/cortiq_npu.cpp` in infosave2007/cmf);
+- `libQnnHtp.so`, `libQnnHtpPrepare.so`, `libQnnSystem.so`;
+- per Hexagon generation (68, 69, 73, 75, 79, 81, 85) `libQnnHtpV<n>Stub.so`
+  and the DSP-side `libQnnHtpV<n>Skel.so`.
+
+`scripts/fetch_npu_libs.sh` puts all of them there from a Qualcomm AI Runtime
+SDK (Community edition; set `QAIRT_SDK_ROOT`). They add roughly 190 MB of
+native libraries, 90 MB of it the on-device graph preparer, which is why they
+are not packaged unless the SDK is present. The SDK's licence allows shipping
+the object code inside an application, not on its own.
+
+On the Android side: `android:extractNativeLibs` via `useLegacyPackaging`
+(the DSP reads its skeleton from a real file), `uses-native-library
+libcdsprpc.so` in the manifest (Android 12+), and the `cmf/native_dir` method
+channel that tells Dart the native library directory.
+
+The engine measures the lane against the CPU on the first answer and keeps it
+only where it is faster; `cortiq_npu_status` returns the verdict and timings
+that Settings shows.

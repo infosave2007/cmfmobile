@@ -83,6 +83,15 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+        // Where the packaged native libraries were extracted: the NPU lane's
+        // QNN libraries and Hexagon skeletons are loaded from there by path.
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "cmf/native_dir")
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "nativeLibraryDir" -> result.success(applicationInfo.nativeLibraryDir)
+                    else -> result.notImplemented()
+                }
+            }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "cmf/device_memory")
             .setMethodCallHandler { call, result ->
                 when (call.method) {

@@ -28,6 +28,17 @@ val hasReleaseSigning = releaseStoreFile != null &&
 
 android {
     namespace = "ai.cortiq.cmf_mobile"
+
+    packaging {
+        jniLibs {
+            // The NPU lane loads the QNN libraries by path and the Hexagon
+            // DSP reads its skeleton from the same directory, so the native
+            // libraries have to exist as files (scripts/fetch_npu_libs.sh).
+            useLegacyPackaging = true
+            // Hexagon ELF, not ARM: the NDK's strip cannot read them.
+            keepDebugSymbols += setOf("**/libQnnHtpV*Skel.so", "**/libQnnHtpV*.so")
+        }
+    }
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
