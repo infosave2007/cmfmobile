@@ -1,3 +1,17 @@
+# 1.3.8 — Cortiq 0.9.0 runtime
+
+- The mobile runtime is built from Cortiq 0.9.0 (it was 0.8.56). The C ABI
+  is unchanged, so chat, record routing, decisions and Whisper dictation
+  work as in 1.3.7; the engine underneath carries the fixes and model
+  support of the releases in between, including the `glm5_next` stack and
+  LFM3 prompts read in chunks on Vulkan.
+- Measured with this runtime on a Snapdragon 778G (Adreno 642L): with the
+  GPU switch on, the engine's probe keeps matvec and the head on the CPU,
+  and a warm answer runs at CPU speed (LFM3-1.7B q4tp 12.4 tokens/s either
+  way). The first answer after enabling the switch still pays the probe
+  once. Two engine-side startup costs found on that phone are fixed
+  upstream (infosave2007/cmf#160) and will arrive with the next runtime.
+
 # 1.3.7 — microphone optional on Android
 
 - 1.3.6 added the `RECORD_AUDIO` permission for dictation, which Play reads

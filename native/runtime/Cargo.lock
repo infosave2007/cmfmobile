@@ -202,7 +202,7 @@ checksum = "f079e83a288787bcd14a6aea84cee5c87a67c5a3e660c30f557a3d24761b3527"
 
 [[package]]
 name = "cmf-mobile-runtime"
-version = "0.8.56"
+version = "0.9.0"
 dependencies = [
  "cortiq-core",
  "cortiq-decision",
@@ -258,9 +258,9 @@ dependencies = [
 
 [[package]]
 name = "cortiq-core"
-version = "0.8.56"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7da71d5ce57a6c3dab416c3cb61b68bbf2ed7552fb37260fd416990ed7959d61"
+checksum = "3c80ed6afdd12982de980fbf19d12623662db92cb6ff415ede8d9fc41ad80b87"
 dependencies = [
  "bincode",
  "bytemuck",
@@ -275,9 +275,9 @@ dependencies = [
 
 [[package]]
 name = "cortiq-decision"
-version = "0.8.56"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d00a8e04e344829ef84536fb02e5d6f64b2b72ae8ad6e769d8b1da3ee7591b4"
+checksum = "abea39aee00e1abdc7ccb56b0775ba53152161488de19e42d864a3cb43658185"
 dependencies = [
  "anyhow",
  "bytemuck",
@@ -301,9 +301,9 @@ dependencies = [
 
 [[package]]
 name = "cortiq-engine"
-version = "0.8.56"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "49a61f27c2ad8b42f0570a0dc92bf68148722dbf740572491a04d351bd17d4aa"
+checksum = "9239814e18f29ae258d80ad898daf158d2cf86ea86c581b320a15501294451aa"
 dependencies = [
  "anyhow",
  "ash",
@@ -314,9 +314,11 @@ dependencies = [
  "image",
  "libc",
  "matrixmultiply",
+ "memmap2",
  "metal",
  "minijinja",
  "minijinja-contrib",
+ "objc",
  "pollster",
  "rustfft",
  "serde",
@@ -325,15 +327,16 @@ dependencies = [
  "tokio",
  "tracing",
  "unicode-normalization",
+ "unicode_categories",
  "ureq",
  "wgpu",
 ]
 
 [[package]]
 name = "cortiq-net"
-version = "0.8.56"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13a1d2ac6b2c3c5c4bac760b06fd6d71a448545a11eecbb281469fc0ee569d36"
+checksum = "12c97cfad9f53c67f29d219dfc942655d42d7d1492e26c0d8afedb9f6297926b"
 dependencies = [
  "bincode",
  "cortiq-core",
@@ -1817,6 +1820,12 @@ name = "unicode-width"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4ac048d71ede7ee76d585517add45da530660ef4390e49b098733c6e897f254"
+
+[[package]]
+name = "unicode_categories"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "39ec24b3121d976906ece63c9daad25b85969647682eee313cb5779fdd69e14e"
 
 [[package]]
 name = "untrusted"

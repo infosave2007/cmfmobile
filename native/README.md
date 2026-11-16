@@ -1,4 +1,4 @@
-# Native Cortiq runtime (0.8.56)
+# Native Cortiq runtime (0.9.0)
 
 Mobile 1.3.3 builds a single `libcortiq_ffi` from `native/runtime`, preserving
 all chat/companion exports and adding `cortiq_decision_load`,
