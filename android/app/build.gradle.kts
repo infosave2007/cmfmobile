@@ -31,12 +31,12 @@ android {
 
     packaging {
         jniLibs {
-            // The NPU lane loads the QNN libraries by path and the Hexagon
-            // DSP reads its skeleton from the same directory, so the native
-            // libraries have to exist as files (scripts/fetch_npu_libs.sh).
+            // The Hexagon DSP reads its side of the NPU module
+            // (libcortiq_hvx_skel.so) from the app's native library directory,
+            // so the native libraries have to exist as files.
             useLegacyPackaging = true
-            // Hexagon ELF, not ARM: the NDK's strip cannot read them.
-            keepDebugSymbols += setOf("**/libQnnHtpV*Skel.so", "**/libQnnHtpV*.so")
+            // Hexagon ELF, not ARM: the NDK's strip cannot read it.
+            keepDebugSymbols += setOf("**/libcortiq_hvx_skel.so")
         }
     }
     compileSdk = flutter.compileSdkVersion

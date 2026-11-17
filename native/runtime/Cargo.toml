@@ -1,6 +1,6 @@
 [package]
 name = "cmf-mobile-runtime"
-version = "0.9.2"
+version = "0.9.3"
 edition = "2024"
 rust-version = "1.88"
 license = "Apache-2.0"
@@ -14,21 +14,21 @@ crate-type = ["cdylib", "staticlib", "rlib"]
 gpu = ["cortiq-engine/gpu"]
 
 [dependencies]
-cortiq-core = "=0.9.2"
-cortiq-engine = "=0.9.2"
-cortiq-net = "=0.9.2"
-cortiq-decision = "=0.9.2"
+cortiq-core = "=0.9.3"
+cortiq-engine = "=0.9.3"
+cortiq-net = "=0.9.3"
+cortiq-decision = "=0.9.3"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
 # NPU lane: the engine branch that carries `cortiq_engine::npu` (infosave2007/cmf
-# `feat/npu-qnn-lane`, on top of v0.9.0). Replace with a version pin once an
+# `feat/npu-hvx`, on top of v0.9.3). Replace with a version pin once an
 # engine release includes it.
 [patch.crates-io]
-cortiq-core = { git = "https://github.com/infosave2007/cmf", branch = "feat/npu-qnn-lane" }
-cortiq-engine = { git = "https://github.com/infosave2007/cmf", branch = "feat/npu-qnn-lane" }
-cortiq-net = { git = "https://github.com/infosave2007/cmf", branch = "feat/npu-qnn-lane" }
-cortiq-decision = { git = "https://github.com/infosave2007/cmf", branch = "feat/npu-qnn-lane" }
+cortiq-core = { git = "https://github.com/infosave2007/cmf", branch = "feat/npu-hvx" }
+cortiq-engine = { git = "https://github.com/infosave2007/cmf", branch = "feat/npu-hvx" }
+cortiq-net = { git = "https://github.com/infosave2007/cmf", branch = "feat/npu-hvx" }
+cortiq-decision = { git = "https://github.com/infosave2007/cmf", branch = "feat/npu-hvx" }
 
 [profile.release]
 debug = 0

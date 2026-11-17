@@ -361,10 +361,10 @@ String _npuStatusLine(AppLocalizations l, bool wanted, NpuStatus npu) {
   if (npu.requested && !npu.available && npu.error.isNotEmpty) {
     return l.settingsNpuUnavailable(npu.error);
   }
-  String ms(int micros) => (micros / 1000).toStringAsFixed(2);
-  return switch (npu.verdict) {
+  return switch (npu.promptVerdict) {
     NpuVerdict.untested => l.settingsNpuUntested,
-    NpuVerdict.npu => l.settingsNpuFaster(ms(npu.npuMicros), ms(npu.cpuMicros)),
-    NpuVerdict.cpu => l.settingsNpuSlower(ms(npu.npuMicros), ms(npu.cpuMicros)),
+    NpuVerdict.npu => l.settingsNpuFaster(
+        npu.promptSpeedup.toStringAsFixed(1), npu.weightsMb.toString()),
+    NpuVerdict.cpu => l.settingsNpuSlower,
   };
 }

@@ -1,9 +1,10 @@
 //! The app's NPU switch: a C ABI over `cortiq_engine::npu` (Android only).
 //!
-//! The engine's NPU lane runs the FFN's `up` matvec on the Hexagon NPU
-//! through Qualcomm's QNN HTP backend while the CPU computes `gate`, times
-//! both ways on the first answer and keeps the NPU only where it wins. On
-//! other platforms these entry points exist and report `supported: false`.
+//! The engine's NPU lane gives the Hexagon DSP a share of the rows of a
+//! prompt chunk's matrix products (our own integer-HVX module over FastRPC)
+//! while the CPU computes the rest, times both ways and keeps the NPU only
+//! where it wins. On other platforms these entry points exist and report
+//! `supported: false`.
 
 use std::ffi::c_char;
 
@@ -16,8 +17,8 @@ pub extern "C" fn cortiq_set_npu(enable: bool) {
     let _ = enable;
 }
 
-/// Directory holding `libcortiq_npu.so`, the QNN libraries and the Hexagon
-/// skeletons: the app's native library directory. Call before enabling.
+/// Directory holding `libcortiq_npu.so` and `libcortiq_hvx_skel.so`: the
+/// app's native library directory. Call before enabling.
 ///
 /// # Safety
 /// `dir` is NULL or a NUL-terminated UTF-8 string valid for the call.
@@ -33,9 +34,13 @@ pub unsafe extern "C" fn cortiq_npu_set_lib_dir(dir: *const c_char) {
 }
 
 /// The lane's state as JSON, valid until the next call from this thread:
-/// `{"supported":true,"requested":true,"available":true,"verdict":"cpu",
-///   "npu_us":2080,"cpu_us":1490,"lanes":1,"weights_mb":15,"calls":24,
-///   "fallbacks":0,"error":""}`. `verdict` is `untested`, `npu` or `cpu`.
+/// `{"supported":true,"requested":true,"available":true,
+///   "prompt_verdict":"npu","prompt_npu":11233,"prompt_cpu":28085,
+///   "decode_verdict":"untested","decode_npu":0,"decode_cpu":0,
+///   "lanes":48,"weights_mb":420,"calls":96,"fallbacks":0,"error":""}`.
+/// A verdict is `untested`, `npu` or `cpu`; the prompt numbers are
+/// nanoseconds per activation vector per million weights, the decode ones
+/// microseconds per fused gate+up.
 #[unsafe(no_mangle)]
 pub extern "C" fn cortiq_npu_status() -> *const c_char {
     #[cfg(target_os = "android")]
@@ -45,9 +50,12 @@ pub extern "C" fn cortiq_npu_status() -> *const c_char {
             "supported": true,
             "requested": s.requested,
             "available": s.available,
-            "verdict": s.verdict,
-            "npu_us": s.npu_us,
-            "cpu_us": s.cpu_us,
+            "prompt_verdict": s.batch_verdict,
+            "prompt_npu": s.batch_npu_us,
+            "prompt_cpu": s.batch_cpu_us,
+            "decode_verdict": s.verdict,
+            "decode_npu": s.npu_us,
+            "decode_cpu": s.cpu_us,
             "lanes": s.lanes,
             "weights_mb": s.weights_mb,
             "calls": s.calls,

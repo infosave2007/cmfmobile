@@ -69,8 +69,8 @@ abstract class InferenceEngine {
   // --- NPU lane (Android, Snapdragon with Hexagon v68+) --------------------
 
   /// Ask the runtime for its NPU lane, or switch it off. Applies on the next
-  /// load. The runtime measures the lane against the CPU on the first answer
-  /// and keeps it only where it is faster.
+  /// load. The runtime measures the lane against the CPU while it reads a
+  /// prompt and keeps it only where it is faster.
   void setNpu(bool enable) {}
 
   /// Where the NPU libraries live (the app's native library directory).
@@ -165,10 +165,11 @@ class NpuStatus {
   const NpuStatus({
     required this.requested,
     required this.available,
-    required this.verdict,
-    required this.npuMicros,
-    required this.cpuMicros,
+    required this.promptVerdict,
+    required this.promptNpu,
+    required this.promptCpu,
     required this.lanes,
+    required this.weightsMb,
     required this.calls,
     required this.fallbacks,
     required this.error,
@@ -177,14 +178,15 @@ class NpuStatus {
   factory NpuStatus.fromJson(Map<String, dynamic> j) => NpuStatus(
         requested: j['requested'] == true,
         available: j['available'] == true,
-        verdict: switch (j['verdict']) {
+        promptVerdict: switch (j['prompt_verdict']) {
           'npu' => NpuVerdict.npu,
           'cpu' => NpuVerdict.cpu,
           _ => NpuVerdict.untested,
         },
-        npuMicros: (j['npu_us'] as num?)?.toInt() ?? 0,
-        cpuMicros: (j['cpu_us'] as num?)?.toInt() ?? 0,
+        promptNpu: (j['prompt_npu'] as num?)?.toInt() ?? 0,
+        promptCpu: (j['prompt_cpu'] as num?)?.toInt() ?? 0,
         lanes: (j['lanes'] as num?)?.toInt() ?? 0,
+        weightsMb: (j['weights_mb'] as num?)?.toInt() ?? 0,
         calls: (j['calls'] as num?)?.toInt() ?? 0,
         fallbacks: (j['fallbacks'] as num?)?.toInt() ?? 0,
         error: (j['error'] as String?) ?? '',
@@ -193,18 +195,29 @@ class NpuStatus {
   /// The switch is on.
   final bool requested;
 
-  /// The NPU backend came up on this device.
+  /// The Hexagon module came up on this device.
   final bool available;
-  final NpuVerdict verdict;
 
-  /// Median microseconds of one fused gate+up with the NPU / on the CPU.
-  final int npuMicros;
-  final int cpuMicros;
+  /// What the runtime's trial decided for reading prompts.
+  final NpuVerdict promptVerdict;
+
+  /// The trial's medians: time per prompt token per million weights with
+  /// the NPU split and on the CPU alone (same unit; only the ratio matters).
+  final int promptNpu;
+  final int promptCpu;
+
+  /// How many times faster the measured layers ran with the NPU.
+  double get promptSpeedup =>
+      promptNpu > 0 && promptCpu > 0 ? promptCpu / promptNpu : 0;
+
   final int lanes;
+
+  /// Megabytes of weights copied for the DSP.
+  final int weightsMb;
   final int calls;
   final int fallbacks;
 
-  /// Why the backend is unavailable, when it is.
+  /// Why the module is unavailable, when it is.
   final String error;
 }
 
