@@ -25,6 +25,10 @@
         android:label="Cortiq"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- The NPU lane talks to the Hexagon DSP through the vendor's FastRPC
+             library. Android 12+ only lets an app load a vendor library it
+             names here; optional, so phones without it install as before. -->
+        <uses-native-library android:name="libcdsprpc.so" android:required="false"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

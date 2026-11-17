@@ -1,4 +1,4 @@
-# Native Cortiq runtime (0.9.2)
+# Native Cortiq runtime (0.9.4)
 
 Mobile 1.3.3 builds a single `libcortiq_ffi` from `native/runtime`, preserving
 all chat/companion exports and adding `cortiq_decision_load`,
@@ -282,3 +282,35 @@ Verified 2026-07-18 with qwen3-5-4b.cmf (Q8_2F), ffi 0.3.9 and 0.3.10
 
 Settings → About shows `engine: cortiq-native <version>` instead of
 `engine: demo`, and the demo banner disappears from the chat.
+
+## NPU lane (Android, optional)
+
+The runtime exports `cortiq_set_npu`, `cortiq_npu_set_lib_dir` and
+`cortiq_npu_status` (`runtime/src/npu.rs`) over `cortiq_engine::npu`. With the
+switch on, a prompt chunk's q4tp matrix products are split by rows: the
+Hexagon DSP takes a share for all the chunk's vectors while the CPU computes
+the rest. Writing the answer stays on the CPU (a token is bound by memory,
+which the two share).
+
+The DSP side is Cortiq's own module, not a vendor runtime (`npu/README.md`):
+`libcortiq_npu.so` (FastRPC client, ~12 KB) and `libcortiq_hvx_skel.so`
+(integer HVX, unsigned PD, Hexagon v68 and newer, ~18 KB), prebuilt in
+`npu/prebuilt/arm64-v8a` and copied into `jniLibs` by `scripts/build_native.sh`.
+
+On the Android side: the libraries stay uncompressed inside the APK (no
+legacy packaging, so nothing is extracted at install); `MainActivity` copies
+only `libcortiq_hvx_skel.so` (18 KB) into `files/npu` on first use, because
+the DSP reads its module as a file, and the `cmf/native_dir` channel's
+`npuDir` hands Dart that directory. `libcortiq_npu.so` is loaded by name.
+The manifest declares `uses-native-library libcdsprpc.so` (Android 12+).
+
+The engine measures the lane against the CPU on the first long prompt and
+keeps it only where it is faster; the verdict is remembered beside the model
+(`cortiq-npu-probe.tsv`). The weights it copies for the DSP take at most a
+fifth of the memory available when the first lane is built (512 MB cap).
+
+Measured in the app on a Xiaomi 12 Lite (Snapdragon 778G, Hexagon V68),
+LFM3-1.7B q4tp, the same 296-token text: 17.3-17.5 s per answer with the CPU,
+12.5 s with the NPU (14.7 s for the first prompt after loading, which copies
+the weights); the prompt is read at about 36 tokens/s instead of 23. Phones without Hexagon (MediaTek, Exynos, Tensor) show the module as
+unavailable.

@@ -469,6 +469,35 @@ class AppLocalizationsZh extends AppLocalizations {
       '需要带 Vulkan/Metal 后端的引擎构建，详见 native/TUNING.md。';
 
   @override
+  String get settingsUseNpu => '使用 NPU（Snapdragon Hexagon）';
+
+  @override
+  String get settingsUseNpuHint =>
+      '与 CPU 一起在手机的信号处理器上读取提示词（下次加载时生效）。长提示词和文档读取更快；回答仍由 CPU 生成。在第一个长提示词时测量，只有更快时才保持开启。需要额外内存存放部分权重的副本。';
+
+  @override
+  String get settingsNpuOff => 'NPU：已关闭。';
+
+  @override
+  String get settingsNpuUntested => 'NPU：将在加载模型后的第一个长提示词时测量。';
+
+  @override
+  String get settingsNpuOn => 'NPU：正用于读取提示词。';
+
+  @override
+  String settingsNpuFaster(String mb) {
+    return 'NPU：正用于读取提示词（已复制 $mb MB 权重）。';
+  }
+
+  @override
+  String get settingsNpuSlower => 'NPU：未使用 — 在这部手机上仅用 CPU 读取提示词更快。';
+
+  @override
+  String settingsNpuUnavailable(String error) {
+    return 'NPU：此设备不可用 — $error';
+  }
+
+  @override
   String get settingsDisableThinking => '禁用思考';
 
   @override

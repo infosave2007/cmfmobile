@@ -1,3 +1,23 @@
+# 1.3.9 — NPU for reading prompts (Snapdragon), Cortiq 0.9.4
+
+- Settings gain "Use NPU (Snapdragon Hexagon)" on Android. With it on, long
+  prompts and attached documents are read on the phone's Hexagon signal
+  processor together with the CPU; the answer is still written by the CPU.
+  On a Snapdragon 778G (LFM3-1.7B) a 296-token text is read at about 36
+  tokens/s instead of 23, and the whole answer comes in 12.5 s instead of
+  17.4. The first long prompt after loading a model also copies part of the
+  weights for the NPU and is about 2 s slower than the ones after it.
+- The engine measures the NPU against the CPU on the first long prompt and
+  keeps it only where it is faster; the caption under the switch says what it
+  decided and how much memory the copied weights take. Phones without a
+  Hexagon DSP show it as unavailable.
+- The NPU part is Cortiq's own module, about 30 KB in the app (no vendor AI
+  runtime is shipped). The installed app does not grow: the libraries stay
+  inside the APK and only the 18 KB DSP half is copied out on first use.
+- The mobile runtime is built from Cortiq 0.9.4 (it was 0.9.2), which carries
+  the NPU lane; the C ABI adds `cortiq_set_npu`, `cortiq_npu_set_lib_dir` and
+  `cortiq_npu_status`.
+
 # 1.3.8 — Cortiq 0.9.2 runtime, faster GPU start on Adreno
 
 - The mobile runtime is built from Cortiq 0.9.2 (it was 0.8.56). The C ABI

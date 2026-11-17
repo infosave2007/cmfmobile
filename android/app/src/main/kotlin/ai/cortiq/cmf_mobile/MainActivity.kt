@@ -83,6 +83,19 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+        // The NPU lane: the directory holding the Hexagon half of the module,
+        // which the DSP can only read as a real file. Null when this APK has
+        // no module for this device's ABI.
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "cmf/native_dir")
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "npuDir" -> Thread {
+                        val dir = try { npuModuleDir() } catch (e: Exception) { null }
+                        runOnUiThread { result.success(dir) }
+                    }.start()
+                    else -> result.notImplemented()
+                }
+            }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "cmf/device_memory")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -101,6 +114,38 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    /// Where `libcortiq_hvx_skel.so` is as a file: the native library
+    /// directory when the libraries were extracted, else a copy in
+    /// `files/npu` taken from the APK (or its ABI split, from Play), refreshed
+    /// when the app is updated. ~18 KB, copied once per version.
+    private fun npuModuleDir(): String? {
+        val name = "libcortiq_hvx_skel.so"
+        val native = java.io.File(applicationInfo.nativeLibraryDir ?: "", name)
+        if (native.isFile) return native.parent
+        val out = java.io.File(filesDir, "npu")
+        val dst = java.io.File(out, name)
+        val stamp = java.io.File(out, "version")
+        val version = packageManager.getPackageInfo(packageName, 0).let {
+            "${it.lastUpdateTime}"
+        }
+        if (dst.isFile && stamp.isFile && stamp.readText() == version) return out.path
+        val apks = listOf(applicationInfo.sourceDir) + (applicationInfo.splitSourceDirs?.toList() ?: emptyList())
+        for (abi in Build.SUPPORTED_ABIS) {
+            for (apk in apks) {
+                java.util.zip.ZipFile(apk).use { zip ->
+                    val entry = zip.getEntry("lib/$abi/$name") ?: return@use
+                    out.mkdirs()
+                    val tmp = java.io.File(out, "$name.tmp")
+                    zip.getInputStream(entry).use { input -> tmp.outputStream().use { input.copyTo(it) } }
+                    if (!tmp.renameTo(dst)) throw java.io.IOException("cannot place $name")
+                    stamp.writeText(version)
+                    return out.path
+                }
+            }
+        }
+        return null
     }
 
     /// Asks for POST_NOTIFICATIONS the first time work starts that the user

@@ -488,6 +488,37 @@ class AppLocalizationsRu extends AppLocalizations {
       'Нужна сборка движка с бэкендом Vulkan/Metal — см. native/TUNING.md.';
 
   @override
+  String get settingsUseNpu => 'Использовать NPU (Snapdragon Hexagon)';
+
+  @override
+  String get settingsUseNpuHint =>
+      'Читает промпт на сигнальном процессоре телефона вместе с CPU (применяется при следующей загрузке). Длинные промпты и документы читаются быстрее; сам ответ по-прежнему пишет CPU. Замеряется на первом длинном промпте и остаётся включённым, только если быстрее. Требует дополнительной памяти под копию части весов.';
+
+  @override
+  String get settingsNpuOff => 'NPU: выключен.';
+
+  @override
+  String get settingsNpuUntested =>
+      'NPU: будет замерен на первом длинном промпте после загрузки модели.';
+
+  @override
+  String get settingsNpuOn => 'NPU: используется для чтения промптов.';
+
+  @override
+  String settingsNpuFaster(String mb) {
+    return 'NPU: используется для чтения промптов (на него скопировано $mb МБ весов).';
+  }
+
+  @override
+  String get settingsNpuSlower =>
+      'NPU: не используется — на этом телефоне CPU читает промпты быстрее.';
+
+  @override
+  String settingsNpuUnavailable(String error) {
+    return 'NPU: недоступен на этом устройстве — $error';
+  }
+
+  @override
   String get settingsDisableThinking => 'Отключить рассуждения';
 
   @override
