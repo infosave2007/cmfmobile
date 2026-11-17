@@ -149,6 +149,17 @@ int32_t cortiq_set_peer(const char *config_json);
  * peer is connected. Valid until the next call on this thread. */
 const char *cortiq_peer_stats(void);
 
+/* NPU lane (Android, Snapdragon with Hexagon v68+): a prompt chunk's matrix
+ * products are split between the CPU and the Hexagon DSP (our own integer-HVX
+ * module over FastRPC). The engine times both ways and keeps the NPU only
+ * where it is faster. cortiq_npu_status returns JSON valid until the next call
+ * from the thread: supported, requested, available, prompt_verdict and
+ * decode_verdict ("untested" | "npu" | "cpu") with their two timings, lanes,
+ * weights_mb, calls, fallbacks, error. */
+void cortiq_set_npu(bool enable);
+void cortiq_npu_set_lib_dir(const char *dir);
+const char *cortiq_npu_status(void);
+
 #ifdef __cplusplus
 }
 #endif

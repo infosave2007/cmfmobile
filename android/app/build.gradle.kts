@@ -28,6 +28,17 @@ val hasReleaseSigning = releaseStoreFile != null &&
 
 android {
     namespace = "ai.cortiq.cmf_mobile"
+
+    packaging {
+        jniLibs {
+            // The NPU module's DSP half is a Hexagon ELF, not ARM: the NDK's
+            // strip cannot read it. Libraries stay uncompressed in the APK
+            // (no legacy packaging: extracting them all would add their full
+            // size to the installed app); MainActivity copies this one file
+            // out for the DSP, which can only read a real file.
+            keepDebugSymbols += setOf("**/libcortiq_hvx_skel.so")
+        }
+    }
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 

@@ -966,6 +966,54 @@ abstract class AppLocalizations {
   /// **'Needs a runtime built with the Vulkan/Metal backend — see native/TUNING.md.'**
   String get settingsUseGpuNeedsBackend;
 
+  /// No description provided for @settingsUseNpu.
+  ///
+  /// In en, this message translates to:
+  /// **'Use NPU (Snapdragon Hexagon)'**
+  String get settingsUseNpu;
+
+  /// No description provided for @settingsUseNpuHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reads prompts on the phone\'s signal processor together with the CPU (applies on next load). Long prompts and documents are read faster; writing the answer stays on the CPU. Measured on the first long prompt and kept only if faster. Uses extra memory for a copy of part of the weights.'**
+  String get settingsUseNpuHint;
+
+  /// No description provided for @settingsNpuOff.
+  ///
+  /// In en, this message translates to:
+  /// **'NPU: off.'**
+  String get settingsNpuOff;
+
+  /// No description provided for @settingsNpuUntested.
+  ///
+  /// In en, this message translates to:
+  /// **'NPU: will be measured on the first long prompt after loading a model.'**
+  String get settingsNpuUntested;
+
+  /// No description provided for @settingsNpuOn.
+  ///
+  /// In en, this message translates to:
+  /// **'NPU: in use for reading prompts.'**
+  String get settingsNpuOn;
+
+  /// No description provided for @settingsNpuFaster.
+  ///
+  /// In en, this message translates to:
+  /// **'NPU: in use for reading prompts ({mb} MB of weights copied to it).'**
+  String settingsNpuFaster(String mb);
+
+  /// No description provided for @settingsNpuSlower.
+  ///
+  /// In en, this message translates to:
+  /// **'NPU: not used — on this phone the CPU alone reads prompts faster.'**
+  String get settingsNpuSlower;
+
+  /// No description provided for @settingsNpuUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'NPU: unavailable on this device — {error}'**
+  String settingsNpuUnavailable(String error);
+
   /// No description provided for @settingsDisableThinking.
   ///
   /// In en, this message translates to:

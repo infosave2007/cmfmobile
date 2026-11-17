@@ -21,6 +21,7 @@ class SettingsRepository {
   static const _kServerToken = 'serverToken';
   static const _kHfToken = 'hfToken';
   static const _kUseGpu = 'useGpu';
+  static const _kUseNpu = 'useNpu';
   static const _kCompanionRole = 'companionRole';
   static const _kCompanionAddress = 'companionAddress';
   static const _kCompanionToken = 'companionToken';
@@ -55,6 +56,7 @@ class SettingsRepository {
       serverToken: token,
       hfToken: p.getString(_kHfToken) ?? '',
       useGpu: p.getBool(_kUseGpu) ?? false,
+      useNpu: p.getBool(_kUseNpu) ?? false,
       // A peer is never restored as active: the address was reachable when it
       // was saved, and a phone that silently dials a desktop it can no longer
       // see would look like a broken model rather than a missing cable. The
@@ -87,6 +89,7 @@ class SettingsRepository {
     await p.setString(_kServerToken, s.serverToken);
     await p.setString(_kHfToken, s.hfToken);
     await p.setBool(_kUseGpu, s.useGpu);
+    await p.setBool(_kUseNpu, s.useNpu);
     await p.setString(_kCompanionRole, s.companionRole.name);
     await p.setString(_kCompanionAddress, s.companionAddress);
     await p.setString(_kCompanionToken, s.companionToken);

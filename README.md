@@ -146,7 +146,7 @@ flutter run
 ```
 
 **The app ships with the real Cortiq runtime** — Android and iOS artifacts are
-built from the pinned **Cortiq 0.9.2** source in CI, including this app's
+built from the pinned **Cortiq 0.9.4** source in CI, including this app's
 Decision and speech-to-text adapters. Generated `.so` and `.a` files are intentionally not stored
 in Git; the shared native-build action produces every Android ABI and the iOS
 static library before packaging. If a development build lacks that library,

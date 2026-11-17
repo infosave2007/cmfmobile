@@ -54,4 +54,6 @@ app.*.map.json
 # Reproducible mobile native build cache
 /native/runtime/target/
 /android/app/src/main/jniLibs/*/libcortiq_ffi.so
+/android/app/src/main/jniLibs/*/libcortiq_npu.so
+/android/app/src/main/jniLibs/*/libcortiq_hvx_skel.so
 /ios/Frameworks/libcortiq_ffi*.a

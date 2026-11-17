@@ -63,6 +63,10 @@ typedef _SetGpuNative = ffi.Void Function(ffi.Bool);
 typedef _SetGpuDart = void Function(bool);
 typedef _GpuAvailableNative = ffi.Bool Function();
 typedef _GpuAvailableDart = bool Function();
+typedef _NpuSetDirNative = ffi.Void Function(ffi.Pointer<Utf8>);
+typedef _NpuSetDirDart = void Function(ffi.Pointer<Utf8>);
+typedef _NpuStatusNative = ffi.Pointer<Utf8> Function();
+typedef _NpuStatusDart = ffi.Pointer<Utf8> Function();
 typedef _SetThreadsNative = ffi.Void Function(ffi.Int32);
 typedef _SetThreadsDart = void Function(int);
 typedef _WorkerTidsNative =
@@ -179,6 +183,23 @@ class NativeCortiqEngine extends InferenceEngine {
         _workerTids = null;
       }
       try {
+        // Mobile runtime with the NPU lane (Android): the switch, the
+        // directory of the Hexagon module and the lane's status.
+        _setNpu = lib.lookupFunction<_SetGpuNative, _SetGpuDart>(
+          'cortiq_set_npu',
+        );
+        _npuSetDir = lib.lookupFunction<_NpuSetDirNative, _NpuSetDirDart>(
+          'cortiq_npu_set_lib_dir',
+        );
+        _npuStatus = lib.lookupFunction<_NpuStatusNative, _NpuStatusDart>(
+          'cortiq_npu_status',
+        );
+      } catch (_) {
+        _setNpu = null;
+        _npuSetDir = null;
+        _npuStatus = null;
+      }
+      try {
         // cortiq-ffi >= 0.5.32. Without it, cancelling can only be noticed
         // between tokens — which never happens during a prefill, so Stop
         // does nothing for the first minute of a long prompt.
@@ -240,6 +261,9 @@ class NativeCortiqEngine extends InferenceEngine {
   _SetOptionsDart? _setOptions;
   _SetGpuDart? _setGpu;
   _GpuAvailableDart? _gpuAvailable;
+  _SetGpuDart? _setNpu;
+  _NpuSetDirDart? _npuSetDir;
+  _NpuStatusDart? _npuStatus;
   _SetThreadsDart? _setThreads;
   _WorkerTidsDart? _workerTids;
   _CancelDart? _cancelNative;
@@ -277,6 +301,36 @@ class NativeCortiqEngine extends InferenceEngine {
 
   @override
   bool? get gpuBackendAvailable => _gpuAvailable?.call();
+
+  @override
+  void setNpu(bool enable) => _setNpu?.call(enable);
+
+  @override
+  void configureNpu(String libDir) {
+    final set = _npuSetDir;
+    if (set == null) return;
+    final dir = libDir.toNativeUtf8();
+    try {
+      set(dir);
+    } finally {
+      malloc.free(dir);
+    }
+  }
+
+  @override
+  NpuStatus? get npuStatus {
+    final status = _npuStatus;
+    if (status == null) return null;
+    try {
+      final ptr = status();
+      if (ptr == ffi.nullptr) return null;
+      final json = jsonDecode(ptr.toDartString()) as Map<String, dynamic>;
+      if (json['supported'] != true) return null;
+      return NpuStatus.fromJson(json);
+    } catch (_) {
+      return null;
+    }
+  }
 
   @override
   String get name {

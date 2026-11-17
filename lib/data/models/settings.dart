@@ -17,6 +17,7 @@ class AppSettings {
     this.serverToken = '',
     this.hfToken = '',
     this.useGpu = false,
+    this.useNpu = false,
     this.companionRole = CompanionRole.local,
     this.companionAddress = '',
     this.companionToken = '',
@@ -50,6 +51,9 @@ class AppSettings {
   final String hfToken;
   final bool useGpu;
 
+  /// Ask the runtime for its NPU lane (Snapdragon, Hexagon v68+).
+  final bool useNpu;
+
   /// Which side computes. Persisted so a phone set up as a worker comes back
   /// as one, but never auto-applied over the network: see [CompanionConfig].
   final CompanionRole companionRole;
@@ -79,6 +83,7 @@ class AppSettings {
     String? serverToken,
     String? hfToken,
     bool? useGpu,
+    bool? useNpu,
     CompanionRole? companionRole,
     String? companionAddress,
     String? companionToken,
@@ -98,6 +103,7 @@ class AppSettings {
         serverToken: serverToken ?? this.serverToken,
         hfToken: hfToken ?? this.hfToken,
         useGpu: useGpu ?? this.useGpu,
+        useNpu: useNpu ?? this.useNpu,
         companionRole: companionRole ?? this.companionRole,
         companionAddress: companionAddress ?? this.companionAddress,
         companionToken: companionToken ?? this.companionToken,

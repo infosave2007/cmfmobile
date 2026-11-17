@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # One pinned runtime for local tests and every store artifact. No downloaded
-# opaque .a/.so files and no local Apple signing/build pipeline.
+# opaque .a/.so files and no local Apple signing/build pipeline. The one
+# prebuilt piece is the Android NPU module (native/npu), built from the
+# engine's source with the Hexagon SDK, which CI cannot download.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$PWD/native/runtime/target}"
@@ -20,6 +22,10 @@ case "${1:-}" in
     export RUSTFLAGS="${RUSTFLAGS:-} -C link-arg=-Wl,-z,max-page-size=16384"
     rustup target add aarch64-linux-android
     cargo ndk -t arm64-v8a --platform 26 -o "$root/android/app/src/main/jniLibs" build --manifest-path "$manifest" --release --locked --features gpu
+    # The NPU module (native/npu/README.md): ~33 KB of prebuilt Hexagon module and FastRPC client,
+    # arm64 only. The runtime loads it only when the app's NPU switch is on.
+    cp "$root"/native/npu/prebuilt/arm64-v8a/libcortiq_npu.so "$root"/native/npu/prebuilt/arm64-v8a/libcortiq_hvx_skel.so \
+      "$root/android/app/src/main/jniLibs/arm64-v8a/"
     if [[ "$1" == android ]]; then
       rustup target add x86_64-linux-android armv7-linux-androideabi
       cargo ndk -t x86_64 --platform 26 -o "$root/android/app/src/main/jniLibs" build --manifest-path "$manifest" --release --locked --features gpu

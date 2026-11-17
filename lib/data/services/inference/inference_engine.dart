@@ -66,6 +66,19 @@ abstract class InferenceEngine {
   /// anything acts on it). See native/TUNING.md.
   bool? get gpuBackendAvailable => null;
 
+  // --- NPU lane (Android, Snapdragon with Hexagon v68+) --------------------
+
+  /// Ask the runtime for its NPU lane, or switch it off. Applies on the next
+  /// load. The runtime measures the lane against the CPU while it reads a
+  /// prompt and keeps it only where it is faster.
+  void setNpu(bool enable) {}
+
+  /// Where the NPU libraries live (the app's native library directory).
+  void configureNpu(String libDir) {}
+
+  /// The lane's state, or null when this runtime has no NPU lane at all.
+  NpuStatus? get npuStatus => null;
+
   /// [threads] sizes the native worker pool (0 = size it to the device's big
   /// cluster); [engineFlags] carries advanced `CMF_*=value` overrides. Both
   /// reach the runtime through the process environment — see
@@ -146,3 +159,67 @@ abstract class InferenceEngine {
   /// Cooperatively stops the current generation.
   void cancel();
 }
+
+/// State of the runtime's NPU lane (`cortiq_npu_status`).
+class NpuStatus {
+  const NpuStatus({
+    required this.requested,
+    required this.available,
+    required this.promptVerdict,
+    required this.promptNpu,
+    required this.promptCpu,
+    required this.lanes,
+    required this.weightsMb,
+    required this.calls,
+    required this.fallbacks,
+    required this.error,
+  });
+
+  factory NpuStatus.fromJson(Map<String, dynamic> j) => NpuStatus(
+        requested: j['requested'] == true,
+        available: j['available'] == true,
+        promptVerdict: switch (j['prompt_verdict']) {
+          'npu' => NpuVerdict.npu,
+          'cpu' => NpuVerdict.cpu,
+          _ => NpuVerdict.untested,
+        },
+        promptNpu: (j['prompt_npu'] as num?)?.toInt() ?? 0,
+        promptCpu: (j['prompt_cpu'] as num?)?.toInt() ?? 0,
+        lanes: (j['lanes'] as num?)?.toInt() ?? 0,
+        weightsMb: (j['weights_mb'] as num?)?.toInt() ?? 0,
+        calls: (j['calls'] as num?)?.toInt() ?? 0,
+        fallbacks: (j['fallbacks'] as num?)?.toInt() ?? 0,
+        error: (j['error'] as String?) ?? '',
+      );
+
+  /// The switch is on.
+  final bool requested;
+
+  /// The Hexagon module came up on this device.
+  final bool available;
+
+  /// What the runtime's trial decided for reading prompts.
+  final NpuVerdict promptVerdict;
+
+  /// The trial's medians: time per prompt token per million weights with
+  /// the NPU split and on the CPU alone (same unit; only the ratio matters).
+  final int promptNpu;
+  final int promptCpu;
+
+  /// How many times faster the measured layers ran with the NPU.
+  double get promptSpeedup =>
+      promptNpu > 0 && promptCpu > 0 ? promptCpu / promptNpu : 0;
+
+  final int lanes;
+
+  /// Megabytes of weights copied for the DSP.
+  final int weightsMb;
+  final int calls;
+  final int fallbacks;
+
+  /// Why the module is unavailable, when it is.
+  final String error;
+}
+
+/// What the runtime's trial decided.
+enum NpuVerdict { untested, npu, cpu }
