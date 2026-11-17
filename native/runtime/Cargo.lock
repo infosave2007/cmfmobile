@@ -259,7 +259,7 @@ dependencies = [
 [[package]]
 name = "cortiq-core"
 version = "0.9.3"
-source = "git+https://github.com/infosave2007/cmf?branch=feat%2Fnpu-hvx#f5e1e2c180f8acf4694ee393ac41ad726973ed80"
+source = "git+https://github.com/infosave2007/cmf?branch=feat%2Fnpu-hvx#9de8fb4d7838c6f89d6b197c68a3f93437bf8e15"
 dependencies = [
  "bincode",
  "bytemuck",
@@ -275,7 +275,7 @@ dependencies = [
 [[package]]
 name = "cortiq-decision"
 version = "0.9.3"
-source = "git+https://github.com/infosave2007/cmf?branch=feat%2Fnpu-hvx#f5e1e2c180f8acf4694ee393ac41ad726973ed80"
+source = "git+https://github.com/infosave2007/cmf?branch=feat%2Fnpu-hvx#9de8fb4d7838c6f89d6b197c68a3f93437bf8e15"
 dependencies = [
  "anyhow",
  "bytemuck",
@@ -300,7 +300,7 @@ dependencies = [
 [[package]]
 name = "cortiq-engine"
 version = "0.9.3"
-source = "git+https://github.com/infosave2007/cmf?branch=feat%2Fnpu-hvx#f5e1e2c180f8acf4694ee393ac41ad726973ed80"
+source = "git+https://github.com/infosave2007/cmf?branch=feat%2Fnpu-hvx#9de8fb4d7838c6f89d6b197c68a3f93437bf8e15"
 dependencies = [
  "anyhow",
  "ash",
@@ -332,7 +332,7 @@ dependencies = [
 [[package]]
 name = "cortiq-net"
 version = "0.9.3"
-source = "git+https://github.com/infosave2007/cmf?branch=feat%2Fnpu-hvx#f5e1e2c180f8acf4694ee393ac41ad726973ed80"
+source = "git+https://github.com/infosave2007/cmf?branch=feat%2Fnpu-hvx#9de8fb4d7838c6f89d6b197c68a3f93437bf8e15"
 dependencies = [
  "bincode",
  "cortiq-core",

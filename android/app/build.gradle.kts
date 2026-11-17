@@ -31,11 +31,11 @@ android {
 
     packaging {
         jniLibs {
-            // The Hexagon DSP reads its side of the NPU module
-            // (libcortiq_hvx_skel.so) from the app's native library directory,
-            // so the native libraries have to exist as files.
-            useLegacyPackaging = true
-            // Hexagon ELF, not ARM: the NDK's strip cannot read it.
+            // The NPU module's DSP half is a Hexagon ELF, not ARM: the NDK's
+            // strip cannot read it. Libraries stay uncompressed in the APK
+            // (no legacy packaging: extracting them all would add their full
+            // size to the installed app); MainActivity copies this one file
+            // out for the DSP, which can only read a real file.
             keepDebugSymbols += setOf("**/libcortiq_hvx_skel.so")
         }
     }

@@ -297,10 +297,12 @@ The DSP side is Cortiq's own module, not a vendor runtime (`npu/README.md`):
 (integer HVX, unsigned PD, Hexagon v68 and newer, ~18 KB), prebuilt in
 `npu/prebuilt/arm64-v8a` and copied into `jniLibs` by `scripts/build_native.sh`.
 
-On the Android side: `useLegacyPackaging` (the DSP reads its module from a
-real file in the native library directory), `uses-native-library
-libcdsprpc.so` in the manifest (Android 12+), and the `cmf/native_dir` method
-channel that tells Dart that directory.
+On the Android side: the libraries stay uncompressed inside the APK (no
+legacy packaging, so nothing is extracted at install); `MainActivity` copies
+only `libcortiq_hvx_skel.so` (18 KB) into `files/npu` on first use, because
+the DSP reads its module as a file, and the `cmf/native_dir` channel's
+`npuDir` hands Dart that directory. `libcortiq_npu.so` is loaded by name.
+The manifest declares `uses-native-library libcdsprpc.so` (Android 12+).
 
 The engine measures the lane against the CPU on the first long prompt and
 keeps it only where it is faster; the verdict is remembered beside the model
