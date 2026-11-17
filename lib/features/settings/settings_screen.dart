@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -162,23 +164,8 @@ class SettingsScreen extends ConsumerWidget {
               },
             ),
             // Only a runtime that carries the NPU lane (Android builds with
-            // the QNN libraries) shows the switch at all.
-            if (npu != null)
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l.settingsUseNpu),
-                subtitle: Text(
-                  '${l.settingsUseNpuHint}\n${_npuStatusLine(l, settings.useNpu, npu)}',
-                  style: const TextStyle(fontSize: 11),
-                ),
-                isThreeLine: true,
-                value: settings.useNpu,
-                onChanged: (v) async {
-                  notifier.updateSettings((s) => s.copyWith(useNpu: v));
-                  if (v) await configureNpu(engine);
-                  engine.setNpu(v);
-                },
-              ),
+            // the Hexagon module) shows the switch at all.
+            if (npu != null) const _NpuTile(),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(l.settingsDisableThinking),
@@ -355,6 +342,62 @@ class _SliderTile extends StatelessWidget {
   }
 }
 
+/// The NPU switch and what the runtime made of it. The settings tab stays
+/// built in the shell's IndexedStack, so the status is read again every two
+/// seconds while the switch is on: the verdict arrives during a prompt, long
+/// after the tab was built.
+class _NpuTile extends ConsumerStatefulWidget {
+  const _NpuTile();
+
+  @override
+  ConsumerState<_NpuTile> createState() => _NpuTileState();
+}
+
+class _NpuTileState extends ConsumerState<_NpuTile> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 2), (_) {
+      final on = ref.read(settingsProvider).value?.useNpu ?? false;
+      if (on && mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final settings = ref.watch(settingsProvider).value ?? const AppSettings();
+    final notifier = ref.read(settingsProvider.notifier);
+    final engine = ref.watch(engineProvider);
+    final npu = engine.npuStatus;
+    if (npu == null) return const SizedBox.shrink();
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(l.settingsUseNpu),
+      subtitle: Text(
+        '${l.settingsUseNpuHint}\n${_npuStatusLine(l, settings.useNpu, npu)}',
+        style: const TextStyle(fontSize: 11),
+      ),
+      isThreeLine: true,
+      value: settings.useNpu,
+      onChanged: (v) async {
+        notifier.updateSettings((s) => s.copyWith(useNpu: v));
+        if (v) await configureNpu(engine);
+        engine.setNpu(v);
+        if (mounted) setState(() {});
+      },
+    );
+  }
+}
+
 /// One line saying what the NPU lane is doing, from the runtime's own report.
 String _npuStatusLine(AppLocalizations l, bool wanted, NpuStatus npu) {
   if (!wanted) return l.settingsNpuOff;
@@ -363,8 +406,12 @@ String _npuStatusLine(AppLocalizations l, bool wanted, NpuStatus npu) {
   }
   return switch (npu.promptVerdict) {
     NpuVerdict.untested => l.settingsNpuUntested,
-    NpuVerdict.npu => l.settingsNpuFaster(
-        npu.promptSpeedup.toStringAsFixed(1), npu.weightsMb.toString()),
+    // No ratio here: the trial's timing comes from whichever prompt was
+    // first, often a short one, and reads lower than a long prompt's gain.
+    // Before the first prompt of this load no weights are copied yet.
+    NpuVerdict.npu => npu.weightsMb > 0
+        ? l.settingsNpuFaster(npu.weightsMb.toString())
+        : l.settingsNpuOn,
     NpuVerdict.cpu => l.settingsNpuSlower,
   };
 }

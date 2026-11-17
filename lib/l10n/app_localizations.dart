@@ -975,7 +975,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsUseNpuHint.
   ///
   /// In en, this message translates to:
-  /// **'Runs part of each layer on the phone\'s neural processor together with the CPU (applies on next load). The first answer measures both ways; the NPU stays on only if it is faster.'**
+  /// **'Reads prompts on the phone\'s signal processor together with the CPU (applies on next load). Long prompts and documents are read faster; writing the answer stays on the CPU. Measured on the first long prompt and kept only if faster. Uses extra memory for a copy of part of the weights.'**
   String get settingsUseNpuHint;
 
   /// No description provided for @settingsNpuOff.
@@ -987,20 +987,26 @@ abstract class AppLocalizations {
   /// No description provided for @settingsNpuUntested.
   ///
   /// In en, this message translates to:
-  /// **'NPU: will be measured on the first answer after loading a model.'**
+  /// **'NPU: will be measured on the first long prompt after loading a model.'**
   String get settingsNpuUntested;
+
+  /// No description provided for @settingsNpuOn.
+  ///
+  /// In en, this message translates to:
+  /// **'NPU: in use for reading prompts.'**
+  String get settingsNpuOn;
 
   /// No description provided for @settingsNpuFaster.
   ///
   /// In en, this message translates to:
-  /// **'NPU: in use — {npu} ms against {cpu} ms on the CPU per layer step.'**
-  String settingsNpuFaster(String npu, String cpu);
+  /// **'NPU: in use for reading prompts ({mb} MB of weights copied to it).'**
+  String settingsNpuFaster(String mb);
 
   /// No description provided for @settingsNpuSlower.
   ///
   /// In en, this message translates to:
-  /// **'NPU: not used — on this phone the CPU is faster ({cpu} ms against {npu} ms with the NPU).'**
-  String settingsNpuSlower(String npu, String cpu);
+  /// **'NPU: not used — on this phone the CPU alone reads prompts faster.'**
+  String get settingsNpuSlower;
 
   /// No description provided for @settingsNpuUnavailable.
   ///

@@ -286,26 +286,29 @@ Settings → About shows `engine: cortiq-native <version>` instead of
 ## NPU lane (Android, optional)
 
 The runtime exports `cortiq_set_npu`, `cortiq_npu_set_lib_dir` and
-`cortiq_npu_status` (`runtime/src/npu.rs`) over `cortiq_engine::npu`. The lane
-needs, next to `libcortiq_ffi.so` in `jniLibs/arm64-v8a`:
+`cortiq_npu_status` (`runtime/src/npu.rs`) over `cortiq_engine::npu`. With the
+switch on, a prompt chunk's q4tp matrix products are split by rows: the
+Hexagon DSP takes a share for all the chunk's vectors while the CPU computes
+the rest. Writing the answer stays on the CPU (a token is bound by memory,
+which the two share).
 
-- `libcortiq_npu.so` — the engine's C++ shim over QNN
-  (`crates/cortiq-engine/npu/cortiq_npu.cpp` in infosave2007/cmf);
-- `libQnnHtp.so`, `libQnnHtpPrepare.so`, `libQnnSystem.so`;
-- per Hexagon generation (68, 69, 73, 75, 79, 81, 85) `libQnnHtpV<n>Stub.so`
-  and the DSP-side `libQnnHtpV<n>Skel.so`.
+The DSP side is Cortiq's own module, not a vendor runtime (`npu/README.md`):
+`libcortiq_npu.so` (FastRPC client, ~12 KB) and `libcortiq_hvx_skel.so`
+(integer HVX, unsigned PD, Hexagon v68 and newer, ~18 KB), prebuilt in
+`npu/prebuilt/arm64-v8a` and copied into `jniLibs` by `scripts/build_native.sh`.
 
-`scripts/fetch_npu_libs.sh` puts all of them there from a Qualcomm AI Runtime
-SDK (Community edition; set `QAIRT_SDK_ROOT`). They add roughly 190 MB of
-native libraries, 90 MB of it the on-device graph preparer, which is why they
-are not packaged unless the SDK is present. The SDK's licence allows shipping
-the object code inside an application, not on its own.
-
-On the Android side: `android:extractNativeLibs` via `useLegacyPackaging`
-(the DSP reads its skeleton from a real file), `uses-native-library
+On the Android side: `useLegacyPackaging` (the DSP reads its module from a
+real file in the native library directory), `uses-native-library
 libcdsprpc.so` in the manifest (Android 12+), and the `cmf/native_dir` method
-channel that tells Dart the native library directory.
+channel that tells Dart that directory.
 
-The engine measures the lane against the CPU on the first answer and keeps it
-only where it is faster; `cortiq_npu_status` returns the verdict and timings
-that Settings shows.
+The engine measures the lane against the CPU on the first long prompt and
+keeps it only where it is faster; the verdict is remembered beside the model
+(`cortiq-npu-probe.tsv`). The weights it copies for the DSP take at most a
+fifth of the memory available when the first lane is built (512 MB cap).
+
+Measured in the app on a Xiaomi 12 Lite (Snapdragon 778G, Hexagon V68),
+LFM3-1.7B q4tp, the same 296-token text: 17.3-17.5 s per answer with the CPU,
+12.5 s with the NPU (14.7 s for the first prompt after loading, which copies
+the weights); the prompt is read at about 36 tokens/s instead of 23. Phones without Hexagon (MediaTek, Exynos, Tensor) show the module as
+unavailable.

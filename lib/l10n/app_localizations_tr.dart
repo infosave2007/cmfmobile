@@ -491,24 +491,26 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsUseNpuHint =>
-      'Her katmanın bir bölümünü CPU ile birlikte telefonun sinir işlemcisinde hesaplar (bir sonraki yüklemede geçerli olur). İlk yanıt iki yolu da ölçer; NPU yalnızca daha hızlıysa açık kalır.';
+      'İstemleri CPU ile birlikte telefonun sinyal işlemcisinde okur (bir sonraki yüklemede geçerli olur). Uzun istemler ve belgeler daha hızlı okunur; yanıtı yine CPU yazar. İlk uzun istemde ölçülür ve yalnızca daha hızlıysa açık kalır. Ağırlıkların bir bölümünün kopyası için ek bellek kullanır.';
 
   @override
   String get settingsNpuOff => 'NPU: kapalı.';
 
   @override
   String get settingsNpuUntested =>
-      'NPU: bir model yüklendikten sonraki ilk yanıtta ölçülecek.';
+      'NPU: bir model yüklendikten sonraki ilk uzun istemde ölçülecek.';
 
   @override
-  String settingsNpuFaster(String npu, String cpu) {
-    return 'NPU: kullanılıyor — katman adımı başına CPU\'da $cpu ms\'ye karşı $npu ms.';
+  String get settingsNpuOn => 'NPU: istemleri okumak için kullanılıyor.';
+
+  @override
+  String settingsNpuFaster(String mb) {
+    return 'NPU: istemleri okumak için kullanılıyor ($mb MB ağırlık kopyalandı).';
   }
 
   @override
-  String settingsNpuSlower(String npu, String cpu) {
-    return 'NPU: kullanılmıyor — bu telefonda CPU daha hızlı ($cpu ms, NPU ile $npu ms).';
-  }
+  String get settingsNpuSlower =>
+      'NPU: kullanılmıyor — bu telefonda CPU istemleri tek başına daha hızlı okuyor.';
 
   @override
   String settingsNpuUnavailable(String error) {

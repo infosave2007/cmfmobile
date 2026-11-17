@@ -494,24 +494,26 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsUseNpuHint =>
-      'Rechnet einen Teil jeder Schicht auf dem Neuralprozessor des Telefons zusammen mit der CPU (gilt ab dem nächsten Laden). Die erste Antwort misst beide Wege; die NPU bleibt nur an, wenn sie schneller ist.';
+      'Liest Prompts auf dem Signalprozessor des Telefons zusammen mit der CPU (gilt ab dem nächsten Laden). Lange Prompts und Dokumente werden schneller gelesen; die Antwort schreibt weiterhin die CPU. Wird beim ersten langen Prompt gemessen und bleibt nur an, wenn es schneller ist. Benötigt zusätzlichen Speicher für eine Kopie eines Teils der Gewichte.';
 
   @override
   String get settingsNpuOff => 'NPU: aus.';
 
   @override
   String get settingsNpuUntested =>
-      'NPU: wird bei der ersten Antwort nach dem Laden eines Modells gemessen.';
+      'NPU: wird beim ersten langen Prompt nach dem Laden eines Modells gemessen.';
 
   @override
-  String settingsNpuFaster(String npu, String cpu) {
-    return 'NPU: in Verwendung — $npu ms gegenüber $cpu ms auf der CPU pro Schichtschritt.';
+  String get settingsNpuOn => 'NPU: wird zum Lesen von Prompts verwendet.';
+
+  @override
+  String settingsNpuFaster(String mb) {
+    return 'NPU: wird zum Lesen von Prompts verwendet ($mb MB Gewichte dorthin kopiert).';
   }
 
   @override
-  String settingsNpuSlower(String npu, String cpu) {
-    return 'NPU: nicht verwendet — auf diesem Telefon ist die CPU schneller ($cpu ms gegenüber $npu ms mit der NPU).';
-  }
+  String get settingsNpuSlower =>
+      'NPU: nicht verwendet — auf diesem Telefon liest die CPU allein Prompts schneller.';
 
   @override
   String settingsNpuUnavailable(String error) {

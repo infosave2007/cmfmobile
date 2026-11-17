@@ -492,24 +492,26 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsUseNpuHint =>
-      'Часть каждого слоя считается на нейропроцессоре телефона вместе с CPU (применяется при следующей загрузке). Первый ответ замеряет оба способа; NPU остаётся включённым, только если он быстрее.';
+      'Читает промпт на сигнальном процессоре телефона вместе с CPU (применяется при следующей загрузке). Длинные промпты и документы читаются быстрее; сам ответ по-прежнему пишет CPU. Замеряется на первом длинном промпте и остаётся включённым, только если быстрее. Требует дополнительной памяти под копию части весов.';
 
   @override
   String get settingsNpuOff => 'NPU: выключен.';
 
   @override
   String get settingsNpuUntested =>
-      'NPU: будет замерен на первом ответе после загрузки модели.';
+      'NPU: будет замерен на первом длинном промпте после загрузки модели.';
 
   @override
-  String settingsNpuFaster(String npu, String cpu) {
-    return 'NPU: используется — $npu мс против $cpu мс на CPU за шаг слоя.';
+  String get settingsNpuOn => 'NPU: используется для чтения промптов.';
+
+  @override
+  String settingsNpuFaster(String mb) {
+    return 'NPU: используется для чтения промптов (на него скопировано $mb МБ весов).';
   }
 
   @override
-  String settingsNpuSlower(String npu, String cpu) {
-    return 'NPU: не используется — на этом телефоне CPU быстрее ($cpu мс против $npu мс с NPU).';
-  }
+  String get settingsNpuSlower =>
+      'NPU: не используется — на этом телефоне CPU читает промпты быстрее.';
 
   @override
   String settingsNpuUnavailable(String error) {
