@@ -11,6 +11,11 @@
     <!-- LAN address discovery for the server screen (network_info_plus). -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <!-- ACCESS_WIFI_STATE makes Play treat Wi-Fi as required, the same way
+         RECORD_AUDIO did the microphone, and Play now refuses to send such a
+         release for review. Wi-Fi only fills in the server screen's LAN
+         address; the app works over any network or none. -->
+    <uses-feature android:name="android.hardware.wifi" android:required="false"/>
     <!-- Inference keeps running at foreground priority (and with the CPU
          awake) while a reply is being generated or the server is up:
          backgrounded processes are confined to the little cores, which the

@@ -1,3 +1,12 @@
+# 1.3.10 — Wi-Fi optional on Android
+
+- Play refused to send 1.3.9 for review: the `ACCESS_WIFI_STATE` permission
+  (the server screen reads the phone's LAN address with it) makes Play treat
+  Wi-Fi as a required hardware feature and leave out phones, tablets,
+  desktops and Android XR devices that report none. The manifest now
+  declares Wi-Fi optional, as 1.3.7 did for the microphone. No other change
+  from 1.3.9; the iOS build is identical apart from the number.
+
 # 1.3.9 — NPU for reading prompts (Snapdragon), Cortiq 0.9.4
 
 - Settings gain "Use NPU (Snapdragon Hexagon)" on Android. With it on, long
