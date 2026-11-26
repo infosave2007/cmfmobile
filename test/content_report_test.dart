@@ -122,6 +122,16 @@ void main() {
     expect(body.length, 5);
   });
 
+  test('the shipped endpoint maps every report field to its own entry', () {
+    const e = contentReportEndpoint;
+    expect(e.configured, isTrue);
+    expect(e.formUrl, endsWith('/formResponse'));
+    expect(e.fields.keys.toSet(),
+        {'id', 'createdAt', 'reason', 'reply', 'prompt', 'comment', 'model', 'app'});
+    expect(e.fields.values.toSet().length, e.fields.length);
+    expect(e.fields.values.every((v) => RegExp(r'^entry\.\d+$').hasMatch(v)), isTrue);
+  });
+
   test('an unconfigured endpoint sends nothing', () async {
     var called = false;
     final client = MockClient((_) async {
