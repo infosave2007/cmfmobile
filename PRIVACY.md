@@ -52,8 +52,23 @@ version and the platform (Android or iOS). No account, device identifier,
 other messages, attachments or files are included. A report made offline is
 kept on the device and sent when you are online. Reports are used to find
 models that produce harmful content, remove or flag them in the in-app
-catalog and improve filtering; they are kept for up to two years. To have a
-report deleted, write to urevich55@gmail.com with the date you sent it.
+catalog and improve filtering; they are kept for up to two years and then
+deleted.
+
+### Deleting a report
+
+Cortiq (developer: Oleg Kirichenko) keeps no other data about you, so the only
+data that can be deleted is a report you sent:
+
+1. Write to **urevich55@gmail.com** with the subject "Cortiq: delete my report".
+2. Give the date (and, if you remember it, the approximate time) you sent the
+   report, and the reason you chose.
+3. The report — its reply text, comment, previous message, model name, app
+   version and time — is deleted from the developer's records within 30 days,
+   and you get a reply when it is done. Nothing is kept after deletion.
+
+Reports still waiting on your phone (made offline) are deleted with the app's
+data: Android Settings → Apps → Cortiq → Storage → Clear data.
 
 ## Oracle credentials
 
