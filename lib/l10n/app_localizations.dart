@@ -1847,6 +1847,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'record {id}'**
   String statsRecord(String id);
+
+  /// No description provided for @chatReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Report this AI reply'**
+  String get chatReport;
+
+  /// No description provided for @reportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Report an AI reply'**
+  String get reportTitle;
+
+  /// No description provided for @reportIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'This reply was written by an AI model running on your device. If it is offensive, dangerous or otherwise inappropriate, tell us: reports show us which models misbehave, so we can remove or flag them in the catalog and improve filtering.'**
+  String get reportIntro;
+
+  /// No description provided for @reportReasonSexual.
+  ///
+  /// In en, this message translates to:
+  /// **'Sexual content'**
+  String get reportReasonSexual;
+
+  /// No description provided for @reportReasonHateful.
+  ///
+  /// In en, this message translates to:
+  /// **'Hate or discrimination'**
+  String get reportReasonHateful;
+
+  /// No description provided for @reportReasonViolent.
+  ///
+  /// In en, this message translates to:
+  /// **'Violence or dangerous acts'**
+  String get reportReasonViolent;
+
+  /// No description provided for @reportReasonSelfHarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Self-harm or suicide'**
+  String get reportReasonSelfHarm;
+
+  /// No description provided for @reportReasonHarassment.
+  ///
+  /// In en, this message translates to:
+  /// **'Insults or harassment'**
+  String get reportReasonHarassment;
+
+  /// No description provided for @reportReasonIllegal.
+  ///
+  /// In en, this message translates to:
+  /// **'Illegal activity'**
+  String get reportReasonIllegal;
+
+  /// No description provided for @reportReasonMisinformation.
+  ///
+  /// In en, this message translates to:
+  /// **'False or misleading information'**
+  String get reportReasonMisinformation;
+
+  /// No description provided for @reportReasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Something else'**
+  String get reportReasonOther;
+
+  /// No description provided for @reportComment.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment (optional)'**
+  String get reportComment;
+
+  /// No description provided for @reportIncludePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Include my previous message'**
+  String get reportIncludePrompt;
+
+  /// No description provided for @reportDisclosure.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to the developer: the text of this reply, the model\'s name, the app version, your comment and, if ticked, your previous message. Nothing else from your chats or files.'**
+  String get reportDisclosure;
+
+  /// No description provided for @reportSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get reportSend;
+
+  /// No description provided for @reportSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you, the report was sent. The reply is hidden.'**
+  String get reportSent;
+
+  /// No description provided for @reportQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'The report is saved and will be sent when you are online. The reply is hidden.'**
+  String get reportQueued;
+
+  /// No description provided for @reportedReplyHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'You reported this reply; it is hidden.'**
+  String get reportedReplyHidden;
+
+  /// No description provided for @reportedReplyShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get reportedReplyShow;
+
+  /// No description provided for @reportedReplyHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get reportedReplyHide;
 }
 
 class _AppLocalizationsDelegate

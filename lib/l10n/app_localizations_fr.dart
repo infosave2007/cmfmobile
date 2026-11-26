@@ -1010,4 +1010,69 @@ class AppLocalizationsFr extends AppLocalizations {
   String statsRecord(String id) {
     return 'fiche $id';
   }
+
+  @override
+  String get chatReport => 'Signaler cette réponse de l\'IA';
+
+  @override
+  String get reportTitle => 'Signaler une réponse de l\'IA';
+
+  @override
+  String get reportIntro =>
+      'Cette réponse a été écrite par un modèle d\'IA qui s\'exécute sur votre appareil. Si elle est offensante, dangereuse ou inappropriée, dites-le-nous : les signalements nous montrent quels modèles posent problème, afin de les retirer ou de les signaler dans le catalogue et d\'améliorer le filtrage.';
+
+  @override
+  String get reportReasonSexual => 'Contenu sexuel';
+
+  @override
+  String get reportReasonHateful => 'Haine ou discrimination';
+
+  @override
+  String get reportReasonViolent => 'Violence ou actes dangereux';
+
+  @override
+  String get reportReasonSelfHarm => 'Automutilation ou suicide';
+
+  @override
+  String get reportReasonHarassment => 'Insultes ou harcèlement';
+
+  @override
+  String get reportReasonIllegal => 'Activité illégale';
+
+  @override
+  String get reportReasonMisinformation => 'Information fausse ou trompeuse';
+
+  @override
+  String get reportReasonOther => 'Autre chose';
+
+  @override
+  String get reportComment => 'Commentaire (facultatif)';
+
+  @override
+  String get reportIncludePrompt => 'Joindre mon message précédent';
+
+  @override
+  String get reportDisclosure =>
+      'Envoyé au développeur : le texte de cette réponse, le nom du modèle, la version de l\'application, votre commentaire et, si coché, votre message précédent. Rien d\'autre de vos conversations ou fichiers.';
+
+  @override
+  String get reportSend => 'Envoyer';
+
+  @override
+  String get reportSent =>
+      'Merci, le signalement a été envoyé. La réponse est masquée.';
+
+  @override
+  String get reportQueued =>
+      'Le signalement est enregistré et sera envoyé dès que vous serez en ligne. La réponse est masquée.';
+
+  @override
+  String get reportedReplyHidden =>
+      'Vous avez signalé cette réponse ; elle est masquée.';
+
+  @override
+  String get reportedReplyShow => 'Afficher';
+
+  @override
+  String get reportedReplyHide => 'Masquer';
 }

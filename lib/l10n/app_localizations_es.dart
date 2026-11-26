@@ -1007,4 +1007,68 @@ class AppLocalizationsEs extends AppLocalizations {
   String statsRecord(String id) {
     return 'ficha $id';
   }
+
+  @override
+  String get chatReport => 'Denunciar esta respuesta de la IA';
+
+  @override
+  String get reportTitle => 'Denunciar una respuesta de la IA';
+
+  @override
+  String get reportIntro =>
+      'Esta respuesta la escribió un modelo de IA que se ejecuta en tu dispositivo. Si es ofensiva, peligrosa o inapropiada, avísanos: las denuncias nos muestran qué modelos se comportan mal, para retirarlos o marcarlos en el catálogo y mejorar el filtrado.';
+
+  @override
+  String get reportReasonSexual => 'Contenido sexual';
+
+  @override
+  String get reportReasonHateful => 'Odio o discriminación';
+
+  @override
+  String get reportReasonViolent => 'Violencia o actos peligrosos';
+
+  @override
+  String get reportReasonSelfHarm => 'Autolesión o suicidio';
+
+  @override
+  String get reportReasonHarassment => 'Insultos o acoso';
+
+  @override
+  String get reportReasonIllegal => 'Actividad ilegal';
+
+  @override
+  String get reportReasonMisinformation => 'Información falsa o engañosa';
+
+  @override
+  String get reportReasonOther => 'Otra cosa';
+
+  @override
+  String get reportComment => 'Comentario (opcional)';
+
+  @override
+  String get reportIncludePrompt => 'Adjuntar mi mensaje anterior';
+
+  @override
+  String get reportDisclosure =>
+      'Se envía al desarrollador: el texto de esta respuesta, el nombre del modelo, la versión de la app, tu comentario y, si lo marcas, tu mensaje anterior. Nada más de tus chats ni archivos.';
+
+  @override
+  String get reportSend => 'Enviar';
+
+  @override
+  String get reportSent =>
+      'Gracias, la denuncia se envió. La respuesta está oculta.';
+
+  @override
+  String get reportQueued =>
+      'La denuncia está guardada y se enviará cuando tengas conexión. La respuesta está oculta.';
+
+  @override
+  String get reportedReplyHidden => 'Denunciaste esta respuesta; está oculta.';
+
+  @override
+  String get reportedReplyShow => 'Mostrar';
+
+  @override
+  String get reportedReplyHide => 'Ocultar';
 }

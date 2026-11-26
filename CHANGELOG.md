@@ -1,3 +1,16 @@
+# 1.3.11 — Report AI replies
+
+- Every AI reply in the chat has a flag button: **Report**. A short form asks
+  for the reason (sexual content, hate, violence or dangerous acts,
+  self-harm, harassment, illegal activity, misinformation, other), an
+  optional comment and whether to attach the previous message, and says
+  exactly what will be sent. The report goes to the developer without
+  leaving the app; the reply is collapsed in the chat (it can still be shown).
+  Reports made offline are kept and sent later. Google Play requires this of
+  every app that shows AI-generated content; the reports tell us which models
+  to remove or flag in the catalog.
+- The privacy policy describes what a report contains and how it is used.
+
 # 1.3.10 — Wi-Fi optional on Android
 
 - Play refused to send 1.3.9 for review: the `ACCESS_WIFI_STATE` permission

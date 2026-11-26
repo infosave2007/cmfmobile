@@ -950,4 +950,66 @@ class AppLocalizationsZh extends AppLocalizations {
   String statsRecord(String id) {
     return '记录 $id';
   }
+
+  @override
+  String get chatReport => '举报这条 AI 回复';
+
+  @override
+  String get reportTitle => '举报 AI 回复';
+
+  @override
+  String get reportIntro =>
+      '这条回复由在您设备上运行的 AI 模型生成。如果它具有冒犯性、危险或其他不当内容，请告诉我们：举报能让我们知道哪些模型有问题，从而在目录中移除或标记它们，并改进过滤。';
+
+  @override
+  String get reportReasonSexual => '色情内容';
+
+  @override
+  String get reportReasonHateful => '仇恨或歧视';
+
+  @override
+  String get reportReasonViolent => '暴力或危险行为';
+
+  @override
+  String get reportReasonSelfHarm => '自残或自杀';
+
+  @override
+  String get reportReasonHarassment => '辱骂或骚扰';
+
+  @override
+  String get reportReasonIllegal => '违法活动';
+
+  @override
+  String get reportReasonMisinformation => '虚假或误导性信息';
+
+  @override
+  String get reportReasonOther => '其他';
+
+  @override
+  String get reportComment => '备注（可选）';
+
+  @override
+  String get reportIncludePrompt => '附上我的上一条消息';
+
+  @override
+  String get reportDisclosure =>
+      '将发送给开发者：这条回复的文本、模型名称、应用版本、您的备注，以及（如勾选）您的上一条消息。不会发送聊天或文件中的其他任何内容。';
+
+  @override
+  String get reportSend => '发送';
+
+  @override
+  String get reportSent => '谢谢，举报已发送。该回复已隐藏。';
+
+  @override
+  String get reportQueued => '举报已保存，联网后将发送。该回复已隐藏。';
+
+  @override
+  String get reportedReplyHidden => '您已举报这条回复，它已被隐藏。';
+
+  @override
+  String get reportedReplyShow => '显示';
+
+  @override
+  String get reportedReplyHide => '隐藏';
 }

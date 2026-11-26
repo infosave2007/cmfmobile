@@ -17,6 +17,7 @@ import '../../data/models/chat.dart';
 import '../../data/models/companion.dart';
 import '../../l10n/app_localizations.dart';
 import 'model_picker_sheet.dart';
+import 'report_sheet.dart';
 import 'sessions_sheet.dart';
 
 const _attachmentTextLimit = 512 * 1024; // bytes of extracted text
@@ -316,6 +317,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       return _MessageBubble(
                         key: ValueKey('${session!.id}:$index'),
                         message: msg,
+                        index: index,
                         sessionId: session.id,
                         generating: chat.generating && isLast,
                         onRegenerate: isLast &&
@@ -534,12 +536,14 @@ class _MessageBubble extends ConsumerWidget {
   const _MessageBubble({
     super.key,
     required this.message,
+    required this.index,
     required this.sessionId,
     required this.generating,
     this.onRegenerate,
   });
 
   final ChatMessage message;
+  final int index;
   final String sessionId;
   final bool generating;
   final VoidCallback? onRegenerate;
@@ -557,6 +561,9 @@ class _MessageBubble extends ConsumerWidget {
             (s) => s != null && s.sessionId == sessionId ? s.text : null))
         : null;
     final content = streamText ?? message.content;
+    // Every finished AI reply can be reported (Google Play's AI-generated
+    // content policy); a reported one keeps the flag, filled.
+    final canReport = !isUser && !generating && message.content.isNotEmpty;
 
     final bubble = Container(
       constraints: BoxConstraints(
@@ -611,6 +618,8 @@ class _MessageBubble extends ConsumerWidget {
             SelectableText(message.content)
           else if (streamText != null)
             Text(streamText)
+          else if (message.reported)
+            _ReportedReply(content: message.content)
           else
             MarkdownBody(data: message.content, selectable: true),
           if (message.error != null)
@@ -627,7 +636,8 @@ class _MessageBubble extends ConsumerWidget {
           alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
           child: bubble,
         ),
-        if (!isUser && (message.stats != null || onRegenerate != null))
+        if (!isUser &&
+            (message.stats != null || onRegenerate != null || canReport))
           Padding(
             padding: const EdgeInsets.only(left: 6, bottom: 4),
             child: Row(
@@ -655,9 +665,73 @@ class _MessageBubble extends ConsumerWidget {
                     tooltip: l.chatRegenerate,
                     onPressed: onRegenerate,
                   ),
+                if (canReport)
+                  IconButton(
+                    key: Key('report-$index'),
+                    icon: Icon(
+                      message.reported ? Icons.flag : Icons.flag_outlined,
+                      size: 16,
+                    ),
+                    visualDensity: VisualDensity.compact,
+                    tooltip: message.reported ? l.reportedReplyHidden : l.chatReport,
+                    onPressed: message.reported
+                        ? null
+                        : () => showReportSheet(context, ref,
+                            sessionId: sessionId, index: index),
+                  ),
               ],
             ),
           ),
+      ],
+    );
+  }
+}
+
+/// A reply the user reported: collapsed to a note, with a toggle to read it.
+class _ReportedReply extends StatefulWidget {
+  const _ReportedReply({required this.content});
+
+  final String content;
+
+  @override
+  State<_ReportedReply> createState() => _ReportedReplyState();
+}
+
+class _ReportedReplyState extends State<_ReportedReply> {
+  bool _shown = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.flag, size: 16, color: scheme.error),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                l.reportedReplyHidden,
+                style: TextStyle(
+                  fontStyle: FontStyle.italic,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ),
+        TextButton(
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
+          ),
+          onPressed: () => setState(() => _shown = !_shown),
+          child: Text(_shown ? l.reportedReplyHide : l.reportedReplyShow),
+        ),
+        if (_shown) MarkdownBody(data: widget.content, selectable: true),
       ],
     );
   }

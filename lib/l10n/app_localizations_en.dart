@@ -997,4 +997,68 @@ class AppLocalizationsEn extends AppLocalizations {
   String statsRecord(String id) {
     return 'record $id';
   }
+
+  @override
+  String get chatReport => 'Report this AI reply';
+
+  @override
+  String get reportTitle => 'Report an AI reply';
+
+  @override
+  String get reportIntro =>
+      'This reply was written by an AI model running on your device. If it is offensive, dangerous or otherwise inappropriate, tell us: reports show us which models misbehave, so we can remove or flag them in the catalog and improve filtering.';
+
+  @override
+  String get reportReasonSexual => 'Sexual content';
+
+  @override
+  String get reportReasonHateful => 'Hate or discrimination';
+
+  @override
+  String get reportReasonViolent => 'Violence or dangerous acts';
+
+  @override
+  String get reportReasonSelfHarm => 'Self-harm or suicide';
+
+  @override
+  String get reportReasonHarassment => 'Insults or harassment';
+
+  @override
+  String get reportReasonIllegal => 'Illegal activity';
+
+  @override
+  String get reportReasonMisinformation => 'False or misleading information';
+
+  @override
+  String get reportReasonOther => 'Something else';
+
+  @override
+  String get reportComment => 'Comment (optional)';
+
+  @override
+  String get reportIncludePrompt => 'Include my previous message';
+
+  @override
+  String get reportDisclosure =>
+      'Sent to the developer: the text of this reply, the model\'s name, the app version, your comment and, if ticked, your previous message. Nothing else from your chats or files.';
+
+  @override
+  String get reportSend => 'Send';
+
+  @override
+  String get reportSent =>
+      'Thank you, the report was sent. The reply is hidden.';
+
+  @override
+  String get reportQueued =>
+      'The report is saved and will be sent when you are online. The reply is hidden.';
+
+  @override
+  String get reportedReplyHidden => 'You reported this reply; it is hidden.';
+
+  @override
+  String get reportedReplyShow => 'Show';
+
+  @override
+  String get reportedReplyHide => 'Hide';
 }
