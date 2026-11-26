@@ -1006,4 +1006,70 @@ class AppLocalizationsDe extends AppLocalizations {
   String statsRecord(String id) {
     return 'Eintrag $id';
   }
+
+  @override
+  String get chatReport => 'KI-Antwort melden';
+
+  @override
+  String get reportTitle => 'KI-Antwort melden';
+
+  @override
+  String get reportIntro =>
+      'Diese Antwort stammt von einem KI-Modell auf Ihrem Gerät. Wenn sie beleidigend, gefährlich oder anderweitig unangemessen ist, teilen Sie es uns mit: Meldungen zeigen uns, welche Modelle sich falsch verhalten, damit wir sie im Katalog entfernen oder kennzeichnen und die Filterung verbessern.';
+
+  @override
+  String get reportReasonSexual => 'Sexuelle Inhalte';
+
+  @override
+  String get reportReasonHateful => 'Hass oder Diskriminierung';
+
+  @override
+  String get reportReasonViolent => 'Gewalt oder gefährliche Handlungen';
+
+  @override
+  String get reportReasonSelfHarm => 'Selbstverletzung oder Suizid';
+
+  @override
+  String get reportReasonHarassment => 'Beleidigung oder Belästigung';
+
+  @override
+  String get reportReasonIllegal => 'Illegale Aktivitäten';
+
+  @override
+  String get reportReasonMisinformation =>
+      'Falsche oder irreführende Informationen';
+
+  @override
+  String get reportReasonOther => 'Etwas anderes';
+
+  @override
+  String get reportComment => 'Kommentar (optional)';
+
+  @override
+  String get reportIncludePrompt => 'Meine vorherige Nachricht anhängen';
+
+  @override
+  String get reportDisclosure =>
+      'An den Entwickler gesendet: der Text dieser Antwort, der Name des Modells, die App-Version, Ihr Kommentar und, falls angehakt, Ihre vorherige Nachricht. Sonst nichts aus Ihren Chats oder Dateien.';
+
+  @override
+  String get reportSend => 'Senden';
+
+  @override
+  String get reportSent =>
+      'Danke, die Meldung wurde gesendet. Die Antwort ist ausgeblendet.';
+
+  @override
+  String get reportQueued =>
+      'Die Meldung ist gespeichert und wird gesendet, sobald Sie online sind. Die Antwort ist ausgeblendet.';
+
+  @override
+  String get reportedReplyHidden =>
+      'Sie haben diese Antwort gemeldet; sie ist ausgeblendet.';
+
+  @override
+  String get reportedReplyShow => 'Anzeigen';
+
+  @override
+  String get reportedReplyHide => 'Ausblenden';
 }

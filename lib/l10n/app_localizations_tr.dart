@@ -1001,4 +1001,67 @@ class AppLocalizationsTr extends AppLocalizations {
   String statsRecord(String id) {
     return 'kayıt $id';
   }
+
+  @override
+  String get chatReport => 'Bu yapay zekâ yanıtını bildir';
+
+  @override
+  String get reportTitle => 'Yapay zekâ yanıtını bildir';
+
+  @override
+  String get reportIntro =>
+      'Bu yanıtı cihazınızda çalışan bir yapay zekâ modeli yazdı. Saldırgan, tehlikeli veya başka şekilde uygunsuzsa bize bildirin: bildirimler hangi modellerin sorunlu olduğunu gösterir; onları katalogdan kaldırır veya işaretler ve filtrelemeyi iyileştiririz.';
+
+  @override
+  String get reportReasonSexual => 'Cinsel içerik';
+
+  @override
+  String get reportReasonHateful => 'Nefret veya ayrımcılık';
+
+  @override
+  String get reportReasonViolent => 'Şiddet veya tehlikeli eylemler';
+
+  @override
+  String get reportReasonSelfHarm => 'Kendine zarar verme veya intihar';
+
+  @override
+  String get reportReasonHarassment => 'Hakaret veya taciz';
+
+  @override
+  String get reportReasonIllegal => 'Yasa dışı faaliyet';
+
+  @override
+  String get reportReasonMisinformation => 'Yanlış veya yanıltıcı bilgi';
+
+  @override
+  String get reportReasonOther => 'Başka bir şey';
+
+  @override
+  String get reportComment => 'Yorum (isteğe bağlı)';
+
+  @override
+  String get reportIncludePrompt => 'Önceki mesajımı ekle';
+
+  @override
+  String get reportDisclosure =>
+      'Geliştiriciye gönderilenler: bu yanıtın metni, modelin adı, uygulama sürümü, yorumunuz ve işaretlediyseniz önceki mesajınız. Sohbetlerinizden veya dosyalarınızdan başka hiçbir şey gönderilmez.';
+
+  @override
+  String get reportSend => 'Gönder';
+
+  @override
+  String get reportSent => 'Teşekkürler, bildirim gönderildi. Yanıt gizlendi.';
+
+  @override
+  String get reportQueued =>
+      'Bildirim kaydedildi ve çevrimiçi olduğunuzda gönderilecek. Yanıt gizlendi.';
+
+  @override
+  String get reportedReplyHidden => 'Bu yanıtı bildirdiniz; gizlendi.';
+
+  @override
+  String get reportedReplyShow => 'Göster';
+
+  @override
+  String get reportedReplyHide => 'Gizle';
 }

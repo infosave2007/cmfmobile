@@ -10,7 +10,9 @@ import '../data/models/conversion.dart';
 import '../data/models/local_model.dart';
 import '../data/models/server.dart';
 import '../data/models/settings.dart';
+import '../data/models/content_report.dart';
 import '../data/services/chat_store.dart';
+import '../data/services/content_report_service.dart';
 import '../data/services/cmf_server.dart';
 import '../data/services/converter_service.dart';
 import '../data/services/device_resources.dart';
@@ -32,6 +34,7 @@ import 'util/transcript.dart';
 final settingsRepositoryProvider = Provider((ref) => SettingsRepository());
 final modelRepositoryProvider = Provider((ref) => ModelRepository());
 final chatStoreProvider = Provider((ref) => ChatStore());
+final contentReportServiceProvider = Provider((ref) => ContentReportService());
 final hfApiProvider = Provider((ref) => HfApi());
 final deviceResourcesProvider = Provider((ref) => DeviceResources());
 
@@ -305,6 +308,8 @@ class ChatController extends Notifier<ChatState> {
       loaded: true,
     );
     if (sessions.isEmpty) newSession();
+    // Reports made offline go out once the app is back.
+    unawaited(ref.read(contentReportServiceProvider).retryPending());
   }
 
   void newSession() {
@@ -325,6 +330,55 @@ class ChatController extends Notifier<ChatState> {
   }
 
   void selectSession(String id) => state = state.copyWith(currentId: id);
+
+  /// Report the AI reply at [index] of [sessionId]: collapse it in the chat,
+  /// save that, and hand the report to the outbox. Returns whether it was
+  /// delivered now (false: kept and retried later).
+  Future<bool> reportReply(
+    String sessionId,
+    int index, {
+    required ReportReason reason,
+    String comment = '',
+    bool includePrompt = true,
+  }) async {
+    final session = state.sessions.where((s) => s.id == sessionId).firstOrNull;
+    if (session == null || index < 0 || index >= session.messages.length) {
+      return false;
+    }
+    final reply = session.messages[index];
+    if (reply.role != ChatRole.assistant) return false;
+    String? prompt;
+    if (includePrompt) {
+      for (var i = index - 1; i >= 0; i--) {
+        if (session.messages[i].role == ChatRole.user) {
+          prompt = session.messages[i].content;
+          break;
+        }
+      }
+    }
+    session.messages[index] = reply.copyWith(reported: true);
+    state = state.copyWith(sessions: [...state.sessions]);
+    await ref.read(chatStoreProvider).save(session);
+
+    final model = ref.read(engineControllerProvider).loadedModel;
+    final version = await ref.read(appVersionProvider.future).catchError((_) => '');
+    final report = ContentReport(
+      id: '${DateTime.now().microsecondsSinceEpoch.toRadixString(16)}-'
+          '${identityHashCode(reply).toRadixString(16)}',
+      createdAt: DateTime.now().toUtc(),
+      reason: reason,
+      reply: ContentReport.clip(reply.content, ContentReport.maxReplyChars),
+      prompt: prompt == null
+          ? null
+          : ContentReport.clip(prompt, ContentReport.maxPromptChars),
+      comment: ContentReport.clip(comment.trim(), ContentReport.maxCommentChars),
+      model: model == null ? '' : model.filePath.split('/').last,
+      appVersion: version,
+      platform: Platform.operatingSystem,
+    );
+    return ref.read(contentReportServiceProvider).submit(report);
+  }
+
 
   Future<void> deleteSession(String id) async {
     await ref.read(chatStoreProvider).delete(id);

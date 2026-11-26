@@ -475,5 +475,25 @@
         "type": "String"
       }
     }
-  }
+  },
+  "chatReport": "Report this AI reply",
+  "reportTitle": "Report an AI reply",
+  "reportIntro": "This reply was written by an AI model running on your device. If it is offensive, dangerous or otherwise inappropriate, tell us: reports show us which models misbehave, so we can remove or flag them in the catalog and improve filtering.",
+  "reportReasonSexual": "Sexual content",
+  "reportReasonHateful": "Hate or discrimination",
+  "reportReasonViolent": "Violence or dangerous acts",
+  "reportReasonSelfHarm": "Self-harm or suicide",
+  "reportReasonHarassment": "Insults or harassment",
+  "reportReasonIllegal": "Illegal activity",
+  "reportReasonMisinformation": "False or misleading information",
+  "reportReasonOther": "Something else",
+  "reportComment": "Comment (optional)",
+  "reportIncludePrompt": "Include my previous message",
+  "reportDisclosure": "Sent to the developer: the text of this reply, the model's name, the app version, your comment and, if ticked, your previous message. Nothing else from your chats or files.",
+  "reportSend": "Send",
+  "reportSent": "Thank you, the report was sent. The reply is hidden.",
+  "reportQueued": "The report is saved and will be sent when you are online. The reply is hidden.",
+  "reportedReplyHidden": "You reported this reply; it is hidden.",
+  "reportedReplyShow": "Show",
+  "reportedReplyHide": "Hide"
 }

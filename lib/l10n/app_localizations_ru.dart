@@ -1003,4 +1003,68 @@ class AppLocalizationsRu extends AppLocalizations {
   String statsRecord(String id) {
     return 'запись $id';
   }
+
+  @override
+  String get chatReport => 'Пожаловаться на ответ ИИ';
+
+  @override
+  String get reportTitle => 'Жалоба на ответ ИИ';
+
+  @override
+  String get reportIntro =>
+      'Этот ответ написала модель ИИ, работающая на вашем устройстве. Если он оскорбительный, опасный или неприемлемый, сообщите нам: по жалобам мы узнаём, какие модели ведут себя плохо, убираем или помечаем их в каталоге и улучшаем фильтрацию.';
+
+  @override
+  String get reportReasonSexual => 'Сексуальный контент';
+
+  @override
+  String get reportReasonHateful => 'Ненависть или дискриминация';
+
+  @override
+  String get reportReasonViolent => 'Насилие или опасные действия';
+
+  @override
+  String get reportReasonSelfHarm => 'Самоповреждение или суицид';
+
+  @override
+  String get reportReasonHarassment => 'Оскорбления или травля';
+
+  @override
+  String get reportReasonIllegal => 'Незаконная деятельность';
+
+  @override
+  String get reportReasonMisinformation =>
+      'Ложная или вводящая в заблуждение информация';
+
+  @override
+  String get reportReasonOther => 'Другое';
+
+  @override
+  String get reportComment => 'Комментарий (необязательно)';
+
+  @override
+  String get reportIncludePrompt => 'Приложить моё предыдущее сообщение';
+
+  @override
+  String get reportDisclosure =>
+      'Разработчику отправятся: текст этого ответа, название модели, версия приложения, ваш комментарий и, если отмечено, ваше предыдущее сообщение. Больше ничего из чатов и файлов.';
+
+  @override
+  String get reportSend => 'Отправить';
+
+  @override
+  String get reportSent => 'Спасибо, жалоба отправлена. Ответ скрыт.';
+
+  @override
+  String get reportQueued =>
+      'Жалоба сохранена и уйдёт, когда появится связь. Ответ скрыт.';
+
+  @override
+  String get reportedReplyHidden => 'Вы пожаловались на этот ответ, он скрыт.';
+
+  @override
+  String get reportedReplyShow => 'Показать';
+
+  @override
+  String get reportedReplyHide => 'Скрыть';
 }

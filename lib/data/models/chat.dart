@@ -87,6 +87,7 @@ class ChatMessage {
     this.attachments = const [],
     this.stats,
     this.error,
+    this.reported = false,
   });
 
   final ChatRole role;
@@ -95,10 +96,14 @@ class ChatMessage {
   final GenerationStats? stats;
   final String? error;
 
+  /// The user reported this AI reply; the chat shows it collapsed.
+  final bool reported;
+
   ChatMessage copyWith({
     String? content,
     GenerationStats? stats,
     String? error,
+    bool? reported,
   }) =>
       ChatMessage(
         role: role,
@@ -106,6 +111,7 @@ class ChatMessage {
         attachments: attachments,
         stats: stats ?? this.stats,
         error: error ?? this.error,
+        reported: reported ?? this.reported,
       );
 
   Map<String, dynamic> toJson() => {
@@ -115,6 +121,7 @@ class ChatMessage {
           'attachments': attachments.map((a) => a.toJson()).toList(),
         if (stats != null) 'stats': stats!.toJson(),
         if (error != null) 'error': error,
+        if (reported) 'reported': true,
       };
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) => ChatMessage(
@@ -132,6 +139,7 @@ class ChatMessage {
             ? null
             : GenerationStats.fromJson(json['stats'] as Map<String, dynamic>),
         error: json['error'] as String?,
+        reported: json['reported'] as bool? ?? false,
       );
 }
 

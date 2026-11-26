@@ -1,6 +1,6 @@
 # Privacy Policy — Cortiq: Local AI Models
 
-**Effective date: September 28, 2026**
+**Effective date: November 26, 2026**
 
 Cortiq runs chat and CMF Decision models on your device by default. Network
 features are optional and described below; enabling them can send data off
@@ -39,6 +39,21 @@ not automatically enable an oracle or train a model on your requests.
   charge for the call and handles the submitted data under its own policies.
   No call is made merely by saving settings or opening the screen. Oracle
   responses are identified separately and do not automatically retrain a model.
+
+## Reporting AI replies
+
+Every reply written by a model has a **Report** button (the flag under the
+reply). Nothing is sent unless you press **Send** in that form. A report goes
+to the developer of Cortiq over HTTPS (a Google Form owned by the developer,
+so Google processes it under its own policies) and contains only: the text of
+the reported reply, the reason you chose, your comment if you wrote one, your
+previous message if you left that box ticked, the model's file name, the app
+version and the platform (Android or iOS). No account, device identifier,
+other messages, attachments or files are included. A report made offline is
+kept on the device and sent when you are online. Reports are used to find
+models that produce harmful content, remove or flag them in the in-app
+catalog and improve filtering; they are kept for up to two years. To have a
+report deleted, write to urevich55@gmail.com with the date you sent it.
 
 ## Oracle credentials
 
