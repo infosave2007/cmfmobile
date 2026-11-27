@@ -282,6 +282,7 @@
   "oracleInvalidResponse": "Die Orakelantwort entspricht nicht den zulässigen Ergebnissen der Fähigkeit und wurde abgelehnt.",
   "decisionFailed": "Keine lokale Entscheidung möglich. Prüfe, ob ein CMF-Decision-Modell und eine Fähigkeit geladen sind.",
   "modelKindSkill": "Fähigkeitserweiterung",
+  "modelKindAddon": "Erweiterung",
   "modelSkillHelp": "Eine Erweiterung für ein Basis-Chatmodell, kein eigenständiges Modell. Nicht als Chat oder Entscheidungsmodell startbar.",
   "modelKindSpeech": "Spracherkennung",
   "modelSpeechHelp": "Wandelt Sprache auf diesem Gerät in Text um. Laden Sie das Modell, dann diktieren Sie im Chat ins Mikrofon oder transkribieren Sie eine WAV-Datei.",
@@ -316,5 +317,7 @@
   "reportQueued": "Die Meldung ist gespeichert und wird gesendet, sobald Sie online sind. Die Antwort ist ausgeblendet.",
   "reportedReplyHidden": "Sie haben diese Antwort gemeldet; sie ist ausgeblendet.",
   "reportedReplyShow": "Anzeigen",
-  "reportedReplyHide": "Ausblenden"
+  "reportedReplyHide": "Ausblenden",
+  "chatReasoning": "Überlegungen",
+  "chatThinking": "Denkt nach…"
 }

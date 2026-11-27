@@ -39,6 +39,41 @@ bool cmfSkillRecordIsStandalone(Map record) {
   return hash is String && hash.isNotEmpty;
 }
 
+/// Whether a `.cmf` file name marks a companion of a model rather than a
+/// model: a multi-token-prediction head (`*.mtp.cmf`), a DFlash draft
+/// sidecar (`*.dflash.cmf`), a multimodal projector (`*.mm.cmf`) or a skill
+/// (`*.skill.cmf`, or "skill" in the name, as Nanbeige4.2's experiments
+/// are named). Repos ship these next to the model they plug into; none of
+/// them loads or chats on its own, and the MTP heads in particular carry
+/// the base model's full `arch`, so a catalog listing them by size alone
+/// sent people to a 1 GB download that then failed to load.
+bool cmfPathIsCompanion(String path) {
+  final name = path.split('/').last.toLowerCase();
+  if (!name.endsWith('.cmf')) return false;
+  final stem = name.substring(0, name.length - '.cmf'.length);
+  return RegExp(r'(^|[^a-z])(mtp|dflash|mm|skill)([^a-z]|$)').hasMatch(stem);
+}
+
+/// Whether a CMF header declares a companion rather than a runnable model
+/// (see [cmfPathIsCompanion] for the kinds). The name is the first signal;
+/// this catches a renamed file: a standalone skill record, a `*_sidecar` or
+/// `*_mm` architecture (DFlash drafts, MiMo's projector towers), or a
+/// provenance that binds the file to a base model.
+bool cmfHeaderIsCompanion(Map<String, dynamic> header) {
+  if (cmfHeaderSkills(header).isNotEmpty) return true;
+  final arch = header['arch'];
+  final archName = arch is Map ? (arch['arch_name'] ?? '').toString() : '';
+  if (archName.endsWith('_sidecar') || archName.endsWith('_mm')) return true;
+  final provenance = header['provenance'];
+  if (provenance is Map) {
+    if (provenance['base_binding'] != null) return true;
+    if (provenance['mimo_mm'] != null) return true;
+    final kind = (provenance['kind'] ?? '').toString();
+    if (kind.endsWith('_sidecar')) return true;
+  }
+  return false;
+}
+
 /// CMF v2 binary format (see cmfpublic/docs/CMF_V2_SPEC.md).
 ///
 /// Envelope: 128 bytes fixed.
@@ -331,6 +366,7 @@ class CmfReader {
         tasks: tasks,
         requiredFeatures: env.requiredFeatures,
         skills: cmfHeaderSkills(header),
+        companion: cmfHeaderIsCompanion(header) || cmfPathIsCompanion(path),
       );
     } finally {
       await raf.close();

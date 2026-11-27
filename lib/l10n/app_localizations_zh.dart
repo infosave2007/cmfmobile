@@ -898,6 +898,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get modelKindSkill => '技能扩展';
 
   @override
+  String get modelKindAddon => '附加组件';
+
+  @override
   String get modelSkillHelp => '这是基础聊天模型的扩展，不是独立模型，不能作为聊天或决策模型打开。';
 
   @override
@@ -1012,4 +1015,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get reportedReplyHide => '隐藏';
+
+  @override
+  String get chatReasoning => '推理过程';
+
+  @override
+  String get chatThinking => '思考中…';
 }

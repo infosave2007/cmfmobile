@@ -1,3 +1,21 @@
+# 1.3.12 — Reasoning folded away; no add-on files in the catalog
+
+- Reasoning models no longer print their thinking into the answer. Everything
+  before `</think>` goes into a collapsed "Reasoning" section above the reply,
+  and while a `<think>` block is still open the bubble says "Thinking…"
+  instead of streaming it. LFM2.5 2.6B was the visible case: its template
+  opens the block in the prompt, so the reply started with the model talking
+  to itself and showed a literal `</think>` before the answer. Copy copies the
+  answer, and earlier replies go back to the model as their answers only.
+- The ready-to-use catalog and the file choice for a Hugging Face repo no
+  longer offer files that are not models on their own: multi-token-prediction
+  heads (`*.mtp.cmf`), DFlash draft sidecars (`*.dflash.cmf`), multimodal
+  projectors (`*.mm.cmf`) and skills (`*.skill.cmf` and other skill files).
+  They plug into a base model; downloaded alone they installed and then
+  failed to load. The file name is checked first and the CMF header second,
+  so a renamed sidecar or skill is caught too. One already on the phone is
+  shown in Models as an add-on, not offered for Chat.
+
 # 1.3.11 — Report AI replies
 
 - Every AI reply in the chat has a flag button: **Report**. A short form asks

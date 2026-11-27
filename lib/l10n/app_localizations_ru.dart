@@ -948,6 +948,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get modelKindSkill => 'Дополнение';
 
   @override
+  String get modelKindAddon => 'Дополнение';
+
+  @override
   String get modelSkillHelp =>
       'Дополнение к базовой чат-модели, а не самостоятельная модель. Его нельзя открыть как чат или модель решений.';
 
@@ -1067,4 +1070,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get reportedReplyHide => 'Скрыть';
+
+  @override
+  String get chatReasoning => 'Рассуждения';
+
+  @override
+  String get chatThinking => 'Думает…';
 }

@@ -433,6 +433,8 @@
     }
   },
   "modelKindSkill": "Skill add-on",
+  "modelKindAddon": "Add-on",
+  "@modelKindAddon": {"description": "Kind chip for a file that plugs into a model (MTP head, draft sidecar, projector) and cannot run on its own."},
   "modelSkillHelp": "An add-on for a base chat model, not a standalone model. It cannot be opened as Chat or Decisions.",
   "modelKindSpeech": "Speech-to-text",
   "modelSpeechHelp": "Turns speech into text on this device. Load it, then dictate into the microphone in Chat or transcribe a WAV file.",
@@ -495,5 +497,9 @@
   "reportQueued": "The report is saved and will be sent when you are online. The reply is hidden.",
   "reportedReplyHidden": "You reported this reply; it is hidden.",
   "reportedReplyShow": "Show",
-  "reportedReplyHide": "Hide"
+  "reportedReplyHide": "Hide",
+  "chatReasoning": "Reasoning",
+  "chatThinking": "Thinking…",
+  "@chatReasoning": {"description": "Collapsible section holding a model's reasoning (text before </think>) above its answer."},
+  "@chatThinking": {"description": "Shown while a reasoning model is still thinking and has not started its answer."}
 }

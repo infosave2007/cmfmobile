@@ -1758,6 +1758,12 @@ abstract class AppLocalizations {
   /// **'Skill add-on'**
   String get modelKindSkill;
 
+  /// Kind chip for a file that plugs into a model (MTP head, draft sidecar, projector) and cannot run on its own.
+  ///
+  /// In en, this message translates to:
+  /// **'Add-on'**
+  String get modelKindAddon;
+
   /// No description provided for @modelSkillHelp.
   ///
   /// In en, this message translates to:
@@ -1967,6 +1973,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hide'**
   String get reportedReplyHide;
+
+  /// Collapsible section holding a model's reasoning (text before </think>) above its answer.
+  ///
+  /// In en, this message translates to:
+  /// **'Reasoning'**
+  String get chatReasoning;
+
+  /// Shown while a reasoning model is still thinking and has not started its answer.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking…'**
+  String get chatThinking;
 }
 
 class _AppLocalizationsDelegate
