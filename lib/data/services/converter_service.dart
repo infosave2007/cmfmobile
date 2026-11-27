@@ -132,8 +132,11 @@ class ConverterService {
       _progress(job, 0.02, 'listing');
       final files = await hf.listFiles(job.repo, token: hfToken);
 
+      // Companions (MTP heads, draft sidecars, projectors, skills) are never
+      // the file to fetch for a repo: they cannot run on their own.
       final cmfFiles = files
           .where((f) => f.path.toLowerCase().endsWith('.cmf'))
+          .where((f) => !cmfPathIsCompanion(f.path))
           .toList();
       if (cmfFiles.isNotEmpty) {
         job.directDownload = true;
@@ -235,7 +238,7 @@ class ConverterService {
       for (final f in sorted) {
         final header = await hf.fetchCmfHeader(job.repo, f.path,
             token: hfToken);
-        if (header == null || cmfHeaderSkills(header).isEmpty) return f;
+        if (header == null || !cmfHeaderIsCompanion(header)) return f;
       }
       return sorted.first;
     }

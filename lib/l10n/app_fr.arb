@@ -282,6 +282,7 @@
   "oracleInvalidResponse": "La réponse de l’oracle ne correspond pas aux résultats autorisés par la compétence et a été rejetée.",
   "decisionFailed": "Impossible d’obtenir une décision locale. Vérifiez qu’un modèle CMF Decision et une compétence sont chargés.",
   "modelKindSkill": "Extension",
+  "modelKindAddon": "Extension",
   "modelSkillHelp": "Une extension pour un modèle de chat de base, pas un modèle autonome. Elle ne s’ouvre pas comme un chat ou un modèle de décision.",
   "modelKindSpeech": "Reconnaissance vocale",
   "modelSpeechHelp": "Transforme la parole en texte sur cet appareil. Chargez le modèle, puis dictez au micro dans le Chat ou transcrivez un fichier WAV.",
@@ -316,5 +317,7 @@
   "reportQueued": "Le signalement est enregistré et sera envoyé dès que vous serez en ligne. La réponse est masquée.",
   "reportedReplyHidden": "Vous avez signalé cette réponse ; elle est masquée.",
   "reportedReplyShow": "Afficher",
-  "reportedReplyHide": "Masquer"
+  "reportedReplyHide": "Masquer",
+  "chatReasoning": "Raisonnement",
+  "chatThinking": "Réflexion…"
 }

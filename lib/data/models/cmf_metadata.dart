@@ -20,6 +20,7 @@ class CmfMetadata {
     required this.tasks,
     required this.requiredFeatures,
     this.skills = const [],
+    this.companion = false,
   });
 
   final int version;
@@ -47,6 +48,11 @@ class CmfMetadata {
   final List<String> skills;
   final int requiredFeatures;
 
+  /// The file is a companion of some model rather than a model: an MTP
+  /// head, a DFlash draft sidecar, a multimodal projector or a skill (see
+  /// `cmfPathIsCompanion` / `cmfHeaderIsCompanion`).
+  final bool companion;
+
   /// Envelope feature bit 6, `SKILL_FILE` (CMF_V2_SPEC §9.1): the file is a
   /// standalone skill. A writer raises it for any `base_dir_hash` record, so
   /// on a well-formed file it agrees with [skills]; both are checked so a
@@ -63,6 +69,11 @@ class CmfMetadata {
   bool get isSkill =>
       !isDecision &&
       ((requiredFeatures & featureSkillFile) != 0 || skills.isNotEmpty);
+
+  /// Anything that plugs into a base model instead of running on its own: a
+  /// skill, or another companion file (MTP head, draft sidecar, projector).
+  /// It is listed, but never offered as Chat or Decisions.
+  bool get isAddon => isSkill || (!isDecision && companion);
 
   /// A Whisper speech-to-text file (`arch_name` "whisper"): an encoder /
   /// decoder over audio, run through the runtime's speech ABI, not the chat
@@ -90,6 +101,7 @@ class CmfMetadata {
         'tasks': tasks,
         'requiredFeatures': requiredFeatures,
         'skills': skills,
+        'companion': companion,
       };
 
   factory CmfMetadata.fromJson(Map<String, dynamic> json) => CmfMetadata(
@@ -110,5 +122,6 @@ class CmfMetadata {
         tasks: (json['tasks'] as List?)?.cast<String>() ?? const [],
         requiredFeatures: json['requiredFeatures'] as int? ?? 1,
         skills: (json['skills'] as List?)?.cast<String>() ?? const [],
+        companion: json['companion'] as bool? ?? false,
       );
 }

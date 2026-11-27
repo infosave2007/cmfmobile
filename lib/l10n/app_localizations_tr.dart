@@ -946,6 +946,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get modelKindSkill => 'Beceri eklentisi';
 
   @override
+  String get modelKindAddon => 'Eklenti';
+
+  @override
   String get modelSkillHelp =>
       'Temel sohbet modeli için bir eklentidir; bağımsız model değildir. Sohbet veya karar modeli olarak açılamaz.';
 
@@ -1064,4 +1067,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get reportedReplyHide => 'Gizle';
+
+  @override
+  String get chatReasoning => 'Akıl yürütme';
+
+  @override
+  String get chatThinking => 'Düşünüyor…';
 }

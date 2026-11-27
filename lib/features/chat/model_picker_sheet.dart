@@ -16,7 +16,7 @@ void showModelPickerSheet(BuildContext context, WidgetRef ref) {
       builder: (context, ref, _) {
         final l = AppLocalizations.of(context);
         final models = (ref.watch(modelsProvider).value ?? const [])
-            .where((m) => m.isValid && !m.meta!.isSkill)
+            .where((m) => m.isValid && !m.meta!.isAddon)
             .toList();
         final engineState = ref.watch(engineControllerProvider);
 

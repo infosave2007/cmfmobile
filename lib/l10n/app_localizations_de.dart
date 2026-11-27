@@ -950,6 +950,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get modelKindSkill => 'Fähigkeitserweiterung';
 
   @override
+  String get modelKindAddon => 'Erweiterung';
+
+  @override
   String get modelSkillHelp =>
       'Eine Erweiterung für ein Basis-Chatmodell, kein eigenständiges Modell. Nicht als Chat oder Entscheidungsmodell startbar.';
 
@@ -1072,4 +1075,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get reportedReplyHide => 'Ausblenden';
+
+  @override
+  String get chatReasoning => 'Überlegungen';
+
+  @override
+  String get chatThinking => 'Denkt nach…';
 }

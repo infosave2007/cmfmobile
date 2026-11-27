@@ -221,7 +221,7 @@ class _ModelCard extends ConsumerWidget {
               Text(
                 meta.isDecision
                     ? l.modelDecisionHelp
-                    : meta.isSkill
+                    : meta.isAddon
                     ? l.modelSkillHelp
                     : meta.isSpeechToText
                     ? l.modelSpeechHelp
@@ -238,12 +238,14 @@ class _ModelCard extends ConsumerWidget {
                         ? l.modelKindDecision
                         : meta.isSkill
                         ? l.modelKindSkill
+                        : meta.isAddon
+                        ? l.modelKindAddon
                         : meta.isSpeechToText
                         ? l.modelKindSpeech
                         : l.modelKindChat,
                     icon: meta.isDecision
                         ? Icons.account_tree_outlined
-                        : meta.isSkill
+                        : meta.isAddon
                         ? Icons.extension_outlined
                         : meta.isSpeechToText
                         ? Icons.mic_outlined
@@ -275,7 +277,7 @@ class _ModelCard extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 10),
-              if (!meta.isSkill)
+              if (!meta.isAddon)
                 Align(
                   alignment: Alignment.centerRight,
                   child: isLoading

@@ -282,6 +282,7 @@
   "oracleInvalidResponse": "预言机回答不符合此技能允许的结果，未被接受。",
   "decisionFailed": "无法获取本地决策。请确认已加载 CMF Decision 模型和技能。",
   "modelKindSkill": "技能扩展",
+  "modelKindAddon": "附加组件",
   "modelSkillHelp": "这是基础聊天模型的扩展，不是独立模型，不能作为聊天或决策模型打开。",
   "modelKindSpeech": "语音识别",
   "modelSpeechHelp": "在本设备上把语音转成文字。加载模型后，在“聊天”中对着麦克风口述，或转写一个 WAV 文件。",
@@ -316,5 +317,7 @@
   "reportQueued": "举报已保存，联网后将发送。该回复已隐藏。",
   "reportedReplyHidden": "您已举报这条回复，它已被隐藏。",
   "reportedReplyShow": "显示",
-  "reportedReplyHide": "隐藏"
+  "reportedReplyHide": "隐藏",
+  "chatReasoning": "推理过程",
+  "chatThinking": "思考中…"
 }

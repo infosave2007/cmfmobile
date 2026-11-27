@@ -25,6 +25,7 @@ import '../data/services/settings_repository.dart';
 import 'util/foreground_task.dart';
 import 'util/keep_awake.dart';
 import 'util/npu_support.dart';
+import 'util/reasoning.dart';
 import 'util/transcript.dart';
 
 // ---------------------------------------------------------------------------
@@ -439,9 +440,18 @@ class ChatController extends Notifier<ChatState> {
 
     // Full session history = the conversation context; attachments are
     // inlined into their message content for the model.
+    //
+    // An earlier reply goes back as its answer only: the model's reasoning
+    // is not part of the conversation (Qwen3's own template drops it), and
+    // re-sending it would eat the context window turn after turn.
     final history = <ChatMessage>[
       for (final m in session.messages)
-        if (!(m.role == ChatRole.assistant && m.content.isEmpty))
+        if (m.role == ChatRole.assistant)
+          ...[
+            if (replyAnswer(m.content).trim().isNotEmpty)
+              m.copyWith(content: replyAnswer(m.content)),
+          ]
+        else
           m.attachments.isEmpty
               ? m
               : ChatMessage(

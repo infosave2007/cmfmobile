@@ -282,6 +282,7 @@
   "oracleInvalidResponse": "Oracle yanıtı becerinin izin verdiği sonuçlara uymadığı için kabul edilmedi.",
   "decisionFailed": "Yerel karar alınamadı. Bir CMF Decision modeli ve beceri yüklendiğinden emin olun.",
   "modelKindSkill": "Beceri eklentisi",
+  "modelKindAddon": "Eklenti",
   "modelSkillHelp": "Temel sohbet modeli için bir eklentidir; bağımsız model değildir. Sohbet veya karar modeli olarak açılamaz.",
   "modelKindSpeech": "Konuşma tanıma",
   "modelSpeechHelp": "Konuşmayı bu cihazda metne çevirir. Modeli yükleyin, sonra Sohbet’te mikrofona dikte edin veya bir WAV dosyasını yazıya dökün.",
@@ -316,5 +317,7 @@
   "reportQueued": "Bildirim kaydedildi ve çevrimiçi olduğunuzda gönderilecek. Yanıt gizlendi.",
   "reportedReplyHidden": "Bu yanıtı bildirdiniz; gizlendi.",
   "reportedReplyShow": "Göster",
-  "reportedReplyHide": "Gizle"
+  "reportedReplyHide": "Gizle",
+  "chatReasoning": "Akıl yürütme",
+  "chatThinking": "Düşünüyor…"
 }

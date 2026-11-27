@@ -12,6 +12,7 @@ import 'package:record/record.dart';
 import '../../core/providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/util/formats.dart';
+import '../../core/util/reasoning.dart';
 import '../../core/util/wav.dart';
 import '../../data/models/chat.dart';
 import '../../data/models/companion.dart';
@@ -617,11 +618,11 @@ class _MessageBubble extends ConsumerWidget {
           else if (isUser)
             SelectableText(message.content)
           else if (streamText != null)
-            Text(streamText)
+            _StreamingReply(text: streamText)
           else if (message.reported)
             _ReportedReply(content: message.content)
           else
-            MarkdownBody(data: message.content, selectable: true),
+            _AssistantReply(content: message.content),
           if (message.error != null)
             _ErrorNote(error: message.error!),
         ],
@@ -652,8 +653,10 @@ class _MessageBubble extends ConsumerWidget {
                   visualDensity: VisualDensity.compact,
                   tooltip: l.actionCopy,
                   onPressed: () {
-                    Clipboard.setData(
-                        ClipboardData(text: message.content));
+                    // The answer, not the model's reasoning above it.
+                    final answer = replyAnswer(message.content);
+                    Clipboard.setData(ClipboardData(
+                        text: answer.trim().isEmpty ? message.content : answer));
                     ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text(l.copiedToClipboard)));
                   },
@@ -731,8 +734,141 @@ class _ReportedReplyState extends State<_ReportedReply> {
           onPressed: () => setState(() => _shown = !_shown),
           child: Text(_shown ? l.reportedReplyHide : l.reportedReplyShow),
         ),
-        if (_shown) MarkdownBody(data: widget.content, selectable: true),
+        if (_shown) _AssistantReply(content: widget.content),
       ],
+    );
+  }
+}
+
+/// A finished assistant reply: the answer as markdown, with the model's
+/// reasoning — everything before `</think>` — folded into a section above
+/// it instead of printed as part of the answer (see `splitReasoning`).
+class _AssistantReply extends StatelessWidget {
+  const _AssistantReply({required this.content});
+
+  final String content;
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = splitReasoning(content);
+    if (parts.reasoning == null) {
+      return MarkdownBody(data: parts.answer, selectable: true);
+    }
+    final hasAnswer = parts.answer.trim().isNotEmpty;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // A reply that is all reasoning (the token limit hit before the
+        // answer) opens it: otherwise the bubble would look empty.
+        _ReasoningSection(
+            text: parts.reasoning!, initiallyExpanded: !hasAnswer),
+        if (hasAnswer) MarkdownBody(data: parts.answer, selectable: true),
+      ],
+    );
+  }
+}
+
+/// The reply being generated. While a `<think>` block is open it shows
+/// "Thinking…" instead of the stream of reasoning; once the block closes
+/// the reasoning folds away and the answer streams in under it.
+class _StreamingReply extends StatelessWidget {
+  const _StreamingReply({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = splitReasoning(text);
+    if (parts.thinking) {
+      final scheme = Theme.of(context).colorScheme;
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            AppLocalizations.of(context).chatThinking,
+            style: TextStyle(
+              fontStyle: FontStyle.italic,
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      );
+    }
+    if (parts.reasoning == null) return Text(parts.answer);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _ReasoningSection(text: parts.reasoning!),
+        Text(parts.answer),
+      ],
+    );
+  }
+}
+
+/// The model's reasoning, collapsed behind a "Reasoning" toggle.
+class _ReasoningSection extends StatefulWidget {
+  const _ReasoningSection({required this.text, this.initiallyExpanded = false});
+
+  final String text;
+  final bool initiallyExpanded;
+
+  @override
+  State<_ReasoningSection> createState() => _ReasoningSectionState();
+}
+
+class _ReasoningSectionState extends State<_ReasoningSection> {
+  late bool _expanded = widget.initiallyExpanded;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final muted = TextStyle(color: scheme.onSurfaceVariant, fontSize: 13);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () => setState(() => _expanded = !_expanded),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.psychology_outlined,
+                      size: 16, color: scheme.onSurfaceVariant),
+                  const SizedBox(width: 6),
+                  Text(AppLocalizations.of(context).chatReasoning,
+                      style: muted),
+                  Icon(_expanded ? Icons.expand_less : Icons.expand_more,
+                      size: 18, color: scheme.onSurfaceVariant),
+                ],
+              ),
+            ),
+          ),
+          if (_expanded)
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 2),
+              padding: const EdgeInsets.only(left: 10),
+              decoration: BoxDecoration(
+                border: Border(
+                  left: BorderSide(color: scheme.outlineVariant, width: 2),
+                ),
+              ),
+              child: SelectableText(widget.text, style: muted),
+            ),
+        ],
+      ),
     );
   }
 }

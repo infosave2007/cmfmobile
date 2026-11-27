@@ -72,6 +72,9 @@ List<HfFileEntry> readyCmfFiles(Iterable<HfFileEntry> files) {
   final cmf = files
       .where((file) => file.path.toLowerCase().endsWith('.cmf'))
       .where((file) => file.size > 0)
+      // MTP heads, draft sidecars, projectors and skills plug into a model;
+      // offered as a download of their own they install and then fail.
+      .where((file) => !cmfPathIsCompanion(file.path))
       .toList();
   cmf.sort((a, b) {
     final bySize = a.size.compareTo(b.size);
@@ -158,6 +161,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
               files
                   .where((f) => f.path.toLowerCase().endsWith('.cmf'))
                   .where((f) => f.size > 0)
+                  .where((f) => !cmfPathIsCompanion(f.path))
                   .toList(),
             );
           } catch (_) {
@@ -169,11 +173,11 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
       // two or three quantizations; folding them into one card hid the choice
       // and — worse — showed the SUM of their sizes as if it were a single
       // download, so a repo whose largest file is 24 GB advertised 57.
-      // Skills are not runnable models — they are task-mask files cut from a
-      // base model — and offering one here sends the user to download
-      // something that cannot chat. The file listing does not say which is
-      // which, so ask each file's header; it declares it. Headers are a few
-      // kilobytes, fetched in parallel.
+      // Skills, MTP heads, draft sidecars and projectors are not runnable
+      // models — they plug into a base model — and offering one here sends
+      // the user to download something that cannot chat. Names already
+      // dropped the obvious ones above; for the rest ask each file's header,
+      // which declares it. Headers are a few kilobytes, fetched in parallel.
       final skillPaths = <String>{};
       final decisionPaths = <String>{};
       final verifiedPaths = <String>{};
@@ -191,7 +195,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen>
               }
               if (header != null &&
                   header['arch']?['arch_name'] != 'cortiq-decision-ph-v1' &&
-                  cmfHeaderSkills(header).isNotEmpty) {
+                  cmfHeaderIsCompanion(header)) {
                 skillPaths.add('${listing.key.id}/${file.path}');
               }
             }),
